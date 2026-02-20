@@ -1,0 +1,76 @@
+# Environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pdm-python
+.pdm-build/
+
+# Testing & linting
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.hypothesis/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+
+# Logs & temp
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Node (e.g. tau2-bench/web/leaderboard)
+node_modules/
+.npm
+.yarn-integrity
+.next/
+out/
+.nuxt/
+dist/
+*.tsbuildinfo
+
+# Optional: uncomment to ignore generated simulation outputs
+# tau2-bench/data/simulations/*.json

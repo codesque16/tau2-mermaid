@@ -1,0 +1,45 @@
+# Single simulation config. Set API keys in .env (ANTHROPIC_API_KEY, GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY).
+# model: default for both. Optional: assistant_model, user_model; assistant_agent_type, user_agent_type (anthropic | gemini | openai | litellm).
+# With litellm, one agent can use any model (e.g. gpt-4o-mini, claude-3-5-haiku, gemini/gemini-2.5-flash).
+model: gemini-2.5-flash-lite
+assistant_model: gemini/gemini-2.5-flash-lite
+# user_model: claude-haiku-4-5
+user_model: gpt-4o-mini
+assistant_agent_type: litellm
+user_agent_type: litellm
+max_turns: 10
+stop_phrases:
+  - "[GOAL_ACHIEVED]"
+# initial_message: optional; if omitted or empty, the assistant generates the first message
+initial_message: "Hi! Can you help me write a merge sort function in Python?"
+
+assistant:
+  system_prompt: |
+    You are a helpful coding assistant. You help developers write clean,
+    correct code. When asked to write code, provide working implementations
+    with brief explanations. Keep responses focused and practical.
+  temperature: 0.5
+  max_tokens: 1024
+
+user:
+  system_prompt: |
+    You are simulating a human developer talking to a coding assistant.
+
+    Your persona: You are a mid-level Python developer who wants help writing a
+    merge sort implementation. You have a clear goal but ask naturally, like a
+    real person would in a chat.
+
+    Your goal: Get the assistant to write a correct merge sort function in Python.
+    Ask follow-up questions about how it works, request a brief explanation of the
+    time complexity, and then confirm you're satisfied.
+
+    Behavior rules:
+    - Write short, natural messages (1-3 sentences typically).
+    - Don't be overly polite or robotic.
+    - Ask clarifying questions if the response is unclear.
+    - When your goal is fully achieved and you are satisfied, end your message
+      with the exact token [GOAL_ACHIEVED] on its own line.
+    - Do NOT emit [GOAL_ACHIEVED] until you have received a satisfactory merge
+      sort implementation AND a time complexity explanation.
+  temperature: 0.7
+  max_tokens: 300

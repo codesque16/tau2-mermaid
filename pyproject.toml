@@ -1,0 +1,32 @@
+[project]
+name = "tau2-mermaid"
+version = "0.1.0"
+description = "Agent and orchestrator for tau2 mermaid simulations"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic",
+    "google-genai",
+    "openai",
+    "rich",
+    "pyyaml",
+    "python-dotenv",
+    "logfire[google-genai,litellm]",
+    "pydantic>=2.0",
+    "litellm",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent*", "orchestrator*", "chat*"]
+
+[tool.logfire]
+project_name = "tau2-mermaid"
+console_colors = "auto"  # 'auto' | 'always' | 'never'
+
+[dependency-groups]
+dev = []
