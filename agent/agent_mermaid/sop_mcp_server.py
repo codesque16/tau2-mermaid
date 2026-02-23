@@ -1,6 +1,6 @@
 """
 SOP MCP server: streamable HTTP transport with load_graph, goto_node, and todo tools.
-Exposes GET /api/connections so all connections (tool calls) to the server can be viewed.
+Exposes GET /api/connections and an Agent Monitor–style viewer (Overview + Session detail).
 """
 
 from __future__ import annotations
@@ -73,14 +73,22 @@ def _get_sessions() -> list[dict[str, Any]]:
     for sid, events in _session_to_events.items():
         if not events:
             continue
+        first = events[0]
         last = events[-1]
+        duration_sec = last.ts - first.ts if last.ts and first.ts else 0
+        last_message = (last.result_summary or last.tool or "")[:80]
+        if len((last.result_summary or last.tool or "")) > 80:
+            last_message += "..."
         out.append({
             "session_id": sid,
+            "first_ts": first.ts,
             "last_ts": last.ts,
             "last_tool": last.tool,
             "event_count": len(events),
+            "duration_sec": duration_sec,
+            "last_message": last_message,
         })
-    out.sort(key=lambda x: -x["last_ts"])
+    out.sort(key=lambda x: -(x["last_ts"] or 0))
     return out
 
 
@@ -389,55 +397,95 @@ def _mermaid_with_traversal_styles(mermaid_source: str, path: list[str], current
     return out
 
 
-async def session_viewer_page(request: Request) -> HTMLResponse:
-    """GET /view/{session_id} — live traversal view: mermaid graph + tool-call log."""
-    session_id = request.path_params.get("session_id", "")
-    detail = _get_session_detail(session_id)
-    if detail is None:
-        return HTMLResponse("<h1>Session not found</h1><a href='/'>Back</a>", status_code=404)
-    graph_state = detail.get("graph_state") or {}
-    events = detail.get("events") or []
-    graphs_html = ""
-    for gid, g in graph_state.items():
-        mermaid = g.get("skeleton") or g.get("mermaid_source", "")
-        path = g.get("path") or []
-        current = g.get("current_node")
-        styled = _mermaid_with_traversal_styles(mermaid, path, current)
-        graphs_html += "<div class='graph'><h3>Graph: " + gid + "</h3><pre class='mermaid'>" + styled.replace("<", "&lt;") + "</pre></div>"
-    events_html = "".join(
-        "<tr><td>" + str(e["ts"]) + "</td><td>" + e["tool"] + "</td><td><pre>" + str(e["params"]) + "</pre></td><td>" + (e.get("result_summary") or "") + "</td></tr>"
-        for e in events
-    )
-    html = (
-        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Session " + session_id[:8] + "</title>"
-        "<script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>"
-        "<style>body{font-family:system-ui}.graph{margin:1rem 0}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px;text-align:left}"
-        ".mermaid{background:#f8f8f8;padding:1rem}</style></head><body>"
-        "<h1>Session: " + session_id[:16] + "...</h1><p><a href='/'>All connections</a></p>"
-        "<h2>Graph traversal</h2><p>Green = visited, Orange = current node</p>" + graphs_html + ""
-        "<h2>MCP tool calls</h2><table><tr><th>Time</th><th>Tool</th><th>Params</th><th>Result</th></tr>" + events_html + "</table>"
-        "<script>mermaid.initialize({startOnLoad:true});</script></body></html>"
+# --- Viewer routes: /app/viewer (overview), /app/viewer/session/{session_id} (session detail) ---
+VIEWER_BASE = "/app/viewer"
+
+
+def _format_duration(sec: float) -> str:
+    """Format duration in seconds as HH:MM:SS or MM:SS."""
+    if sec <= 0:
+        return "00:00"
+    m, s = divmod(int(sec), 60)
+    h, m = divmod(m, 60)
+    if h > 0:
+        return f"{h:02d}:{m:02d}:{s:02d}"
+    return f"{m:02d}:{s:02d}"
+
+
+async def _viewer_overview_page(_request: Request) -> HTMLResponse:
+    """GET /app/viewer — Sessions Overview (Agent Monitor style)."""
+    from .viewer import render_overview, VIEWER_BASE
+
+    sessions = _get_sessions()
+    total = len(sessions)
+    now = time.time()
+    active = sum(1 for s in sessions if (s.get("last_ts") or 0) > now - 300)
+    avg_sec = sum(s.get("duration_sec") or 0 for s in sessions) / total if total else 0
+    html = render_overview(
+        sessions=sessions[:50],
+        total_sessions=total,
+        active_agents=active,
+        avg_duration=_format_duration(avg_sec),
+        error_rate="0%",
+        viewer_base=VIEWER_BASE,
     )
     return HTMLResponse(html)
 
 
-def build_sop_mcp_app() -> Starlette:
-    """Build the ASGI app: MCP at /mcp, connection viewer API at /api/connections."""
+async def _viewer_session_page(request: Request) -> HTMLResponse:
+    """GET /app/viewer/session/{session_id} — Session Detail (Execution Logs + Process Graph + Traversal Path)."""
+    from .viewer import render_session_detail, VIEWER_BASE
 
-    async def _connections_view(_request: Request) -> HTMLResponse:
-        return HTMLResponse(
-            "<!DOCTYPE html><html><head><title>SOP MCP</title></head><body>"
-            "<h1>SOP MCP (Streamable HTTP)</h1><p>MCP: <a href='/mcp'>/mcp</a> — "
-            "<a href='/api/connections'>/api/connections</a></p></body></html>"
-        )
+    session_id = request.path_params.get("session_id", "")
+    detail = _get_session_detail(session_id)
+    if detail is None:
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url=VIEWER_BASE + "/", status_code=302)
+    events = detail.get("events") or []
+    graph_state = detail.get("graph_state") or {}
+    now = time.time()
+    last_ts = events[-1]["ts"] if events else 0
+    is_live = last_ts > now - 300
+    first_ts = events[0]["ts"] if events else now
+    total_uptime = _format_duration((last_ts or now) - first_ts)
+    html = render_session_detail(
+        session_id=session_id,
+        events=events,
+        graph_state=graph_state,
+        is_live=is_live,
+        total_uptime=total_uptime,
+        viewer_base=VIEWER_BASE,
+        mermaid_with_traversal_styles=_mermaid_with_traversal_styles,
+    )
+    return HTMLResponse(html)
+
+
+async def _redirect_to_viewer(_request: Request) -> HTMLResponse:
+    """Redirect / to /app/viewer."""
+    from starlette.responses import RedirectResponse
+    return RedirectResponse(url=VIEWER_BASE + "/", status_code=302)
+
+
+async def _redirect_view_to_app_viewer(request: Request) -> HTMLResponse:
+    """Redirect /view/{session_id} to /app/viewer/session/{session_id}."""
+    from starlette.responses import RedirectResponse
+    session_id = request.path_params.get("session_id", "")
+    return RedirectResponse(url=f"{VIEWER_BASE}/session/{session_id}", status_code=302)
+
+
+def build_sop_mcp_app() -> Starlette:
+    """Build the ASGI app: MCP at /mcp, viewer at /app/viewer, API at /api/connections."""
 
     if not HAS_MCP:
         return Starlette(
             routes=[
-                Route("/", _connections_view, methods=["GET"]),
+                Route("/", _redirect_to_viewer, methods=["GET"]),
+                Route("/app/viewer", _redirect_to_viewer, methods=["GET"]),
+                Route("/app/viewer/", _viewer_overview_page, methods=["GET"]),
+                Route("/app/viewer/session/{session_id}", _viewer_session_page, methods=["GET"]),
+                Route("/view/{session_id}", _redirect_view_to_app_viewer, methods=["GET"]),
                 Route("/api/connections", list_connections, methods=["GET"]),
                 Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
-                Route("/view/{session_id}", session_viewer_page, methods=["GET"]),
             ],
         )
 
@@ -448,11 +496,14 @@ def build_sop_mcp_app() -> Starlette:
 
     return Starlette(
         routes=[
-            Route("/", _connections_view, methods=["GET"]),
-            Mount("/mcp", app=mcp.streamable_http_app()),
+            Route("/", _redirect_to_viewer, methods=["GET"]),
+            Route("/app/viewer", _redirect_to_viewer, methods=["GET"]),
+            Route("/app/viewer/", _viewer_overview_page, methods=["GET"]),
+            Route("/app/viewer/session/{session_id}", _viewer_session_page, methods=["GET"]),
+            Route("/view/{session_id}", _redirect_view_to_app_viewer, methods=["GET"]),
             Route("/api/connections", list_connections, methods=["GET"]),
             Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
-            Route("/view/{session_id}", session_viewer_page, methods=["GET"]),
+            Mount("/", app=mcp.streamable_http_app()),
         ],
         lifespan=lifespan,
     )

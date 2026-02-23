@@ -87,15 +87,31 @@ class Orchestrator:
             # User agent responds (streaming); on first turn with no initial message, this is the first user message
             await self.bus.send_to_user(assistant_reply)
             print_role_header("User", turn=turn + 1)
-            with StreamingDisplay() as display:
+            if self.user.use_streaming_display:
+                with StreamingDisplay() as display:
 
+                    async def on_chunk_user(ev: str, data: object) -> None:
+                        await _stream_chunk(display, ev, data)
+
+                    user_reply, usage_info_user = await self.user.respond_stream(
+                        assistant_reply, on_chunk=on_chunk_user
+                    )
+                    display.finish()
+            else:
+                # Human agent: no Live display so terminal input is visible while typing
                 async def on_chunk_user(ev: str, data: object) -> None:
-                    await _stream_chunk(display, ev, data)
+                    if ev == "tool_use" and isinstance(data, dict):
+                        print_tool_call(
+                            name=data.get("name", ""),
+                            tool_id=data.get("id", ""),
+                            input_data=data.get("input"),
+                        )
+                    elif ev == "text" and data:
+                        print_markdown(str(data))
 
                 user_reply, usage_info_user = await self.user.respond_stream(
                     assistant_reply, on_chunk=on_chunk_user
                 )
-                display.finish()
 
             u_user = usage_info_user.get("usage")
             c_user = usage_info_user.get("cost")

@@ -19,6 +19,7 @@ from .utils import (
     load_agent_system_prompt,
     load_sop_markdown,
 )
+from .tools_loader import load_native_tools
 
 # Default root for mermaid-agents (relative to this package)
 _DEFAULT_MERMAID_AGENTS_ROOT = Path(__file__).resolve().parent / "mermaid-agents"
@@ -131,6 +132,11 @@ class MermaidAgent(BaseAgent):
             self._nodes_list = list_mermaid_nodes(self._agent_dir)
             self._system_prompt = _build_system_prompt(self._agent_dir, self._nodes_list)
 
+        native_list, native_executor = load_native_tools(self._agent_dir)
+        self._native_tools: list[dict[str, Any]] = native_list
+        self._native_tool_names: set[str] = {t["function"]["name"] for t in native_list} if native_list else set()
+        self._native_executor: Callable[[str, dict], str] | None = native_executor
+
         self.history: list[dict[str, Any]] = []
 
     async def _ensure_sop_mcp_initialized(self) -> None:
@@ -238,6 +244,8 @@ class MermaidAgent(BaseAgent):
             return "\n".join(out) if out else "{}"
         if fn_name == "enter_mermaid_node":
             return get_node_instructions(self._agent_dir, args.get("node_id", ""))
+        if getattr(self, "_native_executor", None) and fn_name in getattr(self, "_native_tool_names", set()):
+            return self._native_executor(fn_name, args)
         return f"[Unknown tool: {fn_name}]"
 
     async def _do_respond_stream(
@@ -251,9 +259,14 @@ class MermaidAgent(BaseAgent):
 
         if self._mcp_server_url and self._sop_data:
             await self._ensure_sop_mcp_initialized()
-            tools = self._sop_tools
+            # Exclude load_graph from tools sent to the LLM — we already call it once in _ensure_sop_mcp_initialized
+            tools = [
+                t for t in self._sop_tools
+                if (t.get("function") or {}).get("name") != "load_graph"
+            ]
         else:
             tools = [ENTER_NODE_TOOL]
+        tools = tools + getattr(self, "_native_tools", [])
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": self._system_prompt},
@@ -326,6 +339,8 @@ class MermaidAgent(BaseAgent):
                     args = json.loads(args_raw)
                 except json.JSONDecodeError:
                     args = {}
+                if on_chunk is not None:
+                    await on_chunk("tool_use", {"name": fn_name, "id": tc_id, "input": args})
                 result = await self._handle_tool_call(fn_name, args)
                 self.history.append({
                     "role": "tool",

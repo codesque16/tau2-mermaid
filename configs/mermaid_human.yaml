@@ -1,0 +1,33 @@
+# Test mermaid agent (assistant) with human agent (user).
+# 1. Optional: start SOP MCP server in another terminal:
+#    uv run -m agent.agent_mermaid.sop_mcp_server
+# 2. Run: uv run main.py configs/mermaid_human.yaml
+# 3. Type your messages at [user - Your response]: when prompted.
+
+model: gemini/gemini-3-flash-preview
+assistant_model: gemini/gemini-3-flash-preview
+assistant_agent_type: mermaid
+user_agent_type: human
+assistant_agent_name: retail
+# Uncomment to use SOP MCP (load_graph, goto_node, todo). Start sop_mcp_server first.
+mcp_server_url: http://localhost:8000
+graph_id: retail_support_v1
+
+max_turns: 20
+stop_phrases:
+  - "[GOAL_ACHIEVED]"
+  - "bye"
+  - "goodbye"
+
+# First message from "user" (you type nothing and assistant speaks first if empty)
+initial_message: "Hi, I need help with an order."
+
+assistant:
+  system_prompt: ""
+  temperature: 0.5
+  max_tokens: 2048
+
+user:
+  system_prompt: "You are the human user. Reply naturally."
+  temperature: 0.7
+  max_tokens: 512

@@ -29,14 +29,21 @@ def load_agent_mermaid(agent_dir: Path) -> str:
 
 
 def load_sop_markdown(agent_dir: Path) -> dict[str, str] | None:
-    """Load SOP markdown (e.g. retail-agent-sop.md). Returns {"prose": str, "mermaid": str} or None."""
-    for path in list(agent_dir.glob("*-agent-sop.md")) + [agent_dir / "retail-agent-sop.md"]:
-        if path.is_file():
-            text = path.read_text(encoding="utf-8").strip()
-            match = re.search(r"```mermaid\s*(.*?)```", text, re.DOTALL)
-            if match:
-                return {"prose": text[: match.start()].strip(), "mermaid": match.group(1).strip()}
-            return {"prose": text, "mermaid": ""}
+    """Load SOP markdown from retail-agent-sop.md (or *-agent-sop.md). Returns {"prose": str, "mermaid": str} or None."""
+    # Prefer retail-agent-sop.md when present (e.g. for retail agent) so the graph matches the md file
+    retail_sop = agent_dir / "retail-agent-sop.md"
+    if retail_sop.is_file():
+        candidates = [retail_sop]
+    else:
+        candidates = list(agent_dir.glob("*-agent-sop.md"))
+    for path in candidates:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8").strip()
+        match = re.search(r"```mermaid\s*(.*?)```", text, re.DOTALL)
+        if match:
+            return {"prose": text[: match.start()].strip(), "mermaid": match.group(1).strip()}
+        return {"prose": text, "mermaid": ""}
     return None
 
 

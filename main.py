@@ -47,6 +47,10 @@ async def run(config_path: Path) -> None:
         raise ValueError(
             "When assistant_agent_type is 'litellm', either assistant_model or model must be set in config."
         )
+    if assistant_agent_type == "mermaid" and not (config.assistant_agent_name and str(config.assistant_agent_name).strip()):
+        raise ValueError(
+            "When assistant_agent_type is 'mermaid', set assistant_agent_name in config (e.g. 'retail')."
+        )
 
     # User agent: resolve type and model; when type is litellm, require user_model or model
     user_model = config.user_model or config.model
@@ -57,17 +61,33 @@ async def run(config_path: Path) -> None:
         )
 
     bus = EventBus()
+    assistant_kwargs = {}
+    if assistant_agent_type == "mermaid":
+        assistant_kwargs["agent_name"] = config.assistant_agent_name
+        if config.mcp_server_url:
+            assistant_kwargs["mcp_server_url"] = config.mcp_server_url
+        if config.graph_id:
+            assistant_kwargs["graph_id"] = config.graph_id
+    user_kwargs = {}
+    if user_agent_type == "mermaid":
+        user_kwargs["agent_name"] = config.user_agent_name or config.assistant_agent_name
+        if config.mcp_server_url:
+            user_kwargs["mcp_server_url"] = config.mcp_server_url
+        if config.graph_id:
+            user_kwargs["graph_id"] = config.graph_id
     assistant = create_agent(
         assistant_agent_type,
         "assistant",
         _to_agent_config(config.assistant),
         assistant_model,
+        **assistant_kwargs,
     )
     user = create_agent(
         user_agent_type,
         "user",
         _to_agent_config(config.user),
         user_model,
+        **user_kwargs,
     )
 
     orchestrator = Orchestrator(assistant, user, bus, config)
@@ -79,7 +99,7 @@ async def run(config_path: Path) -> None:
 
 def main() -> None:
     load_dotenv()
-    logfire.configure()
+    logfire.configure(scrubbing=False)
 
     # Initialize Logfire LLM instrumentation (see logfire.pydantic.dev/docs/integrations/llms/)
     # Each call instruments the corresponding SDK so traces show provider, model, tokens, and cost.

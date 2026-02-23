@@ -14,6 +14,10 @@ class BaseAgent(ABC):
     respond() and respond_stream() are provided in terms of it with Logfire tracing.
     """
 
+    # When False, orchestrator will not use a Live streaming display for this agent
+    # (e.g. human agent so terminal input is visible while typing).
+    use_streaming_display: bool = True
+
     def __init__(self, name: str, config: AgentConfig, model: str) -> None:
         self.name = name
         self.config = config

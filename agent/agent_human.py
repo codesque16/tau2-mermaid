@@ -19,6 +19,7 @@ class HumanAgent(BaseAgent):
     as the reply. No model or API; usage/cost are zero. Use assistant_agent_type
     or user_agent_type: human in config.
     """
+    use_streaming_display = False
 
     def __init__(self, name: str, config: AgentConfig, model: str) -> None:
         super().__init__(name=name, config=config, model=model)

@@ -23,6 +23,10 @@ class SimulationConfig:
     user_model: str | None = None  # override model for user
     assistant_agent_type: str | None = None  # e.g. anthropic, gemini, openai, litellm, human; else inferred from model
     user_agent_type: str | None = None
+    assistant_agent_name: str | None = None  # required when assistant is mermaid (e.g. retail)
+    user_agent_name: str | None = None
+    mcp_server_url: str | None = None
+    graph_id: str | None = None
 
 
 def _normalize_agent_type(value: str | None) -> str | None:
@@ -48,4 +52,8 @@ def load_simulation_config(path: Path) -> SimulationConfig:
         user_model=data.get("user_model"),
         assistant_agent_type=_normalize_agent_type(data.get("assistant_agent_type")),
         user_agent_type=_normalize_agent_type(data.get("user_agent_type")),
+        assistant_agent_name=data.get("assistant_agent_name") or None,
+        user_agent_name=data.get("user_agent_name") or None,
+        mcp_server_url=data.get("mcp_server_url") or None,
+        graph_id=data.get("graph_id") or None,
     )
