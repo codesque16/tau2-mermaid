@@ -44,6 +44,8 @@ def create_agent(
             model=model,
             agent_name=agent_name,
             mermaid_agents_root=kwargs.get("mermaid_agents_root"),
+            mcp_server_url=kwargs.get("mcp_server_url"),
+            graph_id=kwargs.get("graph_id"),
         )
     raise ValueError(
         f"Unknown agent type: {agent_type!r}. Use one of: anthropic, gemini, openai, litellm, human, mermaid"

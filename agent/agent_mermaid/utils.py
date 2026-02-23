@@ -1,5 +1,6 @@
 """Utilities for loading mermaid-agent folder structure (index.md, agent-mermaid.md, nodes/*/index.md)."""
 
+import re
 from pathlib import Path
 
 
@@ -25,6 +26,18 @@ def load_agent_mermaid(agent_dir: Path) -> str:
     if not mermaid_path.is_file():
         return ""
     return mermaid_path.read_text(encoding="utf-8").strip()
+
+
+def load_sop_markdown(agent_dir: Path) -> dict[str, str] | None:
+    """Load SOP markdown (e.g. retail-agent-sop.md). Returns {"prose": str, "mermaid": str} or None."""
+    for path in list(agent_dir.glob("*-agent-sop.md")) + [agent_dir / "retail-agent-sop.md"]:
+        if path.is_file():
+            text = path.read_text(encoding="utf-8").strip()
+            match = re.search(r"```mermaid\s*(.*?)```", text, re.DOTALL)
+            if match:
+                return {"prose": text[: match.start()].strip(), "mermaid": match.group(1).strip()}
+            return {"prose": text, "mermaid": ""}
+    return None
 
 
 def list_mermaid_nodes(agent_dir: Path) -> list[str]:

@@ -1,6 +1,7 @@
 """Mermaid agent: structured tools and harness with progressive discovery via mermaid nodes."""
 
 import json
+import uuid
 from pathlib import Path
 from typing import Any, Callable, Awaitable
 
@@ -16,6 +17,7 @@ from .utils import (
     list_mermaid_nodes,
     load_agent_mermaid,
     load_agent_system_prompt,
+    load_sop_markdown,
 )
 
 # Default root for mermaid-agents (relative to this package)
@@ -45,6 +47,24 @@ def _cost_model(model: str) -> str:
     return model.split("/")[-1] if "/" in model else model
 
 
+def _mcp_tools_to_openai_format(tools_response: Any) -> list[dict[str, Any]]:
+    """Convert MCP ListToolsResult to OpenAI/litellm tools list."""
+    out = []
+    for tool in getattr(tools_response, "tools", []) or []:
+        name = getattr(tool, "name", "") or ""
+        description = getattr(tool, "description", None) or ""
+        input_schema = getattr(tool, "inputSchema", None) or {"type": "object", "properties": {}}
+        out.append({
+            "type": "function",
+            "function": {
+                "name": name,
+                "description": description,
+                "parameters": input_schema,
+            },
+        })
+    return out
+
+
 def _build_system_prompt(agent_dir: Path, nodes_list: list[str]) -> str:
     """Build system prompt from index.md, agent-mermaid.md, and tool instructions."""
     prompt = load_agent_system_prompt(agent_dir)
@@ -57,12 +77,26 @@ def _build_system_prompt(agent_dir: Path, nodes_list: list[str]) -> str:
     return prompt
 
 
+def _build_sop_system_prompt(prose: str, skeleton: str) -> str:
+    """Build system prompt from SOP prose and skeleton graph (from load_graph)."""
+    prompt = prose.strip()
+    prompt += "\n\n## SOP Flowchart (skeleton)\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow. Topology:\n\n```mermaid\n" + (skeleton or "flowchart TD") + "\n```"
+    prompt += "\n\nCall goto_node(graph_id, node_id) to get full instructions for a node. Call todo to track multi-intent tasks. Pass the same session_id on each call so state is preserved."
+    return prompt
+
+
 class MermaidAgent(BaseAgent):
     """
     Agent backed by a mermaid-agent folder: index.md (system prompt), agent-mermaid.md
     (diagram), and nodes/<node_id>/index.md (task-specific instructions).
     Uses progressive discovery: the agent can call enter_mermaid_node(node_id) to load
-    instructions for a node on demand instead of having everything upfront.
+    instructions for a node on demand.
+
+    When mcp_server_url is set and the agent dir has SOP markdown (e.g. retail-agent-sop.md),
+    on first use the agent will:
+    - Connect to the SOP MCP server (streamable HTTP)
+    - Call load_graph with the mermaid source and use the returned skeleton in the system prompt
+    - Use the MCP server's tools (load_graph, goto_node, todo) as the agent's tool list
     """
 
     def __init__(
@@ -73,13 +107,81 @@ class MermaidAgent(BaseAgent):
         *,
         agent_name: str,
         mermaid_agents_root: Path | str | None = None,
+        mcp_server_url: str | None = None,
+        graph_id: str | None = None,
     ) -> None:
         super().__init__(name=name, config=config, model=model)
         root = Path(mermaid_agents_root) if mermaid_agents_root else _DEFAULT_MERMAID_AGENTS_ROOT
         self._agent_dir = get_mermaid_agent_dir(root, agent_name)
-        self._nodes_list = list_mermaid_nodes(self._agent_dir)
-        self._system_prompt = _build_system_prompt(self._agent_dir, self._nodes_list)
+        self._mcp_server_url = (mcp_server_url or "").strip() or None
+        self._graph_id = graph_id or "retail_support_v1"
+        self._sop_data = load_sop_markdown(self._agent_dir)
+
+        use_sop_mcp = bool(self._mcp_server_url and self._sop_data)
+        if use_sop_mcp:
+            self._mcp_session_id = str(uuid.uuid4())
+            self._sop_mcp_initialized = False
+            self._mcp_http_context = None
+            self._mcp_session_context = None
+            self._mcp_session = None
+            self._sop_tools: list[dict[str, Any]] = []
+            self._mcp_tool_names: set[str] = set()
+            self._system_prompt = ""
+        else:
+            self._nodes_list = list_mermaid_nodes(self._agent_dir)
+            self._system_prompt = _build_system_prompt(self._agent_dir, self._nodes_list)
+
         self.history: list[dict[str, Any]] = []
+
+    async def _ensure_sop_mcp_initialized(self) -> None:
+        """Connect to MCP server, call load_graph, and set tools + system prompt."""
+        if getattr(self, "_sop_mcp_initialized", False):
+            return
+        assert self._mcp_server_url and self._sop_data
+        from mcp import ClientSession
+        from mcp.client.streamable_http import streamable_http_client
+
+        url = self._mcp_server_url.rstrip("/") + "/mcp" if "/mcp" not in self._mcp_server_url else self._mcp_server_url
+        self._mcp_http_context = streamable_http_client(url)
+        read_stream, write_stream, _ = await self._mcp_http_context.__aenter__()
+        self._mcp_session_context = ClientSession(read_stream, write_stream)
+        self._mcp_session = await self._mcp_session_context.__aenter__()
+        await self._mcp_session.initialize()
+
+        mermaid = self._sop_data["mermaid"]
+        load_result = await self._mcp_session.call_tool(
+            "load_graph",
+            arguments={
+                "graph_id": self._graph_id,
+                "mermaid_source": mermaid,
+                "session_id": self._mcp_session_id,
+            },
+        )
+        if getattr(load_result, "isError", False):
+            content = getattr(load_result, "content", [])
+            err_text = content[0].text if content else str(load_result)
+            raise RuntimeError(f"load_graph failed: {err_text}")
+
+        skeleton = ""
+        if hasattr(load_result, "content") and load_result.content:
+            for block in load_result.content:
+                if hasattr(block, "text"):
+                    try:
+                        data = json.loads(block.text)
+                        skeleton = data.get("skeleton", "")
+                        break
+                    except json.JSONDecodeError:
+                        skeleton = block.text
+                        break
+        if not skeleton and hasattr(load_result, "structuredContent") and load_result.structuredContent:
+            skeleton = (load_result.structuredContent or {}).get("skeleton", "")
+
+        self._system_prompt = _build_sop_system_prompt(self._sop_data["prose"], skeleton)
+
+        tools_response = await self._mcp_session.list_tools()
+        self._sop_tools = _mcp_tools_to_openai_format(tools_response)
+        self._mcp_tool_names = {t["function"]["name"] for t in self._sop_tools}
+        self._sop_mcp_initialized = True
 
     def _messages_for_api(self) -> list[dict[str, Any]]:
         """Build OpenAI-format messages (including tool calls) for the API."""
@@ -107,10 +209,36 @@ class MermaidAgent(BaseAgent):
             elif role == "tool":
                 out.append({
                     "role": "tool",
-                    "content": m["content"],
+                    "content": content,
                     "tool_call_id": m["tool_call_id"],
                 })
         return out
+
+    async def _handle_tool_call(self, fn_name: str, args: dict[str, Any]) -> str:
+        """Execute one tool call: MCP tools go to the server; enter_mermaid_node stays local."""
+        if getattr(self, "_mcp_tool_names", None) and fn_name in self._mcp_tool_names:
+            mcp_args = {**args, "session_id": self._mcp_session_id}
+            if fn_name == "load_graph" and "mermaid_source" in mcp_args:
+                mcp_args["graph_id"] = mcp_args.get("graph_id") or self._graph_id
+            if fn_name == "goto_node":
+                mcp_args["graph_id"] = mcp_args.get("graph_id") or self._graph_id
+            result = await self._mcp_session.call_tool(fn_name, arguments=mcp_args)
+            if getattr(result, "isError", False):
+                parts = []
+                for c in getattr(result, "content", []) or []:
+                    if hasattr(c, "text"):
+                        parts.append(c.text)
+                return json.dumps({"error": " ".join(parts) or "Unknown error"})
+            out = []
+            for c in getattr(result, "content", []) or []:
+                if hasattr(c, "text"):
+                    out.append(c.text)
+            if hasattr(result, "structuredContent") and result.structuredContent:
+                return json.dumps(result.structuredContent)
+            return "\n".join(out) if out else "{}"
+        if fn_name == "enter_mermaid_node":
+            return get_node_instructions(self._agent_dir, args.get("node_id", ""))
+        return f"[Unknown tool: {fn_name}]"
 
     async def _do_respond_stream(
         self,
@@ -118,17 +246,21 @@ class MermaidAgent(BaseAgent):
         *,
         on_chunk: Callable[[str, Any], Awaitable[None]] | None = None,
     ) -> tuple[str, dict]:
-        """Run a turn: optionally handle enter_mermaid_node tool calls, then return final reply."""
+        """Run a turn: optionally handle tool calls (MCP or enter_mermaid_node), then return final reply."""
         self.history.append({"role": "user", "content": incoming})
+
+        if self._mcp_server_url and self._sop_data:
+            await self._ensure_sop_mcp_initialized()
+            tools = self._sop_tools
+        else:
+            tools = [ENTER_NODE_TOOL]
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": self._system_prompt},
             *self._messages_for_api(),
         ]
-        tools = [ENTER_NODE_TOOL]
         total_cost = 0.0
         total_usage: dict[str, int] = {}
-
         max_tool_rounds = 20
         final_text = ""
 
@@ -150,13 +282,11 @@ class MermaidAgent(BaseAgent):
             content = (getattr(msg, "content", None) or "").strip()
             tool_calls = getattr(msg, "tool_calls", None) or []
 
-            # Accumulate usage/cost
             usage = usage_from_openai_response(getattr(response, "usage", None))
             if usage:
                 total_usage = {k: total_usage.get(k, 0) + usage.get(k, 0) for k in set(total_usage) | set(usage)}
             total_cost += compute_cost(_cost_model(self.model), usage) if usage else 0.0
 
-            # Record assistant message (with optional tool_calls)
             assistant_record: dict[str, Any] = {"role": "assistant", "content": content or ""}
             if tool_calls:
                 assistant_record["tool_calls"] = [
@@ -173,7 +303,6 @@ class MermaidAgent(BaseAgent):
                 final_text = content or ""
                 break
 
-            # Append assistant message (with tool_calls) and tool results to messages
             messages.append({
                 "role": "assistant",
                 "content": content or "",
@@ -197,11 +326,7 @@ class MermaidAgent(BaseAgent):
                     args = json.loads(args_raw)
                 except json.JSONDecodeError:
                     args = {}
-                node_id = args.get("node_id", "")
-                if fn_name == "enter_mermaid_node":
-                    result = get_node_instructions(self._agent_dir, node_id)
-                else:
-                    result = f"[Unknown tool: {fn_name}]"
+                result = await self._handle_tool_call(fn_name, args)
                 self.history.append({
                     "role": "tool",
                     "content": result,
@@ -212,5 +337,4 @@ class MermaidAgent(BaseAgent):
         if on_chunk is not None:
             await on_chunk("text", final_text)
 
-        usage_info = {"usage": total_usage, "cost": total_cost}
-        return final_text, usage_info
+        return final_text, {"usage": total_usage, "cost": total_cost}
