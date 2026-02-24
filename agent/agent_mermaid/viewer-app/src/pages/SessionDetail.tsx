@@ -276,11 +276,16 @@ function buildFlowFromGraphState(graph: GraphState, isLive: boolean): { nodes: N
   const laidOut = layoutFlowGraph(withHighlights, edges)
   const edgesWithPathStyle: Edge[] = edges.map((e) => {
     const onPath = onPathEdges.has(`${e.source}-${e.target}`)
+    const dimmed = isLive && !onPath
     return {
       ...e,
       style: onPath
         ? { stroke: 'hsl(187 85% 43%)', strokeWidth: 3 }
-        : { stroke: 'hsl(215 25% 72%)', strokeWidth: 2 },
+        : {
+            stroke: 'hsl(215 25% 72%)',
+            strokeWidth: 2,
+            ...(dimmed && { opacity: 0.35 }),
+          },
     }
   })
   return { nodes: laidOut, edges: edgesWithPathStyle }

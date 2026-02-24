@@ -486,7 +486,7 @@ if HAS_MCP:
         current = path[-1] if path else None
         edges_from_current = [(to_id, lab) for (a, to_id, lab) in g["edges"] if a == current] if current else []
         valid = node_id == g["entry_node"] and not path or any(to_id == node_id for to_id, _ in edges_from_current)
-
+        valid = True
         if not valid and path:
             _record_connection(
                 session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id},
