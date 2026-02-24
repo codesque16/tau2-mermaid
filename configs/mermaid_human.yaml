@@ -1,4 +1,4 @@
-model: openai/gpt-4.1-mini
+model: gemini/gemini-3-flash-preview
 max_turns: 20
 mcp_server_url: http://localhost:8000
 graph_id: retail_customer_support

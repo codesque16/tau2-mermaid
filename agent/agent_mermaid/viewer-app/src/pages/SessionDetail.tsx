@@ -33,15 +33,17 @@ interface GraphState {
   graph_json?: GraphJson
 }
 
+interface LogEvent {
+  id: string
+  ts: number
+  tool: string
+  params: Record<string, unknown>
+  result_summary: string
+}
+
 interface SessionDetailData {
   session_id: string
-  events: Array<{
-    id: string
-    ts: number
-    tool: string
-    params: Record<string, unknown>
-    result_summary: string
-  }>
+  events: LogEvent[]
   graph_state: Record<string, GraphState>
   frontmatter?: string
   node_prompts?: Record<string, string>
@@ -50,6 +52,140 @@ interface SessionDetailData {
 
 function formatTs(ts: number): string {
   return new Date(ts * 1000).toLocaleTimeString(undefined, { hour12: false })
+}
+
+/** Collapsed one-line summary for a log entry. */
+function logCollapsedSummary(e: LogEvent): string {
+  const p = e.params as Record<string, unknown>
+  if (e.tool === 'goto_node' && p?.graph_id != null && p?.node_id != null) {
+    return `${String(p.graph_id)}: ${String(p.node_id)}`
+  }
+  if (e.tool === 'load_graph' && p?.graph_id != null) {
+    const out = e.result_summary ? ` — ${e.result_summary}` : ''
+    return `${String(p.graph_id)}${out}`
+  }
+  if (e.tool === 'todo' && Array.isArray(p?.todos)) {
+    const pending = (p.todos as Array<{ status?: string }>).filter((t) => t.status === 'pending').length
+    const inProgress = (p.todos as Array<{ status?: string }>).filter((t) => t.status === 'in_progress').length
+    const completed = (p.todos as Array<{ status?: string }>).filter((t) => t.status === 'completed').length
+    return `pending=${pending} in_progress=${inProgress} completed=${completed}`
+  }
+  if (e.result_summary) return e.result_summary.slice(0, 80)
+  return '…'
+}
+
+type TodoItem = { content?: string; status?: string }
+const TODO_STATUSES = ['pending', 'in_progress', 'completed'] as const
+
+function LogEntry({
+  event,
+  expanded,
+  onToggle,
+  todoViewMode,
+  onTodoViewModeChange,
+}: {
+  event: LogEvent
+  expanded: boolean
+  onToggle: () => void
+  todoViewMode: 'todo' | 'raw'
+  onTodoViewModeChange: (v: 'todo' | 'raw') => void
+}) {
+  const e = event
+  const p = e.params as Record<string, unknown>
+  const isGotoNode = e.tool === 'goto_node'
+  const isTodo = e.tool === 'todo'
+
+  const collapsedLabel = isGotoNode ? `goto_node ${logCollapsedSummary(e)}` : `${e.tool} ${logCollapsedSummary(e) ? `— ${logCollapsedSummary(e)}` : ''}`.trim()
+
+  return (
+    <div className="mb-3 rounded-lg border border-slate-700/60 bg-slate-800/40 overflow-hidden last:mb-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-700/50 transition-colors"
+      >
+        <span className="text-slate-500 shrink-0">
+          {expanded ? (
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          ) : (
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          )}
+        </span>
+        <span className="font-semibold text-slate-200 truncate">{e.tool}</span>
+        <span className="text-[0.7rem] text-slate-600 shrink-0">{formatTs(e.ts)}</span>
+        <span className="flex-1 min-w-0 text-[0.75rem] text-slate-500 truncate" title={collapsedLabel}>
+          {collapsedLabel}
+        </span>
+      </button>
+      {expanded && (
+        <div className="border-t border-slate-700/60 px-3 py-2 space-y-3 text-[0.8125rem]">
+          {/* Input */}
+          <div>
+            <div className="text-[0.7rem] font-medium uppercase tracking-wider text-slate-500 mb-1">Input</div>
+            {isTodo && (
+              <div className="mb-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onTodoViewModeChange('todo')}
+                  className={`px-2 py-1 rounded text-xs font-medium ${todoViewMode === 'todo' ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-400 hover:text-slate-200'}`}
+                >
+                  Todo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onTodoViewModeChange('raw')}
+                  className={`px-2 py-1 rounded text-xs font-medium ${todoViewMode === 'raw' ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-400 hover:text-slate-200'}`}
+                >
+                  Raw
+                </button>
+              </div>
+            )}
+            {isTodo && todoViewMode === 'todo' ? (
+              <ul className="space-y-2">
+                {(Array.isArray(p?.todos) ? (p.todos as TodoItem[]) : []).map((t, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                      {t.status === 'completed' && (
+                        <span className="inline-flex h-4 w-4 rounded-full border-2 border-emerald-500 bg-emerald-500/20" title="completed">
+                          <svg className="h-2.5 w-2.5 m-auto text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        </span>
+                      )}
+                      {t.status === 'in_progress' && (
+                        <span className="inline-flex h-4 w-4 rounded-full border-2 border-amber-500 bg-amber-500/20" title="in progress">
+                          <span className="m-auto h-2 w-2 rounded-full bg-amber-400" />
+                        </span>
+                      )}
+                      {t.status === 'pending' && (
+                        <span className="inline-flex h-4 w-4 rounded-full border-2 border-slate-500 bg-transparent" title="pending" />
+                      )}
+                      {!TODO_STATUSES.includes(t.status as (typeof TODO_STATUSES)[number]) && (
+                        <span className="inline-flex h-4 w-4 rounded-full border-2 border-slate-500" title={String(t.status)} />
+                      )}
+                    </span>
+                    <span className="text-slate-300">{t.content ?? '(no content)'}</span>
+                    {t.status != null && (
+                      <span className="text-[0.7rem] text-slate-500 shrink-0">{t.status}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <pre className="whitespace-pre-wrap break-words rounded bg-slate-950/80 px-2 py-1.5 text-[0.75rem] text-slate-400 max-h-48 overflow-auto">
+                {JSON.stringify(p ?? {}, null, 2)}
+              </pre>
+            )}
+          </div>
+          {/* Output */}
+          <div>
+              <div className="text-[0.7rem] font-medium uppercase tracking-wider text-slate-500 mb-1">Output</div>
+              <pre className="whitespace-pre-wrap break-words rounded bg-slate-950/80 px-2 py-1.5 text-[0.75rem] text-slate-400">
+                {e.result_summary || '—'}
+              </pre>
+            </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const activeNodeStyles = 'ring-2 ring-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)]'
@@ -148,6 +284,8 @@ export function SessionDetail() {
   const [error, setError] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [expandedLogIds, setExpandedLogIds] = useState<Set<string>>(new Set())
+  const [todoViewModeByLogId, setTodoViewModeByLogId] = useState<Record<string, 'todo' | 'raw'>>({})
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<FlowNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
@@ -223,18 +361,25 @@ export function SessionDetail() {
       <div className="flex flex-1 min-h-0">
         <div className="flex w-[42%] min-w-[280px] flex-col border-r border-slate-700/80 bg-slate-900/60">
           <div className="border-b border-slate-700/80 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Execution Logs</div>
-          <div className="flex-1 overflow-auto p-4 font-mono text-[0.8125rem]">
+          <div className="flex-1 overflow-auto p-3 font-mono text-[0.8125rem]">
             {(data.events ?? []).map((e) => (
-              <div key={e.id} className="mb-4 border-b border-slate-700/60 pb-3 last:border-0">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="font-semibold text-slate-200">{e.tool}</span>
-                  <span className="text-[0.7rem] text-slate-600">{formatTs(e.ts)}</span>
-                </div>
-                <pre className="whitespace-pre-wrap break-all text-[0.75rem] text-slate-600">{JSON.stringify(e.params, null, 2).slice(0, 400)}</pre>
-                {e.result_summary && <div className="mt-1 text-[0.7rem] text-slate-500">{e.result_summary.slice(0, 120)}</div>}
-              </div>
+              <LogEntry
+                key={e.id}
+                event={e}
+                expanded={expandedLogIds.has(e.id)}
+                onToggle={() => {
+                  setExpandedLogIds((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(e.id)) next.delete(e.id)
+                    else next.add(e.id)
+                    return next
+                  })
+                }}
+                todoViewMode={todoViewModeByLogId[e.id] ?? 'todo'}
+                onTodoViewModeChange={(v) => setTodoViewModeByLogId((prev) => ({ ...prev, [e.id]: v }))}
+              />
             ))}
-            {(!data.events || data.events.length === 0) && <p className="text-slate-500">No tool calls yet.</p>}
+            {(!data.events || data.events.length === 0) && <p className="text-slate-500 px-1">No tool calls yet.</p>}
           </div>
         </div>
         <div className="flex flex-1 flex-col min-w-0 border-r border-slate-700/80 bg-slate-900/60">
