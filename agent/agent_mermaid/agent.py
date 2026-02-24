@@ -1,7 +1,6 @@
 """Mermaid agent: structured tools and harness with progressive discovery via mermaid nodes."""
 
 import json
-import uuid
 from pathlib import Path
 from typing import Any, Callable, Awaitable
 
@@ -50,21 +49,21 @@ def _cost_model(model: str) -> str:
 
 def _mcp_tools_to_openai_format(tools_response: Any) -> list[dict[str, Any]]:
     """Convert MCP ListToolsResult to OpenAI/litellm tools list.
-    For the todo tool, session_id is stripped from the schema so the model only sees todos (content + status).
+    Strip server-injected params (ctx, session_id) from schema so the model only sees tool args.
     """
+    _HIDDEN_PARAMS = {"session_id", "ctx"}
     out = []
     for tool in getattr(tools_response, "tools", []) or []:
         name = getattr(tool, "name", "") or ""
         description = getattr(tool, "description", None) or ""
         input_schema = getattr(tool, "inputSchema", None) or {"type": "object", "properties": {}}
-        # Todo tool: do not expose session_id to the model; agent injects it when calling
-        if name == "todo" and isinstance(input_schema, dict):
+        if isinstance(input_schema, dict):
             props = input_schema.get("properties") or {}
             required = input_schema.get("required") or []
             input_schema = {
                 **input_schema,
-                "properties": {k: v for k, v in props.items() if k != "session_id"},
-                "required": [r for r in required if r != "session_id"],
+                "properties": {k: v for k, v in props.items() if k not in _HIDDEN_PARAMS},
+                "required": [r for r in required if r not in _HIDDEN_PARAMS],
             }
         out.append({
             "type": "function",
@@ -93,7 +92,7 @@ def _build_sop_system_prompt(prose: str, mermaid: str, graph_id: str) -> str:
     """Build system prompt from SOP prose and full mermaid flowchart from AGENTS.md."""
     prompt = prose.strip()
     prompt += "\n\n## SOP Flowchart\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow.\n\n```mermaid\n" + (mermaid or "flowchart TD\n  START") + "\n```"
-    prompt += f"\n\n**Important:** For every goto_node call use graph_id \"{graph_id}\" (same as load_graph). Pass the same session_id on goto_node and load_graph so state is preserved. The todo tool only needs a list of todos (each with content and status: pending, in_progress, or completed); do not pass session_id for todo."
+    prompt += f"\n\n**Important:** For every goto_node call use graph_id \"{graph_id}\" (same as load_graph). The todo tool only needs a list of todos (each with content and status: pending, in_progress, or completed)."
     return prompt
 
 
@@ -131,7 +130,6 @@ class MermaidAgent(BaseAgent):
 
         use_sop_mcp = bool(self._mcp_server_url and self._sop_data)
         if use_sop_mcp:
-            self._mcp_session_id = str(uuid.uuid4())
             self._sop_mcp_initialized = False
             self._mcp_http_context = None
             self._mcp_session_context = None
@@ -171,7 +169,6 @@ class MermaidAgent(BaseAgent):
             arguments={
                 "graph_id": self._graph_id,
                 "mermaid_source": mermaid,
-                "session_id": self._mcp_session_id,
             },
         )
         if getattr(load_result, "isError", False):
@@ -223,7 +220,7 @@ class MermaidAgent(BaseAgent):
     async def _handle_tool_call(self, fn_name: str, args: dict[str, Any]) -> str:
         """Execute one tool call: MCP tools go to the server; enter_mermaid_node stays local."""
         if getattr(self, "_mcp_tool_names", None) and fn_name in self._mcp_tool_names:
-            mcp_args = {**args, "session_id": self._mcp_session_id}
+            mcp_args = dict(args)
             if fn_name == "load_graph" and "mermaid_source" in mcp_args:
                 mcp_args["graph_id"] = mcp_args.get("graph_id") or self._graph_id
             if fn_name == "goto_node":

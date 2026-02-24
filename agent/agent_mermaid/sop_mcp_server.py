@@ -399,14 +399,31 @@ class SessionState:
 _sessions: dict[str, SessionState] = defaultdict(SessionState)
 
 
-def _get_or_create_session(session_id: str) -> str:
-    if not session_id or not session_id.strip():
-        session_id = str(uuid.uuid4())
-    return session_id
+# MCP-Session-Id header name (per MCP Streamable HTTP spec: session assigned at init, client sends on subsequent requests)
+_MCP_SESSION_ID_HEADER = "mcp-session-id"
+
+
+def _get_session_id_from_context(ctx: Any) -> str:
+    """Return the session ID for the current MCP connection from the request (MCP-Session-Id header).
+    Per MCP spec: server assigns session ID at initialization; client sends it on all subsequent requests.
+    Fallback to a new UUID only when not using Streamable HTTP or header is missing (e.g. first request has no tools).
+    """
+    try:
+        if ctx is not None and getattr(ctx, "request_context", None) is not None:
+            req = getattr(ctx.request_context, "request", None)
+            if req is not None and getattr(req, "headers", None) is not None:
+                sid = req.headers.get(_MCP_SESSION_ID_HEADER)
+                if sid and str(sid).strip():
+                    return str(sid).strip()
+    except Exception:  # noqa: BLE001
+        pass
+    return str(uuid.uuid4())
 
 
 # --- MCP app and tools ---
 if HAS_MCP:
+    from mcp.server.fastmcp import Context
+
     mcp = FastMCP(
         "SOP Graph Navigation",
         json_response=True,
@@ -416,19 +433,19 @@ if HAS_MCP:
     def load_graph(
         graph_id: str,
         mermaid_source: str,
-        session_id: str = "",
+        ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
         Parse a Mermaid SOP flowchart. Returns a skeleton graph for the system prompt
         and stores the full graph for goto_node lookups.
         """
-        session_id = _get_or_create_session(session_id)
+        session_id = _get_session_id_from_context(ctx)
         try:
             parsed = _parse_mermaid_flowchart(mermaid_source)
         except Exception as e:
             err_result = {"error": str(e), "graph_id": graph_id}
             _record_connection(session_id, "load_graph", {"graph_id": graph_id, "mermaid_source": "(truncated)"}, f"error: {e}")
-            _log_mcp_tool("load_graph", {"graph_id": graph_id, "session_id": session_id}, err_result)
+            _log_mcp_tool("load_graph", {"graph_id": graph_id}, err_result)
             return err_result
         state = _sessions[session_id]
         state.graphs[graph_id] = {
@@ -451,26 +468,26 @@ if HAS_MCP:
             {"graph_id": graph_id, "mermaid_source": mermaid_source[:200] + "..." if len(mermaid_source) > 200 else mermaid_source},
             f"node_count={parsed['node_count']}",
         )
-        _log_mcp_tool("load_graph", {"graph_id": graph_id, "session_id": session_id}, result)
+        _log_mcp_tool("load_graph", {"graph_id": graph_id}, result)
         return result
 
     @mcp.tool()
     def goto_node(
         graph_id: str,
         node_id: str,
-        session_id: str = "",
+        ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
         Move to a node in the SOP graph. Returns the full node instructions plus all
         annotation nodes between the current node and the next decision or action node.
         Validates that the transition is legal from the current position.
         """
-        session_id = _get_or_create_session(session_id)
+        session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
         if graph_id not in state.graphs:
             err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "graph_id": graph_id}
             _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: graph not loaded")
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
             return err_result
 
         g = state.graphs[graph_id]
@@ -479,7 +496,7 @@ if HAS_MCP:
         if node_id not in nodes:
             err_result = {"valid": False, "error": f"Node not found. Valid nodes: {list(nodes)[:20]}...", "node_id": node_id}
             _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: node not found")
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
             return err_result
 
         # Valid if START or node_id is a direct next from current
@@ -498,7 +515,7 @@ if HAS_MCP:
                 "current_node": current,
                 "valid_next": [t for t, _ in edges_from_current],
             }
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
             return err_result
 
         if node_id == g["entry_node"]:
@@ -518,7 +535,7 @@ if HAS_MCP:
             result["todo_reminder"] = f"Reached completion node {node_id}. Update todos and proceed to next task."
 
         _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, f"path_len={len(state.path[graph_id])}")
-        _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, result)
+        _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, result)
         return result
 
     class TodoItem(BaseModel):
@@ -531,13 +548,13 @@ if HAS_MCP:
     @mcp.tool()
     def todo(
         todos: list[TodoItem],
-        session_id: str = "",  # Injected by client; not in tool schema shown to model
+        ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
         Create and manage a structured task list for the current conversation.
         Pass the full list of todos on each call; each item needs content and status only.
         """
-        session_id = _get_or_create_session(session_id)
+        session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
         normalized = [{"content": t.content, "status": t.status} for t in todos]
         state.todos = normalized
@@ -553,7 +570,7 @@ if HAS_MCP:
             {"todos": [{"content": (t["content"] or "")[:80], "status": t["status"]} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
         )
-        _log_mcp_tool("todo", {"todos": normalized, "session_id": session_id}, result)
+        _log_mcp_tool("todo", {"todos": normalized}, result)
         return result
 
 
@@ -827,7 +844,6 @@ def build_sop_mcp_app() -> Starlette:
                 return {"type": "http.request", "body": body, "more_body": False}
             return {"type": "http.disconnect"}
         await mcp_app(scope, wrapped_receive, send)
-        return
 
     @contextlib.asynccontextmanager
     async def lifespan(app: Starlette):
