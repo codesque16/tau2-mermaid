@@ -1,0 +1,15 @@
+model: gemini/gemini-3-flash-preview
+max_turns: 20
+mcp_server_url: http://localhost:8000
+graph_id: travel_assistant
+
+assistant:
+  agent_type: mermaid
+  agent_name: travel
+  system_prompt: ""
+  temperature: 0.5
+  max_tokens: 2048
+
+user:
+  agent_type: human
+  system_prompt: ""

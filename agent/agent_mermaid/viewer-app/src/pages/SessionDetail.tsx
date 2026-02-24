@@ -38,6 +38,8 @@ interface LogEvent {
   tool: string
   params: Record<string, unknown>
   result_summary: string
+  /** Full tool output (same as logged in MCP server console). Shown in Output section when present. */
+  result?: Record<string, unknown> | null
 }
 
 interface SessionDetailData {
@@ -175,13 +177,15 @@ function LogEntry({
               </pre>
             )}
           </div>
-          {/* Output */}
+          {/* Output — show full result (same as MCP server console) when available, else summary */}
           <div>
-              <div className="text-[0.7rem] font-medium uppercase tracking-wider text-slate-500 mb-1">Output</div>
-              <pre className="whitespace-pre-wrap break-words rounded bg-slate-950/80 px-2 py-1.5 text-[0.75rem] text-slate-400">
-                {e.result_summary || '—'}
-              </pre>
-            </div>
+            <div className="text-[0.7rem] font-medium uppercase tracking-wider text-slate-500 mb-1">Output</div>
+            <pre className="whitespace-pre-wrap break-words rounded bg-slate-950/80 px-2 py-1.5 text-[0.75rem] text-slate-400 max-h-96 overflow-auto">
+              {e.result != null && Object.keys(e.result).length > 0
+                ? JSON.stringify(e.result, null, 2)
+                : (e.result_summary || '—')}
+            </pre>
+          </div>
         </div>
       )}
     </div>

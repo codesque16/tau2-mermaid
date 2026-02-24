@@ -72,6 +72,7 @@ class ConnectionEvent:
     params: dict[str, Any]
     session_id: str
     result_summary: str = ""
+    result: dict[str, Any] | None = None  # full tool output (same as logged to console)
 
 
 # In-memory store: session_id -> list of ConnectionEvent (append-only)
@@ -110,6 +111,7 @@ def _persist_session(session_id: str) -> None:
                 "params": e.params,
                 "session_id": e.session_id,
                 "result_summary": e.result_summary,
+                "result": e.result,
             }
             for e in events
         ],
@@ -147,6 +149,7 @@ def _load_persisted_sessions() -> None:
                 params=ev.get("params") or {},
                 session_id=ev.get("session_id") or session_id,
                 result_summary=ev.get("result_summary", ""),
+                result=ev.get("result"),
             )
             _connection_events.append(event)
             _session_to_events[session_id].append(event)
@@ -175,7 +178,13 @@ def _log_mcp_tool(name: str, params: dict[str, Any], result: Any) -> None:
     logging.info("MCP Tool: %s\nInput:\n%s\nOutput:\n%s", name, input_str, out_str)
 
 
-def _record_connection(session_id: str, tool: str, params: dict[str, Any], result_summary: str = "") -> None:
+def _record_connection(
+    session_id: str,
+    tool: str,
+    params: dict[str, Any],
+    result_summary: str = "",
+    result: dict[str, Any] | None = None,
+) -> None:
     event = ConnectionEvent(
         id=str(uuid.uuid4()),
         ts=time.time(),
@@ -183,6 +192,7 @@ def _record_connection(session_id: str, tool: str, params: dict[str, Any], resul
         params=params,
         session_id=session_id,
         result_summary=result_summary,
+        result=result,
     )
     _connection_events.append(event)
     _session_to_events[session_id].append(event)
@@ -292,6 +302,7 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
                 "tool": e.tool,
                 "params": e.params,
                 "result_summary": e.result_summary,
+                "result": e.result,
             }
             for e in events
         ],
@@ -588,14 +599,14 @@ if HAS_MCP:
         path = _resolve_sop_file(sop_file)
         if path is None:
             err_result = {"error": f"SOP file not found: {sop_file}", "sop_file": sop_file}
-            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, "error: file not found")
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, "error: file not found", result=err_result)
             _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
             return err_result
         try:
             content = path.read_text(encoding="utf-8")
         except Exception as e:
             err_result = {"error": str(e), "sop_file": sop_file}
-            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}")
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}", result=err_result)
             _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
             return err_result
 
@@ -608,7 +619,7 @@ if HAS_MCP:
             graph_parsed = _parse_mermaid_flowchart(mermaid_source)
         except Exception as e:
             err_result = {"error": str(e), "sop_file": sop_file}
-            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}")
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}", result=err_result)
             _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
             return err_result
 
@@ -629,7 +640,7 @@ if HAS_MCP:
         result = _build_load_graph_output_from_front(
             front, graph_parsed, nodes_with_prompts, system_prompt_sections
         )
-        _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"agent={agent_name}")
+        _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"agent={agent_name}", result=result)
         _log_mcp_tool("load_graph", {"sop_file": sop_file}, result)
         return result
 
@@ -646,7 +657,7 @@ if HAS_MCP:
         graph_id = state.current_graph_id
         if not graph_id or graph_id not in state.graphs:
             err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "current_node": None, "valid_next": []}
-            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: graph not loaded")
+            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: graph not loaded", result=err_result)
             _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
@@ -655,7 +666,7 @@ if HAS_MCP:
         nodes = set(g["nodes"])
         if node_id not in nodes:
             err_result = {"valid": False, "error": f"Node not found. Valid nodes: {list(nodes)[:20]}...", "node_id": node_id}
-            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: node not found")
+            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: node not found", result=err_result)
             _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
@@ -665,16 +676,17 @@ if HAS_MCP:
         valid = (node_id == g["entry_node"] and not path) or any(to_id == node_id for to_id, _ in edges_from_current)
         valid=True # TODO: test and take a call whether we want to validate the transition or not
         if not valid and path:
-            _record_connection(
-                session_id, "goto_node", {"node_id": node_id},
-                f"invalid transition from {current}",
-            )
             err_result = {
                 "valid": False,
                 "error": f"Cannot reach {node_id} from {current}",
                 "current_node": current,
                 "valid_next": [t for t, _ in edges_from_current],
             }
+            _record_connection(
+                session_id, "goto_node", {"node_id": node_id},
+                f"invalid transition from {current}",
+                result=err_result,
+            )
             _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
@@ -710,7 +722,7 @@ if HAS_MCP:
         if node_id in g["terminal_nodes"]:
             result["todo_reminder"] = f"Reached completion node {node_id}. Update todos and proceed to next task."
 
-        _record_connection(session_id, "goto_node", {"node_id": node_id}, f"path_len={len(state.path[graph_id])}")
+        _record_connection(session_id, "goto_node", {"node_id": node_id}, f"path_len={len(state.path[graph_id])}", result=result)
         _log_mcp_tool("goto_node", {"node_id": node_id}, result)
         return result
 
@@ -758,6 +770,7 @@ if HAS_MCP:
             "todo",
             {"todos": [{"content": (t["content"] or "")[:80], "status": t["status"]} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
+            result=result,
         )
         _log_mcp_tool("todo", {"todos": normalized}, result)
         return result
