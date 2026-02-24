@@ -49,12 +49,23 @@ def _cost_model(model: str) -> str:
 
 
 def _mcp_tools_to_openai_format(tools_response: Any) -> list[dict[str, Any]]:
-    """Convert MCP ListToolsResult to OpenAI/litellm tools list."""
+    """Convert MCP ListToolsResult to OpenAI/litellm tools list.
+    For the todo tool, session_id is stripped from the schema so the model only sees todos (content + status).
+    """
     out = []
     for tool in getattr(tools_response, "tools", []) or []:
         name = getattr(tool, "name", "") or ""
         description = getattr(tool, "description", None) or ""
         input_schema = getattr(tool, "inputSchema", None) or {"type": "object", "properties": {}}
+        # Todo tool: do not expose session_id to the model; agent injects it when calling
+        if name == "todo" and isinstance(input_schema, dict):
+            props = input_schema.get("properties") or {}
+            required = input_schema.get("required") or []
+            input_schema = {
+                **input_schema,
+                "properties": {k: v for k, v in props.items() if k != "session_id"},
+                "required": [r for r in required if r != "session_id"],
+            }
         out.append({
             "type": "function",
             "function": {
@@ -82,7 +93,7 @@ def _build_sop_system_prompt(prose: str, mermaid: str, graph_id: str) -> str:
     """Build system prompt from SOP prose and full mermaid flowchart from AGENTS.md."""
     prompt = prose.strip()
     prompt += "\n\n## SOP Flowchart\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow.\n\n```mermaid\n" + (mermaid or "flowchart TD\n  START") + "\n```"
-    prompt += f"\n\n**Important:** For every goto_node and todo call use graph_id \"{graph_id}\" (same as load_graph). Pass the same session_id on each call so state is preserved."
+    prompt += f"\n\n**Important:** For every goto_node call use graph_id \"{graph_id}\" (same as load_graph). Pass the same session_id on goto_node and load_graph so state is preserved. The todo tool only needs a list of todos (each with content and status: pending, in_progress, or completed); do not pass session_id for todo."
     return prompt
 
 

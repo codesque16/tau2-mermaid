@@ -14,7 +14,9 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -516,37 +518,36 @@ if HAS_MCP:
         _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, result)
         return result
 
+    class TodoItem(BaseModel):
+        """A single todo item (Claude-style: content + status only)."""
+        content: str = Field(..., description="Task description")
+        status: Literal["pending", "in_progress", "completed"] = Field(
+            ..., description="Current state: pending, in_progress, or completed"
+        )
+
     @mcp.tool()
     def todo(
-        todos: list[dict[str, Any]],
-        session_id: str = "",
+        todos: list[TodoItem],
+        session_id: str = "",  # Injected by client; not in tool schema shown to model
     ) -> dict[str, Any]:
         """
         Create and manage a structured task list for the current conversation.
-        Write the full updated list on each call.
+        Pass the full list of todos on each call; each item needs content and status only.
         """
         session_id = _get_or_create_session(session_id)
         state = _sessions[session_id]
-        # Normalize: accept both "description" and "content" for task text; store as "description"
-        normalized = []
-        for t in todos:
-            d = dict(t)
-            desc = d.get("description") or d.get("content") or ""
-            d["description"] = desc
-            if "content" in d and "description" in d:
-                d.pop("content", None)
-            normalized.append(d)
+        normalized = [{"content": t.content, "status": t.status} for t in todos]
         state.todos = normalized
-        pending = sum(1 for t in normalized if t.get("status") == "pending")
-        in_progress = sum(1 for t in normalized if t.get("status") == "in_progress")
-        completed = sum(1 for t in normalized if t.get("status") == "completed")
+        pending = sum(1 for t in normalized if t["status"] == "pending")
+        in_progress = sum(1 for t in normalized if t["status"] == "in_progress")
+        completed = sum(1 for t in normalized if t["status"] == "completed")
         result = {
             "todos": normalized,
             "summary": {"pending": pending, "in_progress": in_progress, "completed": completed},
         }
         _record_connection(
             session_id, "todo",
-            {"todos": [{"description": (t.get("description") or "")[:80], "status": t.get("status")} for t in normalized]},
+            {"todos": [{"content": (t["content"] or "")[:80], "status": t["status"]} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
         )
         _log_mcp_tool("todo", {"todos": normalized, "session_id": session_id}, result)
