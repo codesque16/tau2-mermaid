@@ -31,13 +31,6 @@ class HumanAgent(BaseAgent):
         on_chunk: Callable[[str, Any], Awaitable[None]] | None = None,
     ) -> tuple[str, dict]:
         """Prompt for human input and return it as the reply."""
-        if incoming.strip():
-            preview = (
-                (incoming.strip()[:200] + "…")
-                if len(incoming.strip()) > 200
-                else incoming.strip()
-            )
-            print(f"\n  (Incoming: {preview})")
         prompt = f"[{self.name} - Your response]: "
         reply = await asyncio.to_thread(_read_line, prompt)
 
