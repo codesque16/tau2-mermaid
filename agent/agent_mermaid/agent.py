@@ -78,10 +78,10 @@ def _build_system_prompt(agent_dir: Path, nodes_list: list[str]) -> str:
     return prompt
 
 
-def _build_sop_system_prompt(prose: str, skeleton: str, graph_id: str) -> str:
-    """Build system prompt from SOP prose and skeleton graph (from load_graph)."""
+def _build_sop_system_prompt(prose: str, mermaid: str, graph_id: str) -> str:
+    """Build system prompt from SOP prose and full mermaid flowchart from AGENTS.md."""
     prompt = prose.strip()
-    prompt += "\n\n## SOP Flowchart (skeleton)\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow. Topology:\n\n```mermaid\n" + (skeleton or "flowchart TD") + "\n```"
+    prompt += "\n\n## SOP Flowchart\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow.\n\n```mermaid\n" + (mermaid or "flowchart TD\n  START") + "\n```"
     prompt += f"\n\n**Important:** For every goto_node and todo call use graph_id \"{graph_id}\" (same as load_graph). Pass the same session_id on each call so state is preserved."
     return prompt
 
@@ -96,7 +96,7 @@ class MermaidAgent(BaseAgent):
     When mcp_server_url is set and the agent dir has SOP markdown (e.g. retail-agent-sop.md),
     on first use the agent will:
     - Connect to the SOP MCP server (streamable HTTP)
-    - Call load_graph with the mermaid source and use the returned skeleton in the system prompt
+    - Call load_graph with the mermaid source; the full mermaid from the SOP is included in the system prompt
     - Use the MCP server's tools (load_graph, goto_node, todo) as the agent's tool list
     """
 
@@ -168,21 +168,10 @@ class MermaidAgent(BaseAgent):
             err_text = content[0].text if content else str(load_result)
             raise RuntimeError(f"load_graph failed: {err_text}")
 
-        skeleton = ""
-        if hasattr(load_result, "content") and load_result.content:
-            for block in load_result.content:
-                if hasattr(block, "text"):
-                    try:
-                        data = json.loads(block.text)
-                        skeleton = data.get("skeleton", "")
-                        break
-                    except json.JSONDecodeError:
-                        skeleton = block.text
-                        break
-        if not skeleton and hasattr(load_result, "structuredContent") and load_result.structuredContent:
-            skeleton = (load_result.structuredContent or {}).get("skeleton", "")
-
-        self._system_prompt = _build_sop_system_prompt(self._sop_data["prose"], skeleton, self._graph_id)
+        # Use the full mermaid from SOP (same as sent to load_graph) in the system prompt
+        self._system_prompt = _build_sop_system_prompt(
+            self._sop_data["prose"], self._sop_data["mermaid"], self._graph_id
+        )
 
         tools_response = await self._mcp_session.list_tools()
         self._sop_tools = _mcp_tools_to_openai_format(tools_response)

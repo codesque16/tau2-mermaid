@@ -153,6 +153,19 @@ def _load_persisted_sessions() -> None:
         _connection_events.pop(0)
 
 
+def _log_mcp_tool(name: str, params: dict[str, Any], result: Any) -> None:
+    """Log MCP tool call in a readable format (Tool, Input, Output) like the chat display."""
+    _max_out = 800
+    input_str = json.dumps(params, indent=2)
+    try:
+        out_str = json.dumps(result, indent=2) if isinstance(result, dict) else str(result)
+    except Exception:
+        out_str = str(result)
+    if len(out_str) > _max_out:
+        out_str = out_str[:_max_out] + "\n... (truncated)"
+    logging.info("MCP Tool: %s\nInput:\n%s\nOutput:\n%s", name, input_str, out_str)
+
+
 def _record_connection(session_id: str, tool: str, params: dict[str, Any], result_summary: str = "") -> None:
     event = ConnectionEvent(
         id=str(uuid.uuid4()),
@@ -297,33 +310,24 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
         r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*"
         r"(?:\[(?:[\"`].*?[\"`]|[^\]])*\]|\(\[.*?\]\)|\{.*?\}|\[/.*?/\])\s*$"
     )
-    # Match edge: A --> B or A -->|label| B or A -.->|label| B
-    edge_re = re.compile(
-        r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*"
-        r"(?:-->|-.->)\s*"
-        r"(?:\|[^|]*\|\s*)?"
-        r"([A-Za-z_][A-Za-z0-9_]*)\s*$"
-    )
-    edge_with_label_re = re.compile(
-        r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:-->|-.->)\s*\|([^|]*)\|\s*([A-Za-z_][A-Za-z0-9_]*)\s*$"
-    )
+    # Optional node shape/label after node ID: ([...]) stadium, [...] rectangle, {...} rhombus, [/.../] parallelogram
+    _node_suffix = r"(?:\(\[.*?\]\)|\[.*?\]|\{.*?\}|\[/.*?/\])?"
+    # Match one node ref (id + optional shape) and optional leading edge label: |label| NODE_ID[suffix]
+    _node_part_re = re.compile(r"(?:\|([^|]*)\|\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*" + _node_suffix)
 
     for line in lines:
         if "-->" in line or "-.->" in line:
-            m = edge_with_label_re.match(line)
-            if m:
-                from_id, label, to_id = m.groups()
-                node_ids.add(from_id)
-                node_ids.add(to_id)
-                edges.append((from_id, to_id, label))
-                continue
-            m = edge_re.match(line)
-            if m:
-                from_id, to_id = m.groups()
-                node_ids.add(from_id)
-                node_ids.add(to_id)
-                edges.append((from_id, to_id, None))
-                continue
+            # Split by arrow so "A --> B -->|x| C" -> [part_a, part_b, part_c]; each part may have leading |label|
+            parts = re.split(r"\s*-->\s*|-\.->\s*", line)
+            for i in range(len(parts) - 1):
+                m_from = _node_part_re.search(parts[i].strip())
+                m_to = _node_part_re.search(parts[i + 1].strip())
+                if m_from and m_to:
+                    _, from_id = m_from.groups()
+                    label, to_id = m_to.groups()
+                    node_ids.add(from_id)
+                    node_ids.add(to_id)
+                    edges.append((from_id, to_id, label))
         # Node shape from first occurrence in source (simplified)
         for part in re.split(r"\s*-->\s*|-\.->\s*", line):
             part = part.strip()
@@ -417,11 +421,10 @@ if HAS_MCP:
         try:
             parsed = _parse_mermaid_flowchart(mermaid_source)
         except Exception as e:
+            err_result = {"error": str(e), "graph_id": graph_id}
             _record_connection(session_id, "load_graph", {"graph_id": graph_id, "mermaid_source": "(truncated)"}, f"error: {e}")
-            return {
-                "error": str(e),
-                "graph_id": graph_id,
-            }
+            _log_mcp_tool("load_graph", {"graph_id": graph_id, "session_id": session_id}, err_result)
+            return err_result
         state = _sessions[session_id]
         state.graphs[graph_id] = {
             **parsed,
@@ -443,6 +446,7 @@ if HAS_MCP:
             {"graph_id": graph_id, "mermaid_source": mermaid_source[:200] + "..." if len(mermaid_source) > 200 else mermaid_source},
             f"node_count={parsed['node_count']}",
         )
+        _log_mcp_tool("load_graph", {"graph_id": graph_id, "session_id": session_id}, result)
         return result
 
     @mcp.tool()
@@ -459,15 +463,19 @@ if HAS_MCP:
         session_id = _get_or_create_session(session_id)
         state = _sessions[session_id]
         if graph_id not in state.graphs:
+            err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "graph_id": graph_id}
             _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: graph not loaded")
-            return {"valid": False, "error": "Graph not loaded. Call load_graph first.", "graph_id": graph_id}
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            return err_result
 
         g = state.graphs[graph_id]
         path = state.path[graph_id]
         nodes = set(g["nodes"])
         if node_id not in nodes:
+            err_result = {"valid": False, "error": f"Node not found. Valid nodes: {list(nodes)[:20]}...", "node_id": node_id}
             _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: node not found")
-            return {"valid": False, "error": f"Node not found. Valid nodes: {list(nodes)[:20]}...", "node_id": node_id}
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            return err_result
 
         # Valid if START or node_id is a direct next from current
         current = path[-1] if path else None
@@ -479,12 +487,14 @@ if HAS_MCP:
                 session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id},
                 f"invalid transition from {current}",
             )
-            return {
+            err_result = {
                 "valid": False,
                 "error": f"Cannot reach {node_id} from {current}",
                 "current_node": current,
                 "valid_next": [t for t, _ in edges_from_current],
             }
+            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, err_result)
+            return err_result
 
         if node_id == g["entry_node"]:
             state.path[graph_id] = [node_id]
@@ -503,6 +513,7 @@ if HAS_MCP:
             result["todo_reminder"] = f"Reached completion node {node_id}. Update todos and proceed to next task."
 
         _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, f"path_len={len(state.path[graph_id])}")
+        _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id, "session_id": session_id}, result)
         return result
 
     @mcp.tool()
@@ -538,6 +549,7 @@ if HAS_MCP:
             {"todos": [{"description": (t.get("description") or "")[:80], "status": t.get("status")} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
         )
+        _log_mcp_tool("todo", {"todos": normalized, "session_id": session_id}, result)
         return result
 
 
@@ -743,6 +755,48 @@ def build_sop_mcp_app() -> Starlette:
     if not HAS_MCP:
         return Starlette(routes=common_routes)
 
+    mcp_app = mcp.streamable_http_app()
+
+    async def _mcp_logging_wrapper(scope: dict, receive: Any, send: Any) -> None:
+        if scope.get("type") != "http" or scope.get("method") != "POST":
+            await mcp_app(scope, receive, send)
+            return
+        body_chunks: list[bytes] = []
+        more_body = True
+        while more_body:
+            message = await receive()
+            body_chunks.append(message.get("body", b""))
+            more_body = message.get("more_body", False)
+        body = b"".join(body_chunks)
+        if body:
+            try:
+                data = json.loads(body.decode("utf-8"))
+                method = data.get("method") if isinstance(data, dict) else None
+                params = data.get("params") if isinstance(data, dict) else None
+                if method == "tools/list":
+                    logging.info("MCP Request: list_tools")
+                elif method == "tools/call":
+                    args = (params or {}) if isinstance(params, dict) else {}
+                    name = args.get("name", "?")
+                    call_params = args.get("arguments") or {}
+                    if isinstance(call_params, str):
+                        try:
+                            call_params = json.loads(call_params)
+                        except json.JSONDecodeError:
+                            call_params = {}
+                    input_str = json.dumps(call_params, indent=2)
+                    logging.info("MCP Request: tools/call  Tool: %s\nInput:\n%s", name, input_str)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                pass
+        sent = [False]
+        async def wrapped_receive():
+            if not sent[0]:
+                sent[0] = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return {"type": "http.disconnect"}
+        await mcp_app(scope, wrapped_receive, send)
+        return
+
     @contextlib.asynccontextmanager
     async def lifespan(app: Starlette):
         async with mcp.session_manager.run():
@@ -751,7 +805,7 @@ def build_sop_mcp_app() -> Starlette:
     return Starlette(
         routes=[
             *common_routes,
-            Mount("/", app=mcp.streamable_http_app()),
+            Mount("/", app=_mcp_logging_wrapper),
         ],
         lifespan=lifespan,
     )

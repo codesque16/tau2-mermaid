@@ -164,13 +164,14 @@ export function SessionDetail() {
     fetchSession()
   }, [fetchSession])
 
-  // Live session: poll for updates so node trace and logs stay in sync
+  // Live session: poll for updates so node trace and logs stay in sync (every 5s to limit request volume)
+  const POLL_INTERVAL_MS = 60000
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined
     if (sessionId && data?.events?.length) {
       const lastTs = data.events[data.events.length - 1].ts
       const isLive = lastTs > Date.now() / 1000 - 300
-      if (isLive) interval = setInterval(fetchSession, 2000)
+      if (isLive) interval = setInterval(fetchSession, POLL_INTERVAL_MS)
     }
     return () => {
       if (interval) clearInterval(interval)
