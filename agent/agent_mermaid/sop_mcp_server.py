@@ -6,17 +6,21 @@ Exposes GET /api/connections and an Agent Monitor–style viewer (Overview + Ses
 from __future__ import annotations
 
 import contextlib
+import json
+import logging
 import re
 import time
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, HTMLResponse
 from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
 
 # Optional: use mcp only when available
 try:
@@ -26,8 +30,115 @@ try:
 except ImportError:
     HAS_MCP = False
 
+# Paths for viewer app (Vite build) and mermaid-agents list
+from agent.agent_mermaid.mermaid_graph import mermaid_to_graph_json, graph_json_to_mermaid
 
-# --- Connection tracking (shared, so we can view all connections) ---
+_AGENT_MERMAID_DIR = Path(__file__).resolve().parent
+VIEWER_APP_DIST = _AGENT_MERMAID_DIR / "viewer-app" / "dist"
+MERMAID_AGENTS_DIR = _AGENT_MERMAID_DIR / "mermaid-agents"
+
+
+def _safe_agent_name(name: str) -> bool:
+    """Allow only dir-name-safe characters (no path traversal)."""
+    if not name or "/" in name or "\\" in name or name.startswith("."):
+        return False
+    return all(c.isalnum() or c in "_-" for c in name)
+
+
+def _parse_agents_md(content: str) -> dict[str, Any]:
+    """Parse AGENTS.md content into frontmatter, mermaid, node_prompts, rest_md."""
+    frontmatter = ""
+    rest_md = ""
+    mermaid = ""
+    node_prompts: dict[str, str] = {}
+
+    fm_start = content.find("---")
+    if fm_start >= 0:
+        fm_end = content.find("---", fm_start + 3)
+        if fm_end >= 0:
+            frontmatter = content[fm_start : fm_end + 3].strip()
+            content = content[fm_end + 3 :].lstrip("\n")
+    body = content
+
+    sop_header = "## SOP Flowchart"
+    idx_sop = body.find(sop_header)
+    if idx_sop >= 0:
+        rest_md = body[:idx_sop].strip()
+        body = body[idx_sop:]
+    else:
+        rest_md = body.strip()
+        body = ""
+
+    if body:
+        mm_start = body.find("```mermaid")
+        if mm_start >= 0:
+            mm_start = body.find("\n", mm_start) + 1
+            mm_end = body.find("```", mm_start)
+            if mm_end >= 0:
+                mermaid = body[mm_start:mm_end].strip()
+        np_header = "## Node Prompts"
+        idx_np = body.find(np_header)
+        if idx_np >= 0:
+            prompts_section = body[idx_np + len(np_header) :].strip()
+            parts = re.split(r"\n###\s+", prompts_section, flags=re.IGNORECASE)
+            for i, block in enumerate(parts):
+                block = block.strip()
+                if not block:
+                    continue
+                first_line = block.split("\n")[0].strip()
+                if not first_line:
+                    continue
+                if i == 0 and first_line.lower() == "node prompts":
+                    continue
+                node_id = first_line
+                prompt_content = "\n".join(block.split("\n")[1:]).strip()
+                node_prompts[node_id] = prompt_content
+
+    return {
+        "frontmatter": frontmatter,
+        "rest_md": rest_md,
+        "mermaid": mermaid,
+        "node_prompts": node_prompts,
+    }
+
+
+def _compose_agents_md(
+    frontmatter: str, rest_md: str, mermaid: str, node_prompts: dict[str, str]
+) -> str:
+    """Compose full AGENTS.md content from parts."""
+    out = []
+    if frontmatter:
+        out.append(
+            frontmatter if frontmatter.startswith("---") else f"---\n{frontmatter}\n---"
+        )
+        out.append("")
+    if rest_md:
+        out.append(rest_md.strip())
+        out.append("")
+    out.append("## SOP Flowchart")
+    out.append("")
+    out.append("```mermaid")
+    out.append(mermaid.strip() if mermaid.strip() else "flowchart TD")
+    out.append("```")
+    out.append("")
+    out.append("## Node Prompts")
+    out.append("")
+    for node_id, prompt in sorted(node_prompts.items()):
+        out.append(f"### {node_id}")
+        out.append("")
+        out.append(prompt.strip())
+        out.append("")
+    return "\n".join(out).rstrip() + "\n"
+
+
+class SpaStaticFiles(StaticFiles):
+    """Serve static files and fallback to index.html for SPA client-side routes."""
+
+    async def get_response(self, path: str, scope: Any) -> Any:
+        response = await super().get_response(path, scope)
+        if response.status_code == 404:
+            return await super().get_response("index.html", scope)
+        return response
 @dataclass
 class ConnectionEvent:
     """A single tool-call event from a connection."""
@@ -109,6 +220,9 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
                 "path": path,
                 "current_node": path[-1] if path else None,
                 "entry_node": g.get("entry_node"),
+                "nodes": g.get("nodes"),
+                "edges": g.get("edges"),
+                "node_id_to_shape": g.get("node_id_to_shape"),
             }
     return {
         "session_id": session_id,
@@ -219,6 +333,9 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
         "skeleton": skeleton,
         "node_count": len(action_node_ids),
     }
+
+
+# --- Intermediate graph JSON: use mermaid_graph package (mermaid_to_graph_json, graph_json_to_mermaid) ---
 
 
 # --- Per-session state (graph_id -> graph data, path, todos) ---
@@ -389,16 +506,130 @@ async def get_connection_detail(request: Request) -> JSONResponse:
     return JSONResponse(detail)
 
 
-def _mermaid_with_traversal_styles(mermaid_source: str, path: list[str], current_node: str | None) -> str:
-    out = mermaid_source.rstrip()
-    for n in path:
-        if n and n.strip():
-            out += "\n    style " + n + " fill:" + ("#ffa500" if n == current_node else "#90EE90")
-    return out
+async def list_agents(_request: Request) -> JSONResponse:
+    """GET /api/agents — list agent names (subdirectories of mermaid-agents that contain AGENTS.md)."""
+    agents: list[str] = []
+    if MERMAID_AGENTS_DIR.is_dir():
+        for p in sorted(MERMAID_AGENTS_DIR.iterdir()):
+            if p.is_dir() and (p / "AGENTS.md").is_file():
+                agents.append(p.name)
+    return JSONResponse({"agents": agents})
 
 
-# --- Viewer routes: /app/viewer (overview), /app/viewer/session/{session_id} (session detail) ---
+async def get_agent_content(request: Request) -> JSONResponse:
+    """GET /api/agents/{agent_name} — parsed AGENTS.md (frontmatter, mermaid, node_prompts, rest_md) + flow nodes/edges."""
+    agent_name = request.path_params.get("agent_name", "").strip()
+    if not _safe_agent_name(agent_name):
+        return JSONResponse(
+            {"error": "Invalid agent name", "agent_name": agent_name},
+            status_code=400,
+        )
+    path = MERMAID_AGENTS_DIR / agent_name / "AGENTS.md"
+    if not path.is_file():
+        return JSONResponse(
+            {"error": "Agent not found", "agent_name": agent_name},
+            status_code=404,
+        )
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError as e:
+        return JSONResponse(
+            {"error": f"Failed to read file: {e}", "agent_name": agent_name},
+            status_code=500,
+        )
+    parsed = _parse_agents_md(content)
+    graph_json: dict[str, Any] = {"nodes": [], "edges": []}
+    if parsed["mermaid"]:
+        try:
+            graph_json = mermaid_to_graph_json(parsed["mermaid"])
+        except Exception:
+            pass
+    logging.info(
+        "[get_agent_content] agent_name=%s graph_json nodes=%s edges=%s",
+        agent_name,
+        len(graph_json.get("nodes", [])),
+        len(graph_json.get("edges", [])),
+    )
+    logging.info("[get_agent_content] edges: %s", graph_json.get("edges", []))
+    logging.debug("[get_agent_content] graph_json full: %s", json.dumps(graph_json, indent=2))
+    return JSONResponse({
+        "agent_name": agent_name,
+        "frontmatter": parsed["frontmatter"],
+        "rest_md": parsed["rest_md"],
+        "mermaid": parsed["mermaid"],
+        "node_prompts": parsed["node_prompts"],
+        "graph_json": graph_json,
+    })
+
+
+async def save_agent_content(request: Request) -> JSONResponse:
+    """POST /api/agents/{agent_name}/save — overwrite AGENTS.md with composed content."""
+    agent_name = request.path_params.get("agent_name", "").strip()
+    if not _safe_agent_name(agent_name):
+        return JSONResponse(
+            {"error": "Invalid agent name", "agent_name": agent_name},
+            status_code=400,
+        )
+    path = MERMAID_AGENTS_DIR / agent_name / "AGENTS.md"
+    if not path.is_file():
+        return JSONResponse(
+            {"error": "Agent not found", "agent_name": agent_name},
+            status_code=404,
+        )
+    try:
+        body = await request.json()
+    except Exception as e:
+        return JSONResponse(
+            {"error": f"Invalid JSON: {e}", "agent_name": agent_name},
+            status_code=400,
+        )
+    frontmatter = body.get("frontmatter", "")
+    rest_md = body.get("rest_md", "")
+    graph_json = body.get("graph_json")
+    if graph_json is not None and isinstance(graph_json, dict):
+        mermaid = graph_json_to_mermaid(graph_json)
+    else:
+        mermaid = body.get("mermaid", "")
+    node_prompts = body.get("node_prompts", {})
+    if not isinstance(node_prompts, dict):
+        node_prompts = {}
+    try:
+        full_content = _compose_agents_md(
+            frontmatter, rest_md, mermaid, node_prompts
+        )
+        path.write_text(full_content, encoding="utf-8")
+    except OSError as e:
+        return JSONResponse(
+            {"error": f"Failed to write file: {e}", "agent_name": agent_name},
+            status_code=500,
+        )
+    return JSONResponse({"ok": True, "agent_name": agent_name})
+
+
+# --- Viewer routes: /app/viewer (Vite SPA when built, else "build required" page) ---
 VIEWER_BASE = "/app/viewer"
+
+_BUILD_REQUIRED_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viewer — build required</title>
+<style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#1e293b;}
+code{background:#f1f5f9;padding:.2em .4em;border-radius:4px;}</style></head>
+<body>
+<h1>Viewer not built</h1>
+<p>Build the viewer app to use the UI at <code>/app/viewer</code>:</p>
+<pre><code>cd agent/agent_mermaid/viewer-app
+npm install
+npm run build</code></pre>
+<p>Then restart the server and open <a href="/app/viewer/">/app/viewer/</a>.</p>
+</body>
+</html>
+"""
+
+
+async def _viewer_build_required_page(_request: Request) -> HTMLResponse:
+    """Served at /app/viewer when viewer-app/dist does not exist."""
+    return HTMLResponse(_BUILD_REQUIRED_HTML)
 
 
 def _format_duration(sec: float) -> str:
@@ -410,54 +641,6 @@ def _format_duration(sec: float) -> str:
     if h > 0:
         return f"{h:02d}:{m:02d}:{s:02d}"
     return f"{m:02d}:{s:02d}"
-
-
-async def _viewer_overview_page(_request: Request) -> HTMLResponse:
-    """GET /app/viewer — Sessions Overview (Agent Monitor style)."""
-    from .viewer import render_overview, VIEWER_BASE
-
-    sessions = _get_sessions()
-    total = len(sessions)
-    now = time.time()
-    active = sum(1 for s in sessions if (s.get("last_ts") or 0) > now - 300)
-    avg_sec = sum(s.get("duration_sec") or 0 for s in sessions) / total if total else 0
-    html = render_overview(
-        sessions=sessions[:50],
-        total_sessions=total,
-        active_agents=active,
-        avg_duration=_format_duration(avg_sec),
-        error_rate="0%",
-        viewer_base=VIEWER_BASE,
-    )
-    return HTMLResponse(html)
-
-
-async def _viewer_session_page(request: Request) -> HTMLResponse:
-    """GET /app/viewer/session/{session_id} — Session Detail (Execution Logs + Process Graph + Traversal Path)."""
-    from .viewer import render_session_detail, VIEWER_BASE
-
-    session_id = request.path_params.get("session_id", "")
-    detail = _get_session_detail(session_id)
-    if detail is None:
-        from starlette.responses import RedirectResponse
-        return RedirectResponse(url=VIEWER_BASE + "/", status_code=302)
-    events = detail.get("events") or []
-    graph_state = detail.get("graph_state") or {}
-    now = time.time()
-    last_ts = events[-1]["ts"] if events else 0
-    is_live = last_ts > now - 300
-    first_ts = events[0]["ts"] if events else now
-    total_uptime = _format_duration((last_ts or now) - first_ts)
-    html = render_session_detail(
-        session_id=session_id,
-        events=events,
-        graph_state=graph_state,
-        is_live=is_live,
-        total_uptime=total_uptime,
-        viewer_base=VIEWER_BASE,
-        mermaid_with_traversal_styles=_mermaid_with_traversal_styles,
-    )
-    return HTMLResponse(html)
 
 
 async def _redirect_to_viewer(_request: Request) -> HTMLResponse:
@@ -474,20 +657,41 @@ async def _redirect_view_to_app_viewer(request: Request) -> HTMLResponse:
 
 
 def build_sop_mcp_app() -> Starlette:
-    """Build the ASGI app: MCP at /mcp, viewer at /app/viewer, API at /api/connections."""
+    """Build the ASGI app: MCP at /mcp, viewer at /app/viewer, API at /api/connections.
+    When viewer-app is built (viewer-app/dist exists), the Vite SPA is served at /app/viewer.
+    Otherwise the template-based viewer is used.
+    """
+    api_routes = [
+        Route("/api/connections", list_connections, methods=["GET"]),
+        Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
+        Route("/api/agents", list_agents, methods=["GET"]),
+        Route("/api/agents/{agent_name}", get_agent_content, methods=["GET"]),
+        Route("/api/agents/{agent_name}/save", save_agent_content, methods=["POST"]),
+    ]
+    if VIEWER_APP_DIST.is_dir():
+        viewer_routes = [
+            Mount(
+                "/app/viewer",
+                SpaStaticFiles(directory=str(VIEWER_APP_DIST), html=True),
+                name="viewer_spa",
+            ),
+        ]
+    else:
+        viewer_routes = [
+            Route("/app/viewer/", _viewer_build_required_page, methods=["GET"]),
+            Route("/app/viewer/session/{session_id}", _viewer_build_required_page, methods=["GET"]),
+        ]
+
+    common_routes = [
+        Route("/", _redirect_to_viewer, methods=["GET"]),
+        Route("/app/viewer", _redirect_to_viewer, methods=["GET"]),
+        Route("/view/{session_id}", _redirect_view_to_app_viewer, methods=["GET"]),
+        *api_routes,
+        *viewer_routes,
+    ]
 
     if not HAS_MCP:
-        return Starlette(
-            routes=[
-                Route("/", _redirect_to_viewer, methods=["GET"]),
-                Route("/app/viewer", _redirect_to_viewer, methods=["GET"]),
-                Route("/app/viewer/", _viewer_overview_page, methods=["GET"]),
-                Route("/app/viewer/session/{session_id}", _viewer_session_page, methods=["GET"]),
-                Route("/view/{session_id}", _redirect_view_to_app_viewer, methods=["GET"]),
-                Route("/api/connections", list_connections, methods=["GET"]),
-                Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
-            ],
-        )
+        return Starlette(routes=common_routes)
 
     @contextlib.asynccontextmanager
     async def lifespan(app: Starlette):
@@ -496,13 +700,7 @@ def build_sop_mcp_app() -> Starlette:
 
     return Starlette(
         routes=[
-            Route("/", _redirect_to_viewer, methods=["GET"]),
-            Route("/app/viewer", _redirect_to_viewer, methods=["GET"]),
-            Route("/app/viewer/", _viewer_overview_page, methods=["GET"]),
-            Route("/app/viewer/session/{session_id}", _viewer_session_page, methods=["GET"]),
-            Route("/view/{session_id}", _redirect_view_to_app_viewer, methods=["GET"]),
-            Route("/api/connections", list_connections, methods=["GET"]),
-            Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
+            *common_routes,
             Mount("/", app=mcp.streamable_http_app()),
         ],
         lifespan=lifespan,
@@ -515,6 +713,7 @@ app = build_sop_mcp_app()
 if __name__ == "__main__":
     import uvicorn
 
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     # Run with streamable HTTP so all connections can be viewed at GET /api/connections
     # MCP endpoint: http://localhost:8000/mcp
     uvicorn.run(

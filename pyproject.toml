@@ -32,4 +32,6 @@ project_name = "tau2-mermaid"
 console_colors = "auto"  # 'auto' | 'always' | 'never'
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=9.0.2",
+]
