@@ -191,12 +191,15 @@ function LogEntry({
 const activeNodeStyles = 'ring-2 ring-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)]'
 const visitedNodeStyles = 'ring-1 ring-offset-1 ring-offset-slate-900'
 
+const dimmedNodeStyles = 'opacity-35'
+
 function ViewTerminalNode(props: NodeProps<Node<FlowNodeData>>) {
   const { data } = props
   const visited = (data?.visited) ?? false
   const current = (data?.current) ?? false
+  const dimmed = (data?.dimmed) ?? false
   return (
-    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-emerald-900/80 border-emerald-500/70 text-emerald-100 ${visited ? `${visitedNodeStyles} ring-emerald-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
+    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-emerald-900/80 border-emerald-500/70 text-emerald-100 ${dimmed ? dimmedNodeStyles : ''} ${visited ? `${visitedNodeStyles} ring-emerald-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !border-2 !bg-emerald-900 !border-emerald-500" />
       {data?.label ?? props.id}
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !border-2 !bg-emerald-900 !border-emerald-500" />
@@ -208,8 +211,9 @@ function ViewNormalNode(props: NodeProps<Node<FlowNodeData>>) {
   const { data } = props
   const visited = (data?.visited) ?? false
   const current = (data?.current) ?? false
+  const dimmed = (data?.dimmed) ?? false
   return (
-    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-slate-800 border-slate-600 text-slate-100 ${visited ? `${visitedNodeStyles} ring-slate-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
+    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-slate-800 border-slate-600 text-slate-100 ${dimmed ? dimmedNodeStyles : ''} ${visited ? `${visitedNodeStyles} ring-slate-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !border-2 !bg-slate-800 !border-slate-500" />
       {data?.label ?? props.id}
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !border-2 !bg-slate-800 !border-slate-500" />
@@ -221,8 +225,9 @@ function ViewDecisionNode(props: NodeProps<Node<FlowNodeData>>) {
   const { data } = props
   const visited = (data?.visited) ?? false
   const current = (data?.current) ?? false
+  const dimmed = (data?.dimmed) ?? false
   return (
-    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-amber-900/70 border-amber-500/60 text-amber-100 ${visited ? `${visitedNodeStyles} ring-amber-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
+    <div className={`relative px-3 py-2 rounded-lg text-xs font-medium border bg-amber-900/70 border-amber-500/60 text-amber-100 ${dimmed ? dimmedNodeStyles : ''} ${visited ? `${visitedNodeStyles} ring-amber-400/50` : ''} ${current ? activeNodeStyles : ''}`}>
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !border-2 !bg-amber-900 !border-amber-500" />
       {data?.label ?? props.id}
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !border-2 !bg-amber-900 !border-amber-500" />
@@ -246,7 +251,7 @@ function pathEdgeSet(path: string[]): Set<string> {
 }
 
 /** Build flow nodes/edges from session graph_state; highlight visited, current node, and path edges. */
-function buildFlowFromGraphState(graph: GraphState): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
+function buildFlowFromGraphState(graph: GraphState, isLive: boolean): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
   const graphJson = graph.graph_json
   if (!graphJson?.nodes?.length) {
     return { nodes: [], edges: [] }
@@ -256,14 +261,18 @@ function buildFlowFromGraphState(graph: GraphState): { nodes: Node<FlowNodeData>
   const onPathEdges = pathEdgeSet(path)
   const current = graph.current_node ?? null
   const { nodes, edges } = graphJsonToFlow(graphJson)
-  const withHighlights: Node<FlowNodeData>[] = nodes.map((n) => ({
-    ...n,
-    data: {
-      ...n.data,
-      visited: pathSet.has(n.id),
-      current: n.id === current,
-    } as FlowNodeData,
-  }))
+  const withHighlights: Node<FlowNodeData>[] = nodes.map((n) => {
+    const isCurrent = n.id === current
+    return {
+      ...n,
+      data: {
+        ...n.data,
+        visited: pathSet.has(n.id),
+        current: isCurrent,
+        dimmed: isLive && !isCurrent,
+      } as FlowNodeData,
+    }
+  })
   const laidOut = layoutFlowGraph(withHighlights, edges)
   const edgesWithPathStyle: Edge[] = edges.map((e) => {
     const onPath = onPathEdges.has(`${e.source}-${e.target}`)
@@ -321,16 +330,22 @@ export function SessionDetail() {
     return Object.values(data.graph_state)[0] as GraphState | undefined
   }, [data?.graph_state])
 
+  const isLive = useMemo(() => {
+    if (!data?.events?.length) return false
+    const last = data.events[data.events.length - 1].ts
+    return last > Date.now() / 1000 - 300
+  }, [data?.events])
+
   useEffect(() => {
     if (!graphState) {
       setNodes([])
       setEdges([])
       return
     }
-    const { nodes: n, edges: e } = buildFlowFromGraphState(graphState)
+    const { nodes: n, edges: e } = buildFlowFromGraphState(graphState, isLive)
     setNodes(n)
     setEdges(e)
-  }, [graphState, setNodes, setEdges])
+  }, [graphState, isLive, setNodes, setEdges])
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node<FlowNodeData>) => {
     setSelectedNodeId(node.id)
@@ -338,12 +353,6 @@ export function SessionDetail() {
   }, [])
 
   const selectedPrompt = selectedNodeId && data?.node_prompts?.[selectedNodeId]
-
-  const isLive = useMemo(() => {
-    if (!data?.events?.length) return false
-    const last = data.events[data.events.length - 1].ts
-    return last > Date.now() / 1000 - 300
-  }, [data?.events])
 
   if (loading) return <div className="flex flex-1 items-center justify-center text-slate-500">Loading session…</div>
   if (error) return <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6"><p className="text-red-400">{error}</p><Link to="/sessions" className="text-slate-400 hover:text-slate-200">Back to Sessions</Link></div>

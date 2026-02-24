@@ -34,6 +34,8 @@ export interface FlowNodeData extends Record<string, unknown> {
   nodeType?: 'terminal' | 'normal' | 'decision'
   visited?: boolean
   current?: boolean
+  /** When true (e.g. in live view), node is dimmed; only current node stays full brightness */
+  dimmed?: boolean
 }
 
 const DEFAULT_DAGRE: DagreLayoutOptions = {
