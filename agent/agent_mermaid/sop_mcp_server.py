@@ -11,6 +11,8 @@ import logging
 import re
 import time
 import uuid
+
+import yaml
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -115,6 +117,7 @@ def _persist_session(session_id: str) -> None:
             "graphs": state.graphs if state else {},
             "path": state.path if state else {},
             "todos": state.todos if state else [],
+            "current_graph_id": state.current_graph_id if state else None,
         },
     }
     path = SESSIONS_DATA_DIR / f"{_safe_session_filename(session_id)}.json"
@@ -153,6 +156,7 @@ def _load_persisted_sessions() -> None:
             state.graphs = ss.get("graphs") or {}
             state.path = ss.get("path") or {}
             state.todos = ss.get("todos") or []
+            state.current_graph_id = ss.get("current_graph_id")
     # Trim global after load
     while len(_connection_events) > _MAX_TOTAL_EVENTS:
         _connection_events.pop(0)
@@ -240,8 +244,7 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
     if state and state.graphs:
         for gid, g in state.graphs.items():
             path = state.path.get(gid, [])
-            m = g.get("skeleton") or g.get("mermaid_source", "")
-            mermaid_source = g.get("mermaid_source", m)
+            mermaid_source = g.get("mermaid_source", "")
             graph_json = {"nodes": [], "edges": []}
             if mermaid_source:
                 try:
@@ -249,8 +252,7 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
                 except Exception:
                     pass
             graph_state[gid] = {
-                "mermaid_source": mermaid_source or m,
-                "skeleton": g.get("skeleton", m),
+                "mermaid_source": mermaid_source,
                 "path": path,
                 "current_node": path[-1] if path else None,
                 "entry_node": g.get("entry_node"),
@@ -262,7 +264,7 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
     # Include agent content (node_prompts, frontmatter, rest_md) from first graph's agent
     frontmatter = ""
     rest_md = ""
-    node_prompts: dict[str, str] = {}
+    node_prompts: dict[str, Any] = {}
     if state and state.graphs:
         first_gid = next(iter(state.graphs), None)
         agent_name = _agent_name_from_graph_id(first_gid) if first_gid else None
@@ -273,7 +275,8 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
                     parsed = parse_agents_md(path.read_text(encoding="utf-8"))
                     frontmatter = parsed.get("frontmatter", "") or ""
                     rest_md = parsed.get("rest_md", "") or ""
-                    node_prompts = parsed.get("node_prompts", {}) or {}
+                    np_yaml = parsed.get("node_prompts", "") or ""
+                    node_prompts = _parse_node_prompts_yaml(np_yaml)
                 except Exception:
                     pass
     created_ts = events[0].ts if events else None
@@ -299,22 +302,174 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
     }
 
 
-# --- Mermaid skeleton parsing (minimal, for load_graph output shape) ---
+# --- Mermaid parsing for goto_node navigation (no skeleton; mermaid is used as-is) ---
+# AGENTS.md is parsed in the agent process: agent.py uses utils.load_sop_markdown() which calls
+# parse_agents_md() on the file content. The agent then calls load_graph(mermaid_source=..., node_prompts=...)
+# with the extracted mermaid and node_prompts (raw YAML string). load_graph parses node_prompts to dict here.
+
+
+def _normalize_node_prompt_entry(raw: dict[str, Any]) -> dict[str, Any]:
+    """Normalize a single node entry from YAML to {prompt, tools, examples}."""
+    prompt = (raw.get("prompt") or "").strip()
+    tools = list(raw.get("tools") or [])
+    examples_raw = raw.get("examples") or []
+    examples = []
+    for ex in examples_raw:
+        if isinstance(ex, dict) and "user" in ex and "agent" in ex:
+            examples.append({"user": str(ex["user"]), "agent": str(ex["agent"])})
+        elif isinstance(ex, dict):
+            examples.append({"user": str(ex.get("user", "")), "agent": str(ex.get("agent", ""))})
+    return {"prompt": prompt, "tools": tools, "examples": examples}
+
+
+def _parse_node_prompts_yaml(node_prompts_yaml: str) -> dict[str, dict[str, Any]]:
+    """Parse raw Node Prompts YAML string to dict of node_id -> {prompt, tools, examples}."""
+    if not (node_prompts_yaml or node_prompts_yaml.strip()):
+        return {}
+    try:
+        data = yaml.safe_load(node_prompts_yaml)
+        np_data = (data or {}).get("node_prompts") or data
+        if not isinstance(np_data, dict):
+            return {}
+        return {
+            nid: _normalize_node_prompt_entry(val)
+            for nid, val in np_data.items()
+            if isinstance(val, dict)
+        }
+    except Exception:
+        return {}
+
+
+def _resolve_sop_file(sop_file: str) -> Path | None:
+    """Resolve sop_file (path or agent name) to an AGENTS.md path. Returns None if not found."""
+    if not sop_file or not isinstance(sop_file, str):
+        return None
+    s = sop_file.strip()
+    # Absolute path
+    p = Path(s)
+    if p.is_absolute() and p.is_file():
+        return p
+    if p.is_absolute() and (p / "AGENTS.md").is_file():
+        return p / "AGENTS.md"
+    # Relative: try under MERMAID_AGENTS_DIR
+    under = MERMAID_AGENTS_DIR / s
+    if under.is_file():
+        return under
+    if (under / "AGENTS.md").is_file():
+        return under / "AGENTS.md"
+    # Agent name only (e.g. "retail")
+    agent_dir = MERMAID_AGENTS_DIR / s
+    agents_md = agent_dir / "AGENTS.md"
+    if agents_md.is_file():
+        return agents_md
+    return None
+
+
+def _parse_frontmatter(frontmatter_str: str) -> dict[str, Any]:
+    """Parse AGENTS.md frontmatter YAML to dict (agent, version, entry_node, model, mcp_servers, etc.)."""
+    if not (frontmatter_str or frontmatter_str.strip()):
+        return {}
+    s = frontmatter_str.strip()
+    if s.startswith("---"):
+        s = s[3:].lstrip("\n")
+    if s.endswith("---"):
+        s = s[: s.rfind("---")].strip()
+    try:
+        return yaml.safe_load(s) or {}
+    except Exception:
+        return {}
+
+
+def _build_load_graph_output_from_front(
+    front: dict[str, Any],
+    graph_parsed: dict[str, Any],
+    nodes_with_prompts: list[str],
+    system_prompt_sections: list[str],
+) -> dict[str, Any]:
+    """Build load_graph result per spec: agent, version, entry_node, model, mcp_servers, graph, system_prompt_sections."""
+    agent_name = front.get("agent") or "default"
+    version = front.get("version") or "1.0"
+    entry_node = front.get("entry_node") or graph_parsed.get("entry_node") or "START"
+
+    # model: only provider, name, temperature, max_tokens per spec
+    model_raw = front.get("model") or {}
+    model = {
+        "provider": model_raw.get("provider"),
+        "name": model_raw.get("name"),
+        "temperature": model_raw.get("temperature"),
+        "max_tokens": model_raw.get("max_tokens"),
+    }
+
+    # mcp_servers: only name and url per spec
+    mcp_raw = front.get("mcp_servers") or []
+    mcp_servers = [
+        {"name": item.get("name"), "url": item.get("url")}
+        for item in (mcp_raw if isinstance(mcp_raw, list) else [])
+        if isinstance(item, dict)
+    ]
+
+    return {
+        "agent": agent_name,
+        "version": version,
+        "entry_node": entry_node,
+        "model": model,
+        "mcp_servers": mcp_servers,
+        "graph": {
+            "node_count": graph_parsed.get("node_count", 0),
+            "decision_nodes": graph_parsed.get("decision_nodes") or [],
+            "terminal_nodes": graph_parsed.get("terminal_nodes") or [],
+            "nodes_with_prompts": nodes_with_prompts,
+        },
+        "system_prompt_sections": system_prompt_sections,
+    }
+
+
+def _system_prompt_sections_from_rest_md(rest_md: str) -> list[str]:
+    """Extract ## section headers from rest_md for system_prompt_sections (e.g. Role, Global Rules, SOP Flowchart)."""
+    sections: list[str] = []
+    for line in (rest_md or "").splitlines():
+        line = line.strip()
+        if line.startswith("## ") and not line.startswith("## Node Prompts"):
+            title = line[3:].strip()
+            if title and title != "Node Prompts":
+                sections.append(title)
+    return sections if sections else ["Role", "Global Rules", "Domain Reference", "SOP Flowchart"]
+
+
 def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
     """
-    Parse flowchart TD source: extract node IDs, edges, and classify nodes.
-    Returns dict with nodes, edges, entry_node, decision_nodes, terminal_nodes, skeleton (simplified).
+    Parse flowchart TD source: extract node IDs, edges, shapes, and labels for goto_node.
+    Mermaid is stored and used as-is; no skeleton is built.
     """
     lines = [s.strip() for s in mermaid_source.strip().splitlines() if s.strip() and not s.strip().startswith("%%")]
     node_ids: set[str] = set()
     edges: list[tuple[str, str, str | None]] = []  # (from, to, label)
     node_id_to_shape: dict[str, str] = {}  # rectangle, stadium, rhombus, parallelogram
+    node_id_to_label: dict[str, str] = {}  # human-readable description from mermaid
 
-    # Match node definitions: ID["..."] or ID(["..."]) or ID{...} or ID[/.../]
-    node_def_re = re.compile(
-        r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*"
-        r"(?:\[(?:[\"`].*?[\"`]|[^\]])*\]|\(\[.*?\]\)|\{.*?\}|\[/.*?/\])\s*$"
-    )
+    # Extract label from ["..."] or (["..."]) or {...}
+    def _extract_label(part: str) -> str | None:
+        # (["label"]) stadium
+        m = re.search(r'\(\["([^"]*)"\]\)', part)
+        if m:
+            return m.group(1).strip()
+        # ["label"] rectangle
+        m = re.search(r'\["([^"]*)"\]', part)
+        if m:
+            return m.group(1).strip()
+        m = re.search(r"\[`([^`]*)`\]", part)
+        if m:
+            return m.group(1).strip()
+        # {label} rhombus
+        m = re.search(r"\{([^{}]*)\}", part)
+        if m:
+            return m.group(1).strip()
+        # ["label"] unquoted (single token)
+        m = re.search(r"\[([^\]\[`\"]+)\]", part)
+        if m:
+            return m.group(1).strip()
+        return None
+
     # Optional node shape/label after node ID: ([...]) stadium, [...] rectangle, {...} rhombus, [/.../] parallelogram
     _node_suffix = r"(?:\(\[.*?\]\)|\[.*?\]|\{.*?\}|\[/.*?/\])?"
     # Match one node ref (id + optional shape) and optional leading edge label: |label| NODE_ID[suffix]
@@ -333,7 +488,7 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
                     node_ids.add(from_id)
                     node_ids.add(to_id)
                     edges.append((from_id, to_id, label))
-        # Node shape from first occurrence in source (simplified)
+        # Node shape and label from first occurrence in source (simplified)
         for part in re.split(r"\s*-->\s*|-\.->\s*", line):
             part = part.strip()
             if "|" in part:
@@ -350,6 +505,9 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
                     node_id_to_shape[nid] = "parallelogram"
                 else:
                     node_id_to_shape.setdefault(nid, "rectangle")
+                lbl = _extract_label(part)
+                if lbl and nid not in node_id_to_label:
+                    node_id_to_label[nid] = lbl
 
     # Entry: node that is target of no edge (or START)
     targets = {e[1] for e in edges}
@@ -359,19 +517,7 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
 
     decision_nodes = [n for n in node_ids if node_id_to_shape.get(n) == "rhombus"]
     terminal_nodes = [n for n in node_ids if node_id_to_shape.get(n) == "stadium" and n != "START"]
-    # Parallelogram are annotations: drop from skeleton and from node count for "action" nodes
     action_node_ids = node_ids - {n for n, s in node_id_to_shape.items() if s == "parallelogram"}
-
-    # Build skeleton: topology only (strip labels from rectangles, drop parallelograms)
-    skeleton_lines = ["flowchart TD"]
-    for (a, b, label) in edges:
-        if a not in action_node_ids or b not in action_node_ids:
-            continue
-        if label:
-            skeleton_lines.append(f"  {a} -->|{label}| {b}")
-        else:
-            skeleton_lines.append(f"  {a} --> {b}")
-    skeleton = "\n".join(skeleton_lines) if len(skeleton_lines) > 1 else "flowchart TD\n  " + entry_node
 
     return {
         "nodes": list(node_ids),
@@ -380,7 +526,7 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
         "decision_nodes": decision_nodes,
         "terminal_nodes": terminal_nodes,
         "node_id_to_shape": node_id_to_shape,
-        "skeleton": skeleton,
+        "node_id_to_label": node_id_to_label,
         "node_count": len(action_node_ids),
     }
 
@@ -388,12 +534,13 @@ def _parse_mermaid_flowchart(mermaid_source: str) -> dict[str, Any]:
 # --- Intermediate graph JSON: use mermaid_graph package (mermaid_to_graph_json, graph_json_to_mermaid) ---
 
 
-# --- Per-session state (graph_id -> graph data, path, todos) ---
+# --- Per-session state (graph_id -> graph data, path, todos; current graph from load_graph) ---
 @dataclass
 class SessionState:
     graphs: dict[str, dict] = field(default_factory=dict)  # graph_id -> parsed graph + full source
     path: dict[str, list[str]] = field(default_factory=dict)  # graph_id -> path of node ids
     todos: list[dict] = field(default_factory=list)
+    current_graph_id: str | None = None  # set by load_graph(sop_file); goto_node uses this
 
 
 _sessions: dict[str, SessionState] = defaultdict(SessionState)
@@ -431,63 +578,76 @@ if HAS_MCP:
 
     @mcp.tool()
     def load_graph(
-        graph_id: str,
-        mermaid_source: str,
+        sop_file: str,
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Parse a Mermaid SOP flowchart. Returns a skeleton graph for the system prompt
-        and stores the full graph for goto_node lookups.
+        Parse an agent SOP markdown file. Extracts the mermaid graph for the system prompt and stores node prompts for progressive delivery via goto_node.
         """
         session_id = _get_session_id_from_context(ctx)
-        try:
-            parsed = _parse_mermaid_flowchart(mermaid_source)
-        except Exception as e:
-            err_result = {"error": str(e), "graph_id": graph_id}
-            _record_connection(session_id, "load_graph", {"graph_id": graph_id, "mermaid_source": "(truncated)"}, f"error: {e}")
-            _log_mcp_tool("load_graph", {"graph_id": graph_id}, err_result)
+        path = _resolve_sop_file(sop_file)
+        if path is None:
+            err_result = {"error": f"SOP file not found: {sop_file}", "sop_file": sop_file}
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, "error: file not found")
+            _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
             return err_result
-        state = _sessions[session_id]
-        state.graphs[graph_id] = {
-            **parsed,
-            "mermaid_source": mermaid_source,
-        }
-        state.path[graph_id] = []
+        try:
+            content = path.read_text(encoding="utf-8")
+        except Exception as e:
+            err_result = {"error": str(e), "sop_file": sop_file}
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}")
+            _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
+            return err_result
 
-        result = {
-            "graph_id": graph_id,
-            "skeleton": parsed["skeleton"],
-            "entry_node": parsed["entry_node"],
-            "node_count": parsed["node_count"],
-            "decision_nodes": parsed["decision_nodes"],
-            "terminal_nodes": parsed["terminal_nodes"],
+        parsed = parse_agents_md(content)
+        front = _parse_frontmatter(parsed.get("frontmatter", "") or "")
+        mermaid_source = parsed.get("mermaid", "") or ""
+        node_prompts_dict = _parse_node_prompts_yaml(parsed.get("node_prompts", "") or "")
+
+        try:
+            graph_parsed = _parse_mermaid_flowchart(mermaid_source)
+        except Exception as e:
+            err_result = {"error": str(e), "sop_file": sop_file}
+            _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"error: {e}")
+            _log_mcp_tool("load_graph", {"sop_file": sop_file}, err_result)
+            return err_result
+
+        agent_name = front.get("agent") or "default"
+        state = _sessions[session_id]
+        state.graphs[agent_name] = {
+            **graph_parsed,
+            "mermaid_source": mermaid_source,
+            "node_prompts": node_prompts_dict,
         }
-        _record_connection(
-            session_id,
-            "load_graph",
-            {"graph_id": graph_id, "mermaid_source": mermaid_source[:200] + "..." if len(mermaid_source) > 200 else mermaid_source},
-            f"node_count={parsed['node_count']}",
+        state.path[agent_name] = []
+        state.current_graph_id = agent_name
+
+        nodes_set = set(graph_parsed.get("nodes") or [])
+        nodes_with_prompts = sorted(k for k in node_prompts_dict if k in nodes_set)
+        system_prompt_sections = _system_prompt_sections_from_rest_md(parsed.get("rest_md", "") or "")
+
+        result = _build_load_graph_output_from_front(
+            front, graph_parsed, nodes_with_prompts, system_prompt_sections
         )
-        _log_mcp_tool("load_graph", {"graph_id": graph_id}, result)
+        _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"agent={agent_name}")
+        _log_mcp_tool("load_graph", {"sop_file": sop_file}, result)
         return result
 
     @mcp.tool()
     def goto_node(
-        graph_id: str,
         node_id: str,
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Move to a node in the SOP graph. Returns the full node instructions plus all
-        annotation nodes between the current node and the next decision or action node.
-        Validates that the transition is legal from the current position.
+        Move to a node in the SOP graph. Returns the node description, prompt, tools, examples, and valid next edges. Validates that the transition is legal from the current position.
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
-        if graph_id not in state.graphs:
-            err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "graph_id": graph_id}
-            _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: graph not loaded")
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
+        graph_id = state.current_graph_id
+        if not graph_id or graph_id not in state.graphs:
+            err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "current_node": None, "valid_next": []}
+            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: graph not loaded")
+            _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
         g = state.graphs[graph_id]
@@ -495,18 +655,18 @@ if HAS_MCP:
         nodes = set(g["nodes"])
         if node_id not in nodes:
             err_result = {"valid": False, "error": f"Node not found. Valid nodes: {list(nodes)[:20]}...", "node_id": node_id}
-            _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, "error: node not found")
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
+            _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: node not found")
+            _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
-        # Valid if START or node_id is a direct next from current
+        # Valid if START (and path empty) or node_id is a direct next from current
         current = path[-1] if path else None
         edges_from_current = [(to_id, lab) for (a, to_id, lab) in g["edges"] if a == current] if current else []
-        valid = node_id == g["entry_node"] and not path or any(to_id == node_id for to_id, _ in edges_from_current)
-        valid = True
+        valid = (node_id == g["entry_node"] and not path) or any(to_id == node_id for to_id, _ in edges_from_current)
+        valid=True # TODO: test and take a call whether we want to validate the transition or not
         if not valid and path:
             _record_connection(
-                session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id},
+                session_id, "goto_node", {"node_id": node_id},
                 f"invalid transition from {current}",
             )
             err_result = {
@@ -515,7 +675,7 @@ if HAS_MCP:
                 "current_node": current,
                 "valid_next": [t for t, _ in edges_from_current],
             }
-            _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, err_result)
+            _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
         if node_id == g["entry_node"]:
@@ -524,25 +684,46 @@ if HAS_MCP:
             state.path[graph_id] = path + [node_id] if path else [node_id]
 
         node_type = g["node_id_to_shape"].get(node_id, "rectangle")
+        edges_out = [{"to": to_id, "condition": lab} for (a, to_id, lab) in g["edges"] if a == node_id]
+        # Build node per MCP spec: id, type, description (from mermaid label), prompt, tools, examples from node_prompts
+        node_prompts_map = g.get("node_prompts") or {}
+        prompt_entry = node_prompts_map.get(node_id)
+        description = (g.get("node_id_to_label") or {}).get(node_id) or node_id
+        node_payload: dict[str, Any] = {
+            "id": node_id,
+            "type": node_type,
+            "description": description,
+        }
+        if prompt_entry:
+            if prompt_entry.get("prompt"):
+                node_payload["prompt"] = prompt_entry["prompt"]
+            if prompt_entry.get("tools"):
+                node_payload["tools"] = list(prompt_entry["tools"])
+            if prompt_entry.get("examples"):
+                node_payload["examples"] = list(prompt_entry["examples"])
         result = {
-            "node": {"id": node_id, "type": node_type, "text": node_id},
-            "annotations": [],
-            "edges": [{"to": to_id, "condition": lab} for (a, to_id, lab) in g["edges"] if a == node_id],
+            "node": node_payload,
+            "edges": edges_out,
             "path": state.path[graph_id],
             "valid": True,
         }
         if node_id in g["terminal_nodes"]:
             result["todo_reminder"] = f"Reached completion node {node_id}. Update todos and proceed to next task."
 
-        _record_connection(session_id, "goto_node", {"graph_id": graph_id, "node_id": node_id}, f"path_len={len(state.path[graph_id])}")
-        _log_mcp_tool("goto_node", {"graph_id": graph_id, "node_id": node_id}, result)
+        _record_connection(session_id, "goto_node", {"node_id": node_id}, f"path_len={len(state.path[graph_id])}")
+        _log_mcp_tool("goto_node", {"node_id": node_id}, result)
         return result
 
     class TodoItem(BaseModel):
-        """A single todo item (Claude-style: content + status only)."""
-        content: str = Field(..., description="Task description")
+        """A single todo item per spec: content, status required; note, completion_node optional."""
+        content: str = Field(..., min_length=1, description="Task description")
         status: Literal["pending", "in_progress", "completed"] = Field(
-            ..., description="Current state: pending, in_progress, or completed"
+            ..., description="Current task status"
+        )
+        note: str | None = Field(None, description="Optional context, dependencies, or findings from other tasks")
+        completion_node: str | None = Field(
+            None,
+            description="Terminal SOP node ID that marks this task as done. When goto_node reaches this node, it reminds the agent to update todos.",
         )
 
     @mcp.tool()
@@ -551,12 +732,19 @@ if HAS_MCP:
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Create and manage a structured task list for the current conversation.
-        Pass the full list of todos on each call; each item needs content and status only.
+        Create and manage a structured task list for the current conversation. Write the full updated list on each call. Tasks are internal to the agent and not shown to the user.
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
-        normalized = [{"content": t.content, "status": t.status} for t in todos]
+        normalized = [
+            {
+                "content": t.content,
+                "status": t.status,
+                "note": t.note or "",
+                "completion_node": t.completion_node or "",
+            }
+            for t in todos
+        ]
         state.todos = normalized
         pending = sum(1 for t in normalized if t["status"] == "pending")
         in_progress = sum(1 for t in normalized if t["status"] == "in_progress")
@@ -566,7 +754,8 @@ if HAS_MCP:
             "summary": {"pending": pending, "in_progress": in_progress, "completed": completed},
         }
         _record_connection(
-            session_id, "todo",
+            session_id,
+            "todo",
             {"todos": [{"content": (t["content"] or "")[:80], "status": t["status"]} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
         )
@@ -648,6 +837,7 @@ async def get_agent_content(request: Request) -> JSONResponse:
             status_code=500,
         )
     parsed = parse_agents_md(content)
+    node_prompts_dict = _parse_node_prompts_yaml(parsed.get("node_prompts", "") or "")
     graph_json: dict[str, Any] = {"nodes": [], "edges": []}
     if parsed["mermaid"]:
         try:
@@ -667,7 +857,7 @@ async def get_agent_content(request: Request) -> JSONResponse:
         "frontmatter": parsed["frontmatter"],
         "rest_md": parsed["rest_md"],
         "mermaid": parsed["mermaid"],
-        "node_prompts": parsed["node_prompts"],
+        "node_prompts": node_prompts_dict,
         "graph_json": graph_json,
     })
 

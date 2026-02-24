@@ -109,199 +109,147 @@ flowchart TD
 
 ## Node Prompts
 
-### AUTH
-
 ```yaml
-tools: [find_user_id_by_email, find_user_id_by_name_zip]
+node_prompts:
+  AUTH:
+    tools: [find_user_id_by_email, find_user_id_by_name_zip]
+    prompt: |
+      Authenticate the user via **email** OR **name + zip code**. Must verify even if the user provides a user_id directly.
+
+  INFO:
+    tools: [get_order_details, get_product_details, get_user_details, list_all_product_types]
+    prompt: |
+      Provide information about the user's orders, products, or profile. Use the appropriate lookup tool.
+
+  CHK_CANCEL:
+    tools: [get_order_details]
+    prompt: |
+      Look up the order and check its status before proceeding.
+
+  COLLECT_CANCEL:
+    examples:
+      - user: "I want to cancel order 123"
+        agent: "I can help with that. Could you tell me the reason — is it 'no longer needed' or 'ordered by mistake'?"
+      - user: "I changed my mind about the purchase"
+        agent: "I understand. For our system, would you say the reason is 'no longer needed' or 'ordered by mistake'?"
+    prompt: |
+      Collect and confirm:
+      1. **order_id**
+      2. **reason**: must be 'no longer needed' OR 'ordered by mistake'
+
+      - If user gives a different reason, politely explain only these two are accepted
+      - Do not suggest which reason to pick
+      - If user is unsure, offer to help with return or exchange instead
+
+  DO_CANCEL:
+    tools: [cancel_pending_order, calculate]
+    prompt: |
+      After user confirms, cancel the order. Inform user about refund timing:
+      - Gift card: immediate refund
+      - Other methods: 5–7 business days
+
+  CHK_MOD:
+    tools: [get_order_details]
+    prompt: |
+      Look up the order and verify it is still pending.
+
+  COLLECT_MOD_ADDR:
+    prompt: |
+      Collect:
+      1. **order_id**
+      2. **new shipping address**
+
+  DO_MOD_ADDR:
+    prompt: Confirm details with user and update the shipping address.
+    tools: [modify_pending_order_address]
+
+  COLLECT_MOD_PAY:
+    prompt: |
+      Collect:
+      1. **order_id**
+      2. **new payment method** — must differ from original
+
+  DO_MOD_PAY:
+    tools: [modify_pending_order_payment, calculate]
+    prompt: |
+      Update the payment method. Inform user about refund on original method:
+      - Gift card: immediate
+      - Other methods: 5–7 business days
+
+  COLLECT_MOD_ITEMS:
+    examples:
+      - user: "I want to change the blue shirt to red"
+        agent: "I can help with that. Just to confirm — are there any other items in this order you'd like to change? This modification can only be done once."
+    prompt: |
+      Collect ALL items to modify at once:
+      1. **order_id**
+      2. **list of item_id → new_item_id** (same product type, different option, must be available)
+      3. **payment method** for price difference (gift card must cover difference)
+
+      - This action can only be called ONCE — order becomes "pending items modified", no further modify or cancel
+      - Remind user to confirm ALL items before proceeding
+
+  DO_MOD_ITEMS:
+    tools: [calculate, modify_pending_order_items]
+    prompt: |
+      Calculate price difference, confirm all details with user, then modify items.
+
+  CHK_RETURN:
+    tools: [get_order_details]
+    prompt: |
+      Look up the order and verify it has been delivered.
+
+  COLLECT_RETURN:
+    examples:
+      - user: "I want to return the shoes from order 456"
+        agent: "I can help with that. Your refund can go to your original payment method or an existing gift card. Which would you prefer?"
+    prompt: |
+      Collect:
+      1. **order_id**
+      2. **list of items to return**
+      3. **refund payment method**: original method OR existing gift card (no other options)
+
+  DO_RETURN:
+    tools: [calculate, return_delivered_order_items]
+    prompt: |
+      Confirm details with user and process return. User will receive an email with return instructions.
+
+  CHK_EXCH:
+    tools: [get_order_details]
+    prompt: |
+      Look up the order and verify it has been delivered.
+
+  COLLECT_EXCH:
+    examples:
+      - user: "I want to swap my tablet for a different one"
+        agent: "Sure! Which variant would you like instead? Also, are there any other items you'd like to exchange? This can only be done once per order."
+    prompt: |
+      Collect ALL items to exchange at once:
+      1. **order_id**
+      2. **list of item_id → new_item_id** (same product type, different option, must be available)
+      3. **payment method** for price difference (gift card must cover difference)
+
+      - Remind user to confirm ALL items before proceeding
+      - No new order needed
+
+  DO_EXCH:
+    tools: [calculate, exchange_delivered_order_items]
+    prompt: |
+      Calculate price difference, confirm all details with user, then process exchange. User will receive an email with return instructions.
+
+  COLLECT_USER_ADDR:
+    prompt: |
+      Collect:
+      1. **user_id**
+      2. **new default address**
+
+  DO_USER_ADDR:
+    tools: [modify_user_address]
+    prompt: |
+      Confirm details with user and update default address.
+
+  ESCALATE_HUMAN:
+    tools: [transfer_to_human_agents]
+    prompt: |
+      Transfer the user and send: "YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."
 ```
-
-Authenticate the user via **email** OR **name + zip code**. Must verify even if the user provides a user_id directly.
-
-### INFO
-
-```yaml
-tools: [get_order_details, get_product_details, get_user_details, list_all_product_types]
-```
-
-Provide information about the user's orders, products, or profile. Use the appropriate lookup tool.
-
-### CHK_CANCEL
-
-```yaml
-tools: [get_order_details]
-```
-
-Look up the order and check its status before proceeding.
-
-### COLLECT_CANCEL
-
-```yaml
-examples:
-  - user: "I want to cancel order 123"
-    agent: "I can help with that. Could you tell me the reason — is it 'no longer needed' or 'ordered by mistake'?"
-  - user: "I changed my mind about the purchase"
-    agent: "I understand. For our system, would you say the reason is 'no longer needed' or 'ordered by mistake'?"
-```
-
-Collect and confirm:
-1. **order_id**
-2. **reason**: must be 'no longer needed' OR 'ordered by mistake'
-
-- If user gives a different reason, politely explain only these two are accepted
-- Do not suggest which reason to pick
-- If user is unsure, offer to help with return or exchange instead
-
-### DO_CANCEL
-
-```yaml
-tools: [cancel_pending_order, calculate]
-```
-
-After user confirms, cancel the order. Inform user about refund timing:
-- Gift card: immediate refund
-- Other methods: 5–7 business days
-
-### CHK_MOD
-
-```yaml
-tools: [get_order_details]
-```
-
-Look up the order and verify it is still pending.
-
-### COLLECT_MOD_ADDR
-
-Collect:
-1. **order_id**
-2. **new shipping address**
-
-### DO_MOD_ADDR
-
-```yaml
-tools: [modify_pending_order_address]
-```
-
-Confirm details with user and update the shipping address.
-
-### COLLECT_MOD_PAY
-
-Collect:
-1. **order_id**
-2. **new payment method** — must differ from original
-
-### DO_MOD_PAY
-
-```yaml
-tools: [modify_pending_order_payment, calculate]
-```
-
-Update the payment method. Inform user about refund on original method:
-- Gift card: immediate
-- Other methods: 5–7 business days
-
-### COLLECT_MOD_ITEMS
-
-```yaml
-examples:
-  - user: "I want to change the blue shirt to red"
-    agent: "I can help with that. Just to confirm — are there any other items in this order you'd like to change? This modification can only be done once."
-```
-
-Collect ALL items to modify at once:
-1. **order_id**
-2. **list of item_id → new_item_id** (same product type, different option, must be available)
-3. **payment method** for price difference (gift card must cover difference)
-
-- This action can only be called ONCE — order becomes "pending items modified", no further modify or cancel
-- Remind user to confirm ALL items before proceeding
-
-### DO_MOD_ITEMS
-
-```yaml
-tools: [calculate, modify_pending_order_items]
-```
-
-Calculate price difference, confirm all details with user, then modify items.
-
-### CHK_RETURN
-
-```yaml
-tools: [get_order_details]
-```
-
-Look up the order and verify it has been delivered.
-
-### COLLECT_RETURN
-
-```yaml
-examples:
-  - user: "I want to return the shoes from order 456"
-    agent: "I can help with that. Your refund can go to your original payment method or an existing gift card. Which would you prefer?"
-```
-
-Collect:
-1. **order_id**
-2. **list of items to return**
-3. **refund payment method**: original method OR existing gift card (no other options)
-
-### DO_RETURN
-
-```yaml
-tools: [calculate, return_delivered_order_items]
-```
-
-Confirm details with user and process return. User will receive an email with return instructions.
-
-### CHK_EXCH
-
-```yaml
-tools: [get_order_details]
-```
-
-Look up the order and verify it has been delivered.
-
-### COLLECT_EXCH
-
-```yaml
-examples:
-  - user: "I want to swap my tablet for a different one"
-    agent: "Sure! Which variant would you like instead? Also, are there any other items you'd like to exchange? This can only be done once per order."
-```
-
-Collect ALL items to exchange at once:
-1. **order_id**
-2. **list of item_id → new_item_id** (same product type, different option, must be available)
-3. **payment method** for price difference (gift card must cover difference)
-
-- Remind user to confirm ALL items before proceeding
-- No new order needed
-
-### DO_EXCH
-
-```yaml
-tools: [calculate, exchange_delivered_order_items]
-```
-
-Calculate price difference, confirm all details with user, then process exchange. User will receive an email with return instructions.
-
-### COLLECT_USER_ADDR
-
-Collect:
-1. **user_id**
-2. **new default address**
-
-### DO_USER_ADDR
-
-```yaml
-tools: [modify_user_address]
-```
-
-Confirm details with user and update default address.
-
-### ESCALATE_HUMAN
-
-```yaml
-tools: [transfer_to_human_agents]
-```
-
-Transfer the user and send: "YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."

@@ -23,12 +23,16 @@ const API_BASE = ''
 
 export type { GraphNodeJson, GraphEdgeJson, GraphJson }
 
+/** One node's prompt entry from AGENTS.md Node Prompts YAML */
+export type NodePromptEntry = { prompt: string; tools?: string[]; examples?: { user?: string; agent?: string }[] }
+
 interface AgentContent {
   agent_name: string
   frontmatter: string
   rest_md: string
   mermaid: string
-  node_prompts: Record<string, string>
+  /** node_id -> NodePromptEntry per MCP spec */
+  node_prompts: Record<string, NodePromptEntry>
   graph_json: GraphJson
 }
 
@@ -114,7 +118,7 @@ export function Agents() {
   const [promptViewMode, setPromptViewMode] = useState<'preview' | 'edit'>('preview')
   const [frontmatter, setFrontmatter] = useState('')
   const [restMd, setRestMd] = useState('')
-  const [nodePrompts, setNodePrompts] = useState<Record<string, string>>({})
+  const [nodePrompts, setNodePrompts] = useState<Record<string, NodePromptEntry>>({})
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [layoutAlgorithm, setLayoutAlgorithm] = useState<LayoutAlgorithm>('dagre')
   const [layoutRunning, setLayoutRunning] = useState(false)
@@ -237,7 +241,10 @@ export function Agents() {
   )
 
   const updateNodePrompt = useCallback((nodeId: string, prompt: string) => {
-    setNodePrompts((prev) => ({ ...prev, [nodeId]: prompt }))
+    setNodePrompts((prev) => ({
+      ...prev,
+      [nodeId]: { ...(prev[nodeId] ?? { prompt: '', tools: [], examples: [] }), prompt },
+    }))
   }, [])
 
   const nodeList = useMemo(() => nodes.map((n) => n.id).sort(), [nodes])
@@ -536,14 +543,14 @@ export function Agents() {
                           </div>
                           {promptViewMode === 'edit' ? (
                             <textarea
-                              value={nodePrompts[selectedNodeId] ?? ''}
+                              value={nodePrompts[selectedNodeId]?.prompt ?? ''}
                               onChange={(e) => updateNodePrompt(selectedNodeId, e.target.value)}
                               className="flex-1 min-h-[6rem] w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-xs font-mono resize-none focus:ring-2 focus:ring-blue-500/50"
                               spellCheck={false}
                             />
                           ) : (
                             <div className="flex-1 min-h-0 overflow-auto px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-sm markdown-preview">
-                              <ReactMarkdown>{nodePrompts[selectedNodeId] ?? '_No prompt._'}</ReactMarkdown>
+                              <ReactMarkdown>{nodePrompts[selectedNodeId]?.prompt ?? '_No prompt._'}</ReactMarkdown>
                             </div>
                           )}
                         </div>

@@ -4,17 +4,20 @@ import re
 from pathlib import Path
 from typing import Any
 
+import yaml
 
 AGENTS_MD = "AGENTS.md"
 INDEX_MD = "index.md"
 
 
 def parse_agents_md(content: str) -> dict[str, Any]:
-    """Parse AGENTS.md content into frontmatter, mermaid, node_prompts, rest_md."""
+    """Parse AGENTS.md content into frontmatter, mermaid, node_prompts (raw YAML string), rest_md.
+    node_prompts is the raw YAML block content under ## Node Prompts; parsing to dict is done by the MCP server in load_graph.
+    """
     frontmatter = ""
     rest_md = ""
     mermaid = ""
-    node_prompts: dict[str, str] = {}
+    node_prompts_yaml = ""
 
     fm_start = content.find("---")
     if fm_start >= 0:
@@ -44,32 +47,30 @@ def parse_agents_md(content: str) -> dict[str, Any]:
         idx_np = body.find(np_header)
         if idx_np >= 0:
             prompts_section = body[idx_np + len(np_header) :].strip()
-            parts = re.split(r"\n###\s+", prompts_section, flags=re.IGNORECASE)
-            for i, block in enumerate(parts):
-                block = block.strip()
-                if not block:
-                    continue
-                first_line = block.split("\n")[0].strip()
-                if not first_line:
-                    continue
-                if i == 0 and first_line.lower() == "node prompts":
-                    continue
-                node_id = first_line
-                prompt_content = "\n".join(block.split("\n")[1:]).strip()
-                node_prompts[node_id] = prompt_content
+            yaml_start = prompts_section.find("```yaml")
+            if yaml_start >= 0:
+                yaml_start = prompts_section.find("\n", yaml_start) + 1
+                yaml_end = prompts_section.find("```", yaml_start)
+                if yaml_end >= 0:
+                    node_prompts_yaml = prompts_section[yaml_start:yaml_end].strip()
 
     return {
         "frontmatter": frontmatter,
         "rest_md": rest_md,
         "mermaid": mermaid,
-        "node_prompts": node_prompts,
+        "node_prompts": node_prompts_yaml,
     }
 
 
 def compose_agents_md(
-    frontmatter: str, rest_md: str, mermaid: str, node_prompts: dict[str, str]
+    frontmatter: str,
+    rest_md: str,
+    mermaid: str,
+    node_prompts: dict[str, dict[str, Any]],
 ) -> str:
-    """Compose full AGENTS.md content from parts (used by viewer save)."""
+    """Compose full AGENTS.md content from parts (used by viewer save).
+    node_prompts: node_id -> {prompt, tools?, examples?} per MCP spec.
+    """
     out = []
     if frontmatter:
         out.append(
@@ -87,11 +88,19 @@ def compose_agents_md(
     out.append("")
     out.append("## Node Prompts")
     out.append("")
-    for node_id, prompt in sorted(node_prompts.items()):
-        out.append(f"### {node_id}")
-        out.append("")
-        out.append(prompt.strip())
-        out.append("")
+    normalized = {
+        nid: {
+            "prompt": (val.get("prompt") or "").strip(),
+            "tools": val.get("tools") or [],
+            "examples": val.get("examples") or [],
+        }
+        for nid, val in sorted(node_prompts.items())
+        if isinstance(val, dict)
+    }
+    yaml_block = {"node_prompts": normalized}
+    out.append("```yaml")
+    out.append(yaml.dump(yaml_block, default_flow_style=False, allow_unicode=True).strip())
+    out.append("```")
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -126,15 +135,21 @@ def load_agent_mermaid(agent_dir: Path) -> str:
     return ""
 
 
-def load_sop_markdown(agent_dir: Path) -> dict[str, str] | None:
-    """Load SOP from AGENTS.md or retail-agent-sop.md (or *-agent-sop.md). Returns {"prose": str, "mermaid": str} or None."""
+def load_sop_markdown(agent_dir: Path) -> dict[str, Any] | None:
+    """Load SOP from AGENTS.md or retail-agent-sop.md (or *-agent-sop.md).
+    Returns {"prose": str, "mermaid": str, "node_prompts": str} or None. node_prompts is raw YAML string.
+    """
     agents_md = agent_dir / AGENTS_MD
     if agents_md.is_file():
         parsed = parse_agents_md(agents_md.read_text(encoding="utf-8"))
         prose = parsed["frontmatter"]
         if parsed["rest_md"]:
             prose = f"{prose}\n\n{parsed['rest_md']}" if prose else parsed["rest_md"]
-        return {"prose": prose.strip(), "mermaid": parsed.get("mermaid", "") or ""}
+        return {
+            "prose": prose.strip(),
+            "mermaid": parsed.get("mermaid", "") or "",
+            "node_prompts": parsed.get("node_prompts", "") or "",
+        }
     retail_sop = agent_dir / "retail-agent-sop.md"
     if retail_sop.is_file():
         candidates = [retail_sop]
@@ -146,37 +161,43 @@ def load_sop_markdown(agent_dir: Path) -> dict[str, str] | None:
         text = path.read_text(encoding="utf-8").strip()
         match = re.search(r"```mermaid\s*(.*?)```", text, re.DOTALL)
         if match:
-            return {"prose": text[: match.start()].strip(), "mermaid": match.group(1).strip()}
-        return {"prose": text, "mermaid": ""}
+            return {"prose": text[: match.start()].strip(), "mermaid": match.group(1).strip(), "node_prompts": ""}
+        return {"prose": text, "mermaid": "", "node_prompts": ""}
     return None
 
 
 def list_mermaid_nodes(agent_dir: Path) -> list[str]:
-    """List node IDs from AGENTS.md Node Prompts or from nodes/ subdirs that have index.md."""
+    """List node IDs from AGENTS.md Node Prompts YAML (parses raw node_prompts string)."""
     agents_md = agent_dir / AGENTS_MD
     if agents_md.is_file():
         parsed = parse_agents_md(agents_md.read_text(encoding="utf-8"))
-        return sorted(parsed.get("node_prompts", {}).keys())
-    nodes_dir = agent_dir / "nodes"
-    if not nodes_dir.is_dir():
-        return []
-    return [
-        d.name
-        for d in sorted(nodes_dir.iterdir())
-        if d.is_dir() and (d / INDEX_MD).is_file()
-    ]
+        np_str = parsed.get("node_prompts") or ""
+        if not np_str:
+            return []
+        try:
+            data = yaml.safe_load(np_str)
+            np_data = (data or {}).get("node_prompts") or data
+            return sorted(np_data.keys()) if isinstance(np_data, dict) else []
+        except Exception:
+            return []
+    return []
 
 
 def get_node_instructions(agent_dir: Path, node_id: str) -> str:
-    """Load node instructions from AGENTS.md Node Prompts or from nodes/<node_id>/index.md."""
+    """Load node prompt text from AGENTS.md Node Prompts YAML (parses raw node_prompts string)."""
     agents_md = agent_dir / AGENTS_MD
     if agents_md.is_file():
         parsed = parse_agents_md(agents_md.read_text(encoding="utf-8"))
-        prompts = parsed.get("node_prompts", {})
-        if node_id in prompts:
-            return prompts[node_id]
+        np_str = parsed.get("node_prompts") or ""
+        if np_str:
+            try:
+                data = yaml.safe_load(np_str)
+                np_data = (data or {}).get("node_prompts") or data
+                if isinstance(np_data, dict) and node_id in np_data:
+                    entry = np_data[node_id]
+                    if isinstance(entry, dict):
+                        return (entry.get("prompt") or "").strip()
+            except Exception:
+                pass
         return f"[Error: node '{node_id}' not found in AGENTS.md Node Prompts]"
-    node_path = agent_dir / "nodes" / node_id / INDEX_MD
-    if not node_path.is_file():
-        return f"[Error: node '{node_id}' not found or has no {INDEX_MD} at {node_path}]"
-    return node_path.read_text(encoding="utf-8").strip()
+    return f"[Error: node '{node_id}' not found in AGENTS.md Node Prompts]"

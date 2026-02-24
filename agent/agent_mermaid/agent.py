@@ -88,11 +88,11 @@ def _build_system_prompt(agent_dir: Path, nodes_list: list[str]) -> str:
     return prompt
 
 
-def _build_sop_system_prompt(prose: str, mermaid: str, graph_id: str) -> str:
+def _build_sop_system_prompt(prose: str, mermaid: str) -> str:
     """Build system prompt from SOP prose and full mermaid flowchart from AGENTS.md."""
     prompt = prose.strip()
     prompt += "\n\n## SOP Flowchart\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow.\n\n```mermaid\n" + (mermaid or "flowchart TD\n  START") + "\n```"
-    prompt += f"\n\n**Important:** For every goto_node call use graph_id \"{graph_id}\" (same as load_graph). The todo tool only needs a list of todos (each with content and status: pending, in_progress, or completed)."
+    prompt += "\n\n**Important:** Use goto_node(node_id) to move through the graph. The todo tool only needs a list of todos (each with content and status: pending, in_progress, or completed)."
     return prompt
 
 
@@ -149,7 +149,9 @@ class MermaidAgent(BaseAgent):
         self.history: list[dict[str, Any]] = []
 
     async def _ensure_sop_mcp_initialized(self) -> None:
-        """Connect to MCP server, call load_graph, and set tools + system prompt."""
+        """Connect to MCP server, call load_graph(sop_file), and set tools + system prompt.
+        load_graph parses the SOP file on the server; we pass sop_file (agent name or path) and build system prompt from _sop_data.
+        """
         if getattr(self, "_sop_mcp_initialized", False):
             return
         assert self._mcp_server_url and self._sop_data
@@ -163,22 +165,20 @@ class MermaidAgent(BaseAgent):
         self._mcp_session = await self._mcp_session_context.__aenter__()
         await self._mcp_session.initialize()
 
-        mermaid = self._sop_data["mermaid"]
+        # Spec: load_graph(sop_file) — path or agent name; server resolves and parses the file
+        sop_file = self._agent_dir.name
         load_result = await self._mcp_session.call_tool(
             "load_graph",
-            arguments={
-                "graph_id": self._graph_id,
-                "mermaid_source": mermaid,
-            },
+            arguments={"sop_file": sop_file},
         )
         if getattr(load_result, "isError", False):
             content = getattr(load_result, "content", [])
             err_text = content[0].text if content else str(load_result)
             raise RuntimeError(f"load_graph failed: {err_text}")
 
-        # Use the full mermaid from SOP (same as sent to load_graph) in the system prompt
+        # Build system prompt from local _sop_data (prose + mermaid)
         self._system_prompt = _build_sop_system_prompt(
-            self._sop_data["prose"], self._sop_data["mermaid"], self._graph_id
+            self._sop_data["prose"], self._sop_data["mermaid"]
         )
 
         tools_response = await self._mcp_session.list_tools()
@@ -221,10 +221,6 @@ class MermaidAgent(BaseAgent):
         """Execute one tool call: MCP tools go to the server; enter_mermaid_node stays local."""
         if getattr(self, "_mcp_tool_names", None) and fn_name in self._mcp_tool_names:
             mcp_args = dict(args)
-            if fn_name == "load_graph" and "mermaid_source" in mcp_args:
-                mcp_args["graph_id"] = mcp_args.get("graph_id") or self._graph_id
-            if fn_name == "goto_node":
-                mcp_args["graph_id"] = mcp_args.get("graph_id") or self._graph_id
             result = await self._mcp_session.call_tool(fn_name, arguments=mcp_args)
             if getattr(result, "isError", False):
                 parts = []

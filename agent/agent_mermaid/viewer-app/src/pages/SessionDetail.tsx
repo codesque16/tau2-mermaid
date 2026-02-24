@@ -23,7 +23,6 @@ const API_BASE = ''
 
 interface GraphState {
   mermaid_source?: string
-  skeleton?: string
   path?: string[]
   current_node?: string | null
   entry_node?: string
@@ -46,7 +45,8 @@ interface SessionDetailData {
   events: LogEvent[]
   graph_state: Record<string, GraphState>
   frontmatter?: string
-  node_prompts?: Record<string, string>
+  /** node_id -> { prompt, tools?, examples? } per MCP spec */
+  node_prompts?: Record<string, { prompt?: string; tools?: string[]; examples?: { user?: string; agent?: string }[] }>
   rest_md?: string
 }
 
@@ -57,12 +57,12 @@ function formatTs(ts: number): string {
 /** Collapsed one-line summary for a log entry. */
 function logCollapsedSummary(e: LogEvent): string {
   const p = e.params as Record<string, unknown>
-  if (e.tool === 'goto_node' && p?.graph_id != null && p?.node_id != null) {
-    return `${String(p.graph_id)}: ${String(p.node_id)}`
+  if (e.tool === 'goto_node' && p?.node_id != null) {
+    return String(p.node_id)
   }
-  if (e.tool === 'load_graph' && p?.graph_id != null) {
+  if (e.tool === 'load_graph' && p?.sop_file != null) {
     const out = e.result_summary ? ` — ${e.result_summary}` : ''
-    return `${String(p.graph_id)}${out}`
+    return `${String(p.sop_file)}${out}`
   }
   if (e.tool === 'todo' && Array.isArray(p?.todos)) {
     const pending = (p.todos as Array<{ status?: string }>).filter((t) => t.status === 'pending').length
@@ -357,7 +357,8 @@ export function SessionDetail() {
     setPanelOpen(true)
   }, [])
 
-  const selectedPrompt = selectedNodeId && data?.node_prompts?.[selectedNodeId]
+  const selectedPromptEntry = selectedNodeId ? data?.node_prompts?.[selectedNodeId] : undefined
+  const selectedPromptText = selectedPromptEntry?.prompt ?? ''
 
   if (loading) return <div className="flex flex-1 items-center justify-center text-slate-500">Loading session…</div>
   if (error) return <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6"><p className="text-red-400">{error}</p><Link to="/sessions" className="text-slate-400 hover:text-slate-200">Back to Sessions</Link></div>
@@ -449,7 +450,7 @@ export function SessionDetail() {
                   </div>
                   <div>
                     <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">Prompt</label>
-                    <div className="min-h-[8rem] overflow-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm markdown-preview"><ReactMarkdown>{selectedPrompt ?? '_No prompt for this node._'}</ReactMarkdown></div>
+                    <div className="min-h-[8rem] overflow-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm markdown-preview"><ReactMarkdown>{selectedPromptText || '_No prompt for this node._'}</ReactMarkdown></div>
                   </div>
                 </div>
               ) : (
