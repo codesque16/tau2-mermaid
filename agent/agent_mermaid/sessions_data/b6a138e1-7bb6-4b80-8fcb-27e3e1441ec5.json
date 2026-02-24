@@ -1,0 +1,244 @@
+{
+  "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+  "created_ts": 1771914264.0659368,
+  "updated_ts": 1771914390.375699,
+  "events": [
+    {
+      "id": "3ff68883-2046-40d7-b4e4-b265fda18e88",
+      "ts": 1771914264.0659368,
+      "tool": "load_graph",
+      "params": {
+        "graph_id": "retail_customer_support",
+        "mermaid_source": "flowchart TD\n    START([User contacts Agent]) --> AUTH[\"Authenticate via email or name + zip\"]\n    AUTH --> ROUTE{User intent?}\n\n    %% --- Info ---\n    ROUTE -->|info request| INFO[\"Provide order / p..."
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "node_count=41"
+    },
+    {
+      "id": "731ea1f8-11f5-42f1-84ae-4a9e5d167a9d",
+      "ts": 1771914266.242662,
+      "tool": "goto_node",
+      "params": {
+        "graph_id": "retail_customer_support",
+        "node_id": "START"
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "path_len=1"
+    },
+    {
+      "id": "53a9fe73-aac1-4060-abca-8a0e5048236f",
+      "ts": 1771914268.059414,
+      "tool": "todo",
+      "params": {
+        "todos": [
+          {
+            "description": "Identify the user and their order.",
+            "status": "in_progress"
+          }
+        ]
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "pending=0 in_progress=1 completed=0"
+    },
+    {
+      "id": "90da0e6f-6fae-4e54-bdb9-d0db9715e2fd",
+      "ts": 1771914307.676099,
+      "tool": "todo",
+      "params": {
+        "todos": [
+          {
+            "description": "Identify the user and their order.",
+            "status": "in_progress"
+          },
+          {
+            "description": "Determine which order and items need to be returned.",
+            "status": "pending"
+          }
+        ]
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "pending=1 in_progress=1 completed=0"
+    },
+    {
+      "id": "c8ba7808-a056-498d-840a-c8c02d09a985",
+      "ts": 1771914347.5632799,
+      "tool": "todo",
+      "params": {
+        "todos": [
+          {
+            "description": "Identify the user and their order.",
+            "status": "completed"
+          },
+          {
+            "description": "Determine which order and items need to be returned.",
+            "status": "in_progress"
+          }
+        ]
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "pending=0 in_progress=1 completed=1"
+    },
+    {
+      "id": "385287e6-012f-4ba9-9272-cb398dffba09",
+      "ts": 1771914390.375699,
+      "tool": "todo",
+      "params": {
+        "todos": [
+          {
+            "description": "Identify the user and their order.",
+            "status": "completed"
+          },
+          {
+            "description": "Determine which order and items need to be returned.",
+            "status": "completed"
+          },
+          {
+            "description": "Cancel the pending order.",
+            "status": "in_progress"
+          }
+        ]
+      },
+      "session_id": "b6a138e1-7bb6-4b80-8fcb-27e3e1441ec5",
+      "result_summary": "pending=0 in_progress=1 completed=2"
+    }
+  ],
+  "session_state": {
+    "graphs": {
+      "retail_customer_support": {
+        "nodes": [
+          "END_INFO",
+          "ROUTE",
+          "DO_USER_ADDR",
+          "END_RETURN",
+          "START",
+          "COLLECT_MOD_PAY",
+          "IS_GC_OK",
+          "IS_DELIVERED_R",
+          "CHK_EXCH",
+          "COLLECT_RETURN",
+          "END_CANCEL",
+          "COLLECT_EXCH",
+          "ESCALATE_HUMAN",
+          "INFO",
+          "CHK_RETURN",
+          "DENY_RETURN",
+          "IS_PENDING_M",
+          "CHK_CANCEL",
+          "COLLECT_CANCEL",
+          "COLLECT_MOD_ADDR",
+          "IS_PENDING_C",
+          "END_UADDR",
+          "flowchart",
+          "DO_MOD_ITEMS",
+          "COLLECT_USER_ADDR",
+          "IS_DELIVERED_E",
+          "COLLECT_MOD_ITEMS",
+          "DO_RETURN",
+          "DO_EXCH",
+          "DENY_CANCEL",
+          "DENY_MOD",
+          "DENY_PAY",
+          "MOD_TYPE",
+          "DENY_EXCH",
+          "DO_CANCEL",
+          "END_MOD",
+          "END_EXCH",
+          "DO_MOD_ADDR",
+          "DO_MOD_PAY",
+          "AUTH",
+          "CHK_MOD"
+        ],
+        "edges": [],
+        "entry_node": "START",
+        "decision_nodes": [
+          "ROUTE",
+          "IS_GC_OK",
+          "IS_DELIVERED_R",
+          "IS_PENDING_M",
+          "IS_PENDING_C",
+          "IS_DELIVERED_E",
+          "MOD_TYPE"
+        ],
+        "terminal_nodes": [
+          "END_INFO",
+          "END_RETURN",
+          "END_CANCEL",
+          "ESCALATE_HUMAN",
+          "DENY_RETURN",
+          "END_UADDR",
+          "DENY_CANCEL",
+          "DENY_MOD",
+          "DENY_PAY",
+          "DENY_EXCH",
+          "END_MOD",
+          "END_EXCH"
+        ],
+        "node_id_to_shape": {
+          "flowchart": "rectangle",
+          "START": "stadium",
+          "AUTH": "rectangle",
+          "ROUTE": "rhombus",
+          "INFO": "rectangle",
+          "END_INFO": "stadium",
+          "CHK_CANCEL": "rectangle",
+          "IS_PENDING_C": "rhombus",
+          "DENY_CANCEL": "stadium",
+          "COLLECT_CANCEL": "rectangle",
+          "DO_CANCEL": "rectangle",
+          "END_CANCEL": "stadium",
+          "CHK_MOD": "rectangle",
+          "IS_PENDING_M": "rhombus",
+          "DENY_MOD": "stadium",
+          "MOD_TYPE": "rhombus",
+          "COLLECT_MOD_ADDR": "rectangle",
+          "DO_MOD_ADDR": "rectangle",
+          "END_MOD": "stadium",
+          "COLLECT_MOD_PAY": "rectangle",
+          "IS_GC_OK": "rhombus",
+          "DENY_PAY": "stadium",
+          "DO_MOD_PAY": "rectangle",
+          "COLLECT_MOD_ITEMS": "rectangle",
+          "DO_MOD_ITEMS": "rectangle",
+          "CHK_RETURN": "rectangle",
+          "IS_DELIVERED_R": "rhombus",
+          "DENY_RETURN": "stadium",
+          "COLLECT_RETURN": "rectangle",
+          "DO_RETURN": "rectangle",
+          "END_RETURN": "stadium",
+          "CHK_EXCH": "rectangle",
+          "IS_DELIVERED_E": "rhombus",
+          "DENY_EXCH": "stadium",
+          "COLLECT_EXCH": "rectangle",
+          "DO_EXCH": "rectangle",
+          "END_EXCH": "stadium",
+          "COLLECT_USER_ADDR": "rectangle",
+          "DO_USER_ADDR": "rectangle",
+          "END_UADDR": "stadium",
+          "ESCALATE_HUMAN": "stadium"
+        },
+        "skeleton": "flowchart TD\n  START",
+        "node_count": 41,
+        "mermaid_source": "flowchart TD\n    START([User contacts Agent]) --> AUTH[\"Authenticate via email or name + zip\"]\n    AUTH --> ROUTE{User intent?}\n\n    %% --- Info ---\n    ROUTE -->|info request| INFO[\"Provide order / product / profile info\"] --> END_INFO([End / Restart])\n\n    %% --- Cancel ---\n    ROUTE -->|cancel order| CHK_CANCEL[\"Check order status\"] --> IS_PENDING_C{status == pending?}\n    IS_PENDING_C -->|no| DENY_CANCEL([DENY: Only pending orders can be cancelled])\n    IS_PENDING_C -->|yes| COLLECT_CANCEL[\"Collect: order_id, reason\"] --> DO_CANCEL[\"Cancel and refund\"] --> END_CANCEL([End / Restart])\n\n    %% --- Modify ---\n    ROUTE -->|modify order| CHK_MOD[\"Check order status\"] --> IS_PENDING_M{status == pending?}\n    IS_PENDING_M -->|no| DENY_MOD([DENY: Only pending orders can be modified])\n    IS_PENDING_M -->|yes| MOD_TYPE{What to modify?}\n\n    MOD_TYPE -->|address| COLLECT_MOD_ADDR[\"Collect: order_id, new address\"] --> DO_MOD_ADDR[\"Update order address\"] --> END_MOD([End / Restart])\n\n    MOD_TYPE -->|payment| COLLECT_MOD_PAY[\"Collect: order_id, new payment method\"] --> IS_GC_OK{Gift card balance sufficient?}\n    IS_GC_OK -->|no| DENY_PAY([DENY: Gift card balance insufficient])\n    IS_GC_OK -->|yes or not gift card| DO_MOD_PAY[\"Update payment method\"] --> END_MOD\n\n    MOD_TYPE -->|items| COLLECT_MOD_ITEMS[\"Collect: order_id, all item changes\"] --> DO_MOD_ITEMS[\"Modify items and settle difference\"] --> END_MOD\n\n    %% --- Return ---\n    ROUTE -->|return order| CHK_RETURN[\"Check order status\"] --> IS_DELIVERED_R{status == delivered?}\n    IS_DELIVERED_R -->|no| DENY_RETURN([DENY: Only delivered orders can be returned])\n    IS_DELIVERED_R -->|yes| COLLECT_RETURN[\"Collect: order_id, items, refund method\"] --> DO_RETURN[\"Process return\"] --> END_RETURN([Return requested \u2014 email sent])\n\n    %% --- Exchange ---\n    ROUTE -->|exchange order| CHK_EXCH[\"Check order status\"] --> IS_DELIVERED_E{status == delivered?}\n    IS_DELIVERED_E -->|no| DENY_EXCH([DENY: Only delivered orders can be exchanged])\n    IS_DELIVERED_E -->|yes| COLLECT_EXCH[\"Collect: order_id, all item exchanges\"] --> DO_EXCH[\"Process exchange\"] --> END_EXCH([Exchange requested \u2014 email sent])\n\n    %% --- User address ---\n    ROUTE -->|modify default address| COLLECT_USER_ADDR[\"Collect: user_id, new address\"] --> DO_USER_ADDR[\"Update default address\"] --> END_UADDR([End / Restart])\n\n    %% --- Fallback ---\n    ROUTE -.->|out of scope| ESCALATE_HUMAN([Escalate to human agent])"
+      }
+    },
+    "path": {
+      "retail_customer_support": [
+        "START"
+      ]
+    },
+    "todos": [
+      {
+        "description": "Identify the user and their order.",
+        "status": "completed"
+      },
+      {
+        "description": "Determine which order and items need to be returned.",
+        "status": "completed"
+      },
+      {
+        "description": "Cancel the pending order.",
+        "status": "in_progress"
+      }
+    ]
+  }
+}

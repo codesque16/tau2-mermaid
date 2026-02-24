@@ -16,28 +16,12 @@ import {
 import '@xyflow/react/dist/style.css'
 import type { LayoutAlgorithm, DagreRankDir, DagreLayoutOptions } from '../utils/autoLayout'
 import { layoutWithDagre, layoutWithD3, layoutWithElk } from '../utils/autoLayout'
+import type { GraphJson, GraphNodeJson, GraphEdgeJson, FlowNodeData } from '../utils/flowGraph'
+import { graphJsonToFlow as graphJsonToFlowShared } from '../utils/flowGraph'
 
 const API_BASE = ''
 
-export interface GraphNodeJson {
-  id: string
-  label: string
-  shape: 'rectangle' | 'stadium' | 'rhombus'
-  node_type?: 'terminal' | 'normal' | 'decision'
-  x: number
-  y: number
-}
-
-export interface GraphEdgeJson {
-  source: string
-  target: string
-  label?: string | null
-}
-
-export interface GraphJson {
-  nodes: GraphNodeJson[]
-  edges: GraphEdgeJson[]
-}
+export type { GraphNodeJson, GraphEdgeJson, GraphJson }
 
 interface AgentContent {
   agent_name: string
@@ -48,44 +32,8 @@ interface AgentContent {
   graph_json: GraphJson
 }
 
-interface FlowNodeData extends Record<string, unknown> {
-  label: string
-  shape?: 'rectangle' | 'stadium' | 'rhombus'
-  nodeType?: 'terminal' | 'normal' | 'decision'
-}
-
-function graphJsonToFlow(
-  graph: GraphJson
-): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
-  const nodes: Node<FlowNodeData>[] = (graph.nodes || []).map((n) => {
-    const nodeType = n.node_type ?? (n.shape === 'stadium' ? 'terminal' : n.shape === 'rhombus' ? 'decision' : 'normal')
-    const type = nodeType as 'terminal' | 'normal' | 'decision'
-    return {
-      id: n.id,
-      type,
-      position: { x: n.x ?? 0, y: n.y ?? 0 },
-      data: {
-        label: n.label ?? n.id,
-        shape: n.shape ?? 'rectangle',
-        nodeType,
-      } as FlowNodeData,
-    }
-  })
-  const edges: Edge[] = (graph.edges || []).map((e, i) => ({
-    id: `e-${e.source}-${e.target}-${i}`,
-    source: e.source,
-    target: e.target,
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-    label: e.label ?? undefined,
-    type: 'straight',
-    style: { stroke: 'hsl(215 25% 72%)', strokeWidth: 2 },
-    labelStyle: { fill: 'hsl(215 20% 85%)', fontSize: 10 },
-    labelBgStyle: { fill: 'hsl(215 30% 18%)', fillOpacity: 0.95 },
-    labelBgBorderRadius: 4,
-    labelBgPadding: [4, 6] as [number, number],
-  }))
-  return { nodes, edges }
+function graphJsonToFlow(graph: GraphJson): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
+  return graphJsonToFlowShared(graph, { sourcePosition: Position.Right, targetPosition: Position.Left })
 }
 
 function flowToGraphJson(

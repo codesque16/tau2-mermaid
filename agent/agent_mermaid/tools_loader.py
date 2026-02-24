@@ -19,8 +19,12 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import logging
 from pathlib import Path
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
+
 
 def load_native_tools(agent_dir: Path) -> tuple[list[dict[str, Any]], Callable[[str, dict], str] | None]:
     """
@@ -31,6 +35,8 @@ def load_native_tools(agent_dir: Path) -> tuple[list[dict[str, Any]], Callable[[
         and executor(name, arguments) runs a tool and returns a string.
         If no tools package or interface is found, returns ([], None).
     """
+
+    print(f"[tools_loader] Loading native tools from {agent_dir}", flush=True)
     agent_dir = Path(agent_dir).resolve()
     tools_dir = agent_dir / "tools"
     if not tools_dir.is_dir():
@@ -46,7 +52,9 @@ def load_native_tools(agent_dir: Path) -> tuple[list[dict[str, Any]], Callable[[
         sys.path.insert(0, parent)
 
     try:
-        spec = importlib.util.spec_from_file_location("agent_tools", init_py, submodule_search_locations=[str(tools_dir)])
+        spec = importlib.util.spec_from_file_location("agent_tools", 
+        init_py, 
+        submodule_search_locations=[str(tools_dir)])
         if spec is None or spec.loader is None:
             return ([], None)
         module = importlib.util.module_from_spec(spec)
@@ -67,6 +75,18 @@ def load_native_tools(agent_dir: Path) -> tuple[list[dict[str, Any]], Callable[[
         return ([], None)
     if not isinstance(tools_list, list):
         return ([], None)
+
+    if not tools_list:
+        logger.info(
+            "Native tools package at %s returned 0 tools (e.g. missing tau2 or db.json).",
+            tools_dir,
+        )
+    else:
+        logger.info(
+            "Native tools package at %s returned %d tools.",
+            tools_dir,
+            len(tools_list),
+        )
 
     def executor(name: str, arguments: dict[str, Any]) -> str:
         try:

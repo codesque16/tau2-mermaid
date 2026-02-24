@@ -5,8 +5,9 @@ Standard interface for mermaid-agent tools:
   - get_openai_tools(agent_dir) -> list[dict]   # OpenAI/litellm tool definitions
   - execute_tool(name, arguments, agent_dir) -> str
 
-When tau2 is available, uses RetailTools and db from agent_dir/tools/db.json.
-Otherwise returns no tools and a stub executor.
+Uses the local data_model and tools in this package (same folder). When tau2 is
+available, tools.py uses tau2's toolkit; when not, it uses toolkit_stub. db.json
+is always loaded from agent_dir/tools/db.json.
 """
 
 from __future__ import annotations
@@ -17,10 +18,10 @@ from typing import Any
 
 
 def get_openai_tools(agent_dir: Path) -> list[dict[str, Any]]:
-    """Return OpenAI-format tool list for the retail agent. Requires tau2."""
+    """Return OpenAI-format tool list for the retail agent. Uses local .data_model and .tools."""
     try:
-        from tau2.domains.retail.data_model import RetailDB
-        from tau2.domains.retail.tools import RetailTools
+        from .data_model import RetailDB
+        from .tools import RetailTools
     except ImportError:
         return []
 
@@ -50,12 +51,12 @@ def get_openai_tools(agent_dir: Path) -> list[dict[str, Any]]:
 
 
 def execute_tool(name: str, arguments: dict[str, Any], agent_dir: Path, **context: Any) -> str:
-    """Execute a retail tool by name. Requires tau2 and agent_dir/tools/db.json."""
+    """Execute a retail tool by name. Uses local .data_model and .tools; db from agent_dir/tools/db.json."""
     try:
-        from tau2.domains.retail.data_model import RetailDB
-        from tau2.domains.retail.tools import RetailTools
+        from .data_model import RetailDB
+        from .tools import RetailTools
     except ImportError:
-        return json.dumps({"error": "tau2 not installed; native retail tools unavailable"})
+        return json.dumps({"error": "retail tools package incomplete; native retail tools unavailable"})
 
     db_path = agent_dir / "tools" / "db.json"
     if not db_path.is_file():
@@ -66,6 +67,10 @@ def execute_tool(name: str, arguments: dict[str, Any], agent_dir: Path, **contex
         return json.dumps({"error": f"Unknown tool: {name}"})
     try:
         result = toolkit.use_tool(name, **arguments)
-        return result if isinstance(result, str) else json.dumps(result)
+        if isinstance(result, str):
+            return result
+        if hasattr(result, "model_dump"):
+            return json.dumps(result.model_dump())
+        return json.dumps(result)
     except Exception as e:
         return json.dumps({"error": str(e)})

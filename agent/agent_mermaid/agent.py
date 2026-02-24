@@ -78,11 +78,11 @@ def _build_system_prompt(agent_dir: Path, nodes_list: list[str]) -> str:
     return prompt
 
 
-def _build_sop_system_prompt(prose: str, skeleton: str) -> str:
+def _build_sop_system_prompt(prose: str, skeleton: str, graph_id: str) -> str:
     """Build system prompt from SOP prose and skeleton graph (from load_graph)."""
     prompt = prose.strip()
     prompt += "\n\n## SOP Flowchart (skeleton)\n\nUse the tools load_graph (already called), goto_node, and todo to follow the flow. Topology:\n\n```mermaid\n" + (skeleton or "flowchart TD") + "\n```"
-    prompt += "\n\nCall goto_node(graph_id, node_id) to get full instructions for a node. Call todo to track multi-intent tasks. Pass the same session_id on each call so state is preserved."
+    prompt += f"\n\n**Important:** For every goto_node and todo call use graph_id \"{graph_id}\" (same as load_graph). Pass the same session_id on each call so state is preserved."
     return prompt
 
 
@@ -115,7 +115,7 @@ class MermaidAgent(BaseAgent):
         root = Path(mermaid_agents_root) if mermaid_agents_root else _DEFAULT_MERMAID_AGENTS_ROOT
         self._agent_dir = get_mermaid_agent_dir(root, agent_name)
         self._mcp_server_url = (mcp_server_url or "").strip() or None
-        self._graph_id = graph_id or "retail_support_v1"
+        self._graph_id = graph_id or "retail_customer_support"
         self._sop_data = load_sop_markdown(self._agent_dir)
 
         use_sop_mcp = bool(self._mcp_server_url and self._sop_data)
@@ -182,7 +182,7 @@ class MermaidAgent(BaseAgent):
         if not skeleton and hasattr(load_result, "structuredContent") and load_result.structuredContent:
             skeleton = (load_result.structuredContent or {}).get("skeleton", "")
 
-        self._system_prompt = _build_sop_system_prompt(self._sop_data["prose"], skeleton)
+        self._system_prompt = _build_sop_system_prompt(self._sop_data["prose"], skeleton, self._graph_id)
 
         tools_response = await self._mcp_session.list_tools()
         self._sop_tools = _mcp_tools_to_openai_format(tools_response)

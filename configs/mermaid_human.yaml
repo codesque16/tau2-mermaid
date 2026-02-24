@@ -11,7 +11,7 @@ user_agent_type: human
 assistant_agent_name: retail
 # Uncomment to use SOP MCP (load_graph, goto_node, todo). Start sop_mcp_server first.
 mcp_server_url: http://localhost:8000
-graph_id: retail_support_v1
+graph_id: retail_customer_support
 
 max_turns: 20
 stop_phrases:

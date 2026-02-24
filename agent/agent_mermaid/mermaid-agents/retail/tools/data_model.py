@@ -1,9 +1,24 @@
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union
 
+import json
 from pydantic import BaseModel, Field
 
-from tau2.domains.retail.utils import RETAIL_DB_PATH
-from tau2.environment.db import DB
+try:
+    from tau2.environment.db import DB
+except ImportError:
+    class DB(BaseModel):
+        """Minimal DB base when tau2 is not installed."""
+
+        @classmethod
+        def load(cls, path: str) -> "DB":
+            data = json.loads(Path(path).read_text())
+            return cls.model_validate(data)
+
+try:
+    from tau2.domains.retail.utils import RETAIL_DB_PATH
+except ImportError:
+    RETAIL_DB_PATH = None
 
 
 class Variant(BaseModel):
@@ -235,6 +250,8 @@ class RetailDB(DB):
 
 
 def get_db():
+    if RETAIL_DB_PATH is None:
+        raise RuntimeError("RETAIL_DB_PATH not set (tau2 not installed); use RetailDB.load(path) with agent_dir/tools/db.json")
     return RetailDB.load(RETAIL_DB_PATH)
 
 

@@ -13,14 +13,14 @@ console = Console()
 
 
 def print_role_header(role: str, turn: int | None = None, seed: bool = False) -> None:
-    """Print a section header for the given role."""
+    """Print a section header for the given role (muted so main message stands out)."""
     label = f"[{role}]"
     if turn is not None:
         label += f" (turn {turn})"
     if seed:
         label += " (seed)"
     console.print()
-    console.print(Rule(label, style="bold blue"))
+    console.print(Rule(label, style="dim"))
     console.print()
 
 
@@ -32,21 +32,21 @@ def print_markdown(content: str) -> None:
 
 
 def print_tool_call(name: str, tool_id: str, input_data: dict[str, Any] | None) -> None:
-    """Print a tool call in a panel with formatted input."""
+    """Print a tool call in a panel with formatted input (muted so main message stands out)."""
     input_str = json.dumps(input_data or {}, indent=2)
-    body = f"[bold cyan]Tool:[/] {name}\n[bold]ID:[/] {tool_id}\n\n[bold]Input:[/]\n{input_str}"
-    console.print(Panel(body, title="[bold]Tool call[/]", border_style="yellow"))
+    body = f"[dim]Tool:[/dim] [dim]{name}[/dim]\n[dim]ID:[/dim] [dim]{tool_id}[/dim]\n\n[dim]Input:[/dim]\n[dim]{input_str}[/dim]"
+    console.print(Panel(body, title="[dim]Tool call[/dim]", border_style="dim"))
     console.print()
 
 
 def print_stop_phrase(reason: str) -> None:
-    """Print stop phrase detection message."""
-    console.print(f"\n[green]{reason}[/green]")
+    """Print stop phrase detection message (muted)."""
+    console.print(f"\n[dim]{reason}[/dim]")
 
 
 def print_max_turns_reached(max_turns: int) -> None:
-    """Print message when max turns is reached."""
-    console.print(f"\n[yellow]Max turns ({max_turns}) reached.[/yellow]")
+    """Print message when max turns is reached (muted)."""
+    console.print(f"\n[dim]Max turns ({max_turns}) reached.[/dim]")
 
 
 def print_simulation_complete(message_count: int) -> None:
@@ -73,23 +73,23 @@ def _format_usage(usage: dict[str, Any] | None) -> str:
 
 
 def print_turn_cost(role: str, usage: dict[str, Any] | None, cost: float | None) -> None:
-    """Print token usage and cost for one turn (assistant or user)."""
+    """Print token usage and cost for one turn (muted so main message stands out)."""
     usage_str = _format_usage(usage)
     cost_str = f"${cost:.4f}" if cost is not None and cost > 0 else "—"
-    body = f"[bold]Tokens:[/] {usage_str}\n[bold]Cost this turn:[/] {cost_str}"
-    console.print(Panel(body, title=f"[bold]Usage — {role}[/]", border_style="dim"))
+    body = f"[dim]Tokens:[/dim] [dim]{usage_str}[/dim]\n[dim]Cost this turn:[/dim] [dim]{cost_str}[/dim]"
+    console.print(Panel(body, title=f"[dim]Usage — {role}[/dim]", border_style="dim"))
     console.print()
 
 
 def print_total_cost(agent_cost: float, user_cost: float) -> None:
-    """Print total simulation cost (agent + user)."""
+    """Print total simulation cost (muted so main message stands out)."""
     total = agent_cost + user_cost
     body = (
-        f"[bold]Assistant total:[/] ${agent_cost:.4f}\n"
-        f"[bold]User total:[/]     ${user_cost:.4f}\n"
-        f"[bold]Total:[/]          ${total:.4f}"
+        f"[dim]Assistant total:[/dim] [dim]${agent_cost:.4f}[/dim]\n"
+        f"[dim]User total:[/dim]     [dim]${user_cost:.4f}[/dim]\n"
+        f"[dim]Total:[/dim]          [dim]${total:.4f}[/dim]"
     )
-    console.print(Panel(body, title="[bold]Total cost (simulation)[/]", border_style="green"))
+    console.print(Panel(body, title="[dim]Total cost (simulation)[/dim]", border_style="dim"))
     console.print()
 
 

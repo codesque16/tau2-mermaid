@@ -32,10 +32,12 @@ except ImportError:
 
 # Paths for viewer app (Vite build) and mermaid-agents list
 from agent.agent_mermaid.mermaid_graph import mermaid_to_graph_json, graph_json_to_mermaid
+from agent.agent_mermaid.utils import compose_agents_md, parse_agents_md
 
 _AGENT_MERMAID_DIR = Path(__file__).resolve().parent
 VIEWER_APP_DIST = _AGENT_MERMAID_DIR / "viewer-app" / "dist"
 MERMAID_AGENTS_DIR = _AGENT_MERMAID_DIR / "mermaid-agents"
+SESSIONS_DATA_DIR = _AGENT_MERMAID_DIR / "sessions_data"
 
 
 def _safe_agent_name(name: str) -> bool:
@@ -43,92 +45,6 @@ def _safe_agent_name(name: str) -> bool:
     if not name or "/" in name or "\\" in name or name.startswith("."):
         return False
     return all(c.isalnum() or c in "_-" for c in name)
-
-
-def _parse_agents_md(content: str) -> dict[str, Any]:
-    """Parse AGENTS.md content into frontmatter, mermaid, node_prompts, rest_md."""
-    frontmatter = ""
-    rest_md = ""
-    mermaid = ""
-    node_prompts: dict[str, str] = {}
-
-    fm_start = content.find("---")
-    if fm_start >= 0:
-        fm_end = content.find("---", fm_start + 3)
-        if fm_end >= 0:
-            frontmatter = content[fm_start : fm_end + 3].strip()
-            content = content[fm_end + 3 :].lstrip("\n")
-    body = content
-
-    sop_header = "## SOP Flowchart"
-    idx_sop = body.find(sop_header)
-    if idx_sop >= 0:
-        rest_md = body[:idx_sop].strip()
-        body = body[idx_sop:]
-    else:
-        rest_md = body.strip()
-        body = ""
-
-    if body:
-        mm_start = body.find("```mermaid")
-        if mm_start >= 0:
-            mm_start = body.find("\n", mm_start) + 1
-            mm_end = body.find("```", mm_start)
-            if mm_end >= 0:
-                mermaid = body[mm_start:mm_end].strip()
-        np_header = "## Node Prompts"
-        idx_np = body.find(np_header)
-        if idx_np >= 0:
-            prompts_section = body[idx_np + len(np_header) :].strip()
-            parts = re.split(r"\n###\s+", prompts_section, flags=re.IGNORECASE)
-            for i, block in enumerate(parts):
-                block = block.strip()
-                if not block:
-                    continue
-                first_line = block.split("\n")[0].strip()
-                if not first_line:
-                    continue
-                if i == 0 and first_line.lower() == "node prompts":
-                    continue
-                node_id = first_line
-                prompt_content = "\n".join(block.split("\n")[1:]).strip()
-                node_prompts[node_id] = prompt_content
-
-    return {
-        "frontmatter": frontmatter,
-        "rest_md": rest_md,
-        "mermaid": mermaid,
-        "node_prompts": node_prompts,
-    }
-
-
-def _compose_agents_md(
-    frontmatter: str, rest_md: str, mermaid: str, node_prompts: dict[str, str]
-) -> str:
-    """Compose full AGENTS.md content from parts."""
-    out = []
-    if frontmatter:
-        out.append(
-            frontmatter if frontmatter.startswith("---") else f"---\n{frontmatter}\n---"
-        )
-        out.append("")
-    if rest_md:
-        out.append(rest_md.strip())
-        out.append("")
-    out.append("## SOP Flowchart")
-    out.append("")
-    out.append("```mermaid")
-    out.append(mermaid.strip() if mermaid.strip() else "flowchart TD")
-    out.append("```")
-    out.append("")
-    out.append("## Node Prompts")
-    out.append("")
-    for node_id, prompt in sorted(node_prompts.items()):
-        out.append(f"### {node_id}")
-        out.append("")
-        out.append(prompt.strip())
-        out.append("")
-    return "\n".join(out).rstrip() + "\n"
 
 
 class SpaStaticFiles(StaticFiles):
@@ -159,6 +75,84 @@ _MAX_EVENTS_PER_SESSION = 500
 _MAX_TOTAL_EVENTS = 10_000
 
 
+def _safe_session_filename(session_id: str) -> str:
+    """Safe filename for session_id (alnum, dash, underscore only)."""
+    return re.sub(r"[^\w\-]", "_", session_id or "default")[:200]
+
+
+def _persist_session(session_id: str) -> None:
+    """Write session events and state to JSON for persistence and replay.
+    Format: session_id, created_ts, updated_ts, events (ordered tool calls), session_state (graphs, path, todos).
+    Replay can step through events and restore graph_state at each step.
+    """
+    if not SESSIONS_DATA_DIR.exists():
+        SESSIONS_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    events = _session_to_events.get(session_id, [])
+    state = _sessions.get(session_id)
+    created_ts = events[0].ts if events else time.time()
+    updated_ts = events[-1].ts if events else time.time()
+    payload = {
+        "session_id": session_id,
+        "created_ts": created_ts,
+        "updated_ts": updated_ts,
+        "events": [
+            {
+                "id": e.id,
+                "ts": e.ts,
+                "tool": e.tool,
+                "params": e.params,
+                "session_id": e.session_id,
+                "result_summary": e.result_summary,
+            }
+            for e in events
+        ],
+        "session_state": {
+            "graphs": state.graphs if state else {},
+            "path": state.path if state else {},
+            "todos": state.todos if state else [],
+        },
+    }
+    path = SESSIONS_DATA_DIR / f"{_safe_session_filename(session_id)}.json"
+    try:
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError as e:
+        logging.warning("Failed to persist session %s: %s", session_id[:16], e)
+
+
+def _load_persisted_sessions() -> None:
+    """Load persisted sessions from JSON into in-memory stores (for restart and replay)."""
+    if not SESSIONS_DATA_DIR.is_dir():
+        return
+    for path in SESSIONS_DATA_DIR.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logging.warning("Failed to load session file %s: %s", path.name, e)
+            continue
+        session_id = payload.get("session_id") or path.stem
+        events_data = payload.get("events") or []
+        for ev in events_data:
+            event = ConnectionEvent(
+                id=ev.get("id") or str(uuid.uuid4()),
+                ts=float(ev.get("ts", 0)),
+                tool=ev.get("tool", ""),
+                params=ev.get("params") or {},
+                session_id=ev.get("session_id") or session_id,
+                result_summary=ev.get("result_summary", ""),
+            )
+            _connection_events.append(event)
+            _session_to_events[session_id].append(event)
+        ss = payload.get("session_state") or {}
+        if ss:
+            state = _sessions[session_id]
+            state.graphs = ss.get("graphs") or {}
+            state.path = ss.get("path") or {}
+            state.todos = ss.get("todos") or []
+    # Trim global after load
+    while len(_connection_events) > _MAX_TOTAL_EVENTS:
+        _connection_events.pop(0)
+
+
 def _record_connection(session_id: str, tool: str, params: dict[str, Any], result_summary: str = "") -> None:
     event = ConnectionEvent(
         id=str(uuid.uuid4()),
@@ -176,6 +170,7 @@ def _record_connection(session_id: str, tool: str, params: dict[str, Any], resul
     # Trim global
     while len(_connection_events) > _MAX_TOTAL_EVENTS:
         _connection_events.pop(0)
+    _persist_session(session_id)
 
 
 def _get_sessions() -> list[dict[str, Any]]:
@@ -203,6 +198,20 @@ def _get_sessions() -> list[dict[str, Any]]:
     return out
 
 
+def _agent_name_from_graph_id(graph_id: str) -> str | None:
+    """Resolve agent name from graph_id (e.g. retail_customer_support -> retail)."""
+    if not graph_id or not MERMAID_AGENTS_DIR.is_dir():
+        return None
+    # Try full graph_id as agent folder name
+    if (MERMAID_AGENTS_DIR / graph_id / "AGENTS.md").is_file():
+        return graph_id
+    # Try first segment (e.g. retail_customer_support -> retail)
+    first = graph_id.split("_")[0]
+    if first and (MERMAID_AGENTS_DIR / first / "AGENTS.md").is_file():
+        return first
+    return None
+
+
 def _get_session_detail(session_id: str) -> dict[str, Any] | None:
     """Get full tool-call log and graph state (path, current node) for a session."""
     events = _session_to_events.get(session_id)
@@ -214,8 +223,15 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
         for gid, g in state.graphs.items():
             path = state.path.get(gid, [])
             m = g.get("skeleton") or g.get("mermaid_source", "")
+            mermaid_source = g.get("mermaid_source", m)
+            graph_json = {"nodes": [], "edges": []}
+            if mermaid_source:
+                try:
+                    graph_json = mermaid_to_graph_json(mermaid_source)
+                except Exception:
+                    pass
             graph_state[gid] = {
-                "mermaid_source": g.get("mermaid_source", m),
+                "mermaid_source": mermaid_source or m,
                 "skeleton": g.get("skeleton", m),
                 "path": path,
                 "current_node": path[-1] if path else None,
@@ -223,9 +239,31 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
                 "nodes": g.get("nodes"),
                 "edges": g.get("edges"),
                 "node_id_to_shape": g.get("node_id_to_shape"),
+                "graph_json": graph_json,
             }
+    # Include agent content (node_prompts, frontmatter, rest_md) from first graph's agent
+    frontmatter = ""
+    rest_md = ""
+    node_prompts: dict[str, str] = {}
+    if state and state.graphs:
+        first_gid = next(iter(state.graphs), None)
+        agent_name = _agent_name_from_graph_id(first_gid) if first_gid else None
+        if agent_name:
+            path = MERMAID_AGENTS_DIR / agent_name / "AGENTS.md"
+            if path.is_file():
+                try:
+                    parsed = parse_agents_md(path.read_text(encoding="utf-8"))
+                    frontmatter = parsed.get("frontmatter", "") or ""
+                    rest_md = parsed.get("rest_md", "") or ""
+                    node_prompts = parsed.get("node_prompts", {}) or {}
+                except Exception:
+                    pass
+    created_ts = events[0].ts if events else None
+    updated_ts = events[-1].ts if events else None
     return {
         "session_id": session_id,
+        "created_ts": created_ts,
+        "updated_ts": updated_ts,
         "events": [
             {
                 "id": e.id,
@@ -237,6 +275,9 @@ def _get_session_detail(session_id: str) -> dict[str, Any] | None:
             for e in events
         ],
         "graph_state": graph_state,
+        "frontmatter": frontmatter or None,
+        "rest_md": rest_md or None,
+        "node_prompts": node_prompts if node_prompts else None,
     }
 
 
@@ -475,17 +516,26 @@ if HAS_MCP:
         """
         session_id = _get_or_create_session(session_id)
         state = _sessions[session_id]
-        state.todos = todos
-        pending = sum(1 for t in todos if t.get("status") == "pending")
-        in_progress = sum(1 for t in todos if t.get("status") == "in_progress")
-        completed = sum(1 for t in todos if t.get("status") == "completed")
+        # Normalize: accept both "description" and "content" for task text; store as "description"
+        normalized = []
+        for t in todos:
+            d = dict(t)
+            desc = d.get("description") or d.get("content") or ""
+            d["description"] = desc
+            if "content" in d and "description" in d:
+                d.pop("content", None)
+            normalized.append(d)
+        state.todos = normalized
+        pending = sum(1 for t in normalized if t.get("status") == "pending")
+        in_progress = sum(1 for t in normalized if t.get("status") == "in_progress")
+        completed = sum(1 for t in normalized if t.get("status") == "completed")
         result = {
-            "todos": todos,
+            "todos": normalized,
             "summary": {"pending": pending, "in_progress": in_progress, "completed": completed},
         }
         _record_connection(
             session_id, "todo",
-            {"todos": [{"content": t.get("content", "")[:80], "status": t.get("status")} for t in todos]},
+            {"todos": [{"description": (t.get("description") or "")[:80], "status": t.get("status")} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
         )
         return result
@@ -537,7 +587,7 @@ async def get_agent_content(request: Request) -> JSONResponse:
             {"error": f"Failed to read file: {e}", "agent_name": agent_name},
             status_code=500,
         )
-    parsed = _parse_agents_md(content)
+    parsed = parse_agents_md(content)
     graph_json: dict[str, Any] = {"nodes": [], "edges": []}
     if parsed["mermaid"]:
         try:
@@ -594,7 +644,7 @@ async def save_agent_content(request: Request) -> JSONResponse:
     if not isinstance(node_prompts, dict):
         node_prompts = {}
     try:
-        full_content = _compose_agents_md(
+        full_content = compose_agents_md(
             frontmatter, rest_md, mermaid, node_prompts
         )
         path.write_text(full_content, encoding="utf-8")
@@ -708,6 +758,9 @@ def build_sop_mcp_app() -> Starlette:
 
 
 app = build_sop_mcp_app()
+
+# Load persisted sessions so they survive restarts (and support replay later)
+_load_persisted_sessions()
 
 
 if __name__ == "__main__":
