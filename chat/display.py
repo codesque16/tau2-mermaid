@@ -13,12 +13,18 @@ console = Console()
 
 
 def print_role_header(role: str, turn: int | None = None, seed: bool = False) -> None:
-    """Print a section header for the given role (muted so main message stands out)."""
-    label = f"[{role}]"
+    """Print a section header for the given role; [Assistant] in cyan, [User] in green."""
+    if role.lower() == "assistant":
+        role_styled = "[bold cyan][Assistant][/bold cyan]"
+    elif role.lower() == "user":
+        role_styled = "[bold green][User][/bold green]"
+    else:
+        role_styled = f"[{role}]"
+    label = role_styled
     if turn is not None:
-        label += f" (turn {turn})"
+        label += f"[dim] (turn {turn})[/dim]"
     if seed:
-        label += " (seed)"
+        label += "[dim] (seed)[/dim]"
     console.print()
     console.print(Rule(label, style="dim"))
     console.print()
@@ -73,24 +79,16 @@ def _format_usage(usage: dict[str, Any] | None) -> str:
 
 
 def print_turn_cost(role: str, usage: dict[str, Any] | None, cost: float | None) -> None:
-    """Print token usage and cost for one turn (muted so main message stands out)."""
+    """Print token usage and cost for one turn as a single footnote line."""
     usage_str = _format_usage(usage)
     cost_str = f"${cost:.4f}" if cost is not None and cost > 0 else "—"
-    body = f"[dim]Tokens:[/dim] [dim]{usage_str}[/dim]\n[dim]Cost this turn:[/dim] [dim]{cost_str}[/dim]"
-    console.print(Panel(body, title=f"[dim]Usage — {role}[/dim]", border_style="dim"))
-    console.print()
+    console.print(f"[dim]Usage — {role}:  Tokens: {usage_str}  Cost: {cost_str}[/dim]")
 
 
 def print_total_cost(agent_cost: float, user_cost: float) -> None:
-    """Print total simulation cost (muted so main message stands out)."""
+    """Print total simulation cost as a single footnote line."""
     total = agent_cost + user_cost
-    body = (
-        f"[dim]Assistant total:[/dim] [dim]${agent_cost:.4f}[/dim]\n"
-        f"[dim]User total:[/dim]     [dim]${user_cost:.4f}[/dim]\n"
-        f"[dim]Total:[/dim]          [dim]${total:.4f}[/dim]"
-    )
-    console.print(Panel(body, title="[dim]Total cost (simulation)[/dim]", border_style="dim"))
-    console.print()
+    console.print(f"[dim]Total cost — Assistant: ${agent_cost:.4f}  User: ${user_cost:.4f}  Total: ${total:.4f}[/dim]")
 
 
 class StreamingDisplay:

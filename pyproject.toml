@@ -29,6 +29,7 @@ include = ["agent*", "orchestrator*", "chat*"]
 
 [tool.logfire]
 project_name = "tau2-mermaid"
+console = false  # mute Logfire URL and trace output in terminal
 console_colors = "auto"  # 'auto' | 'always' | 'never'
 
 [dependency-groups]

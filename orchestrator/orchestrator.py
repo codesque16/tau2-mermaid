@@ -98,7 +98,7 @@ class Orchestrator:
                     )
                     display.finish()
             else:
-                # Human agent: no Live display so terminal input is visible while typing
+                # Human agent: don't print "text" chunk — user already saw their input when typing
                 async def on_chunk_user(ev: str, data: object) -> None:
                     if ev == "tool_use" and isinstance(data, dict):
                         print_tool_call(
@@ -106,8 +106,6 @@ class Orchestrator:
                             tool_id=data.get("id", ""),
                             input_data=data.get("input"),
                         )
-                    elif ev == "text" and data:
-                        print_markdown(str(data))
 
                 user_reply, usage_info_user = await self.user.respond_stream(
                     assistant_reply, on_chunk=on_chunk_user

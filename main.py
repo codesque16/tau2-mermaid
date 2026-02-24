@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import sys
+import warnings
 from pathlib import Path
 
 import logfire
@@ -99,7 +100,10 @@ async def run(config_path: Path) -> None:
 
 def main() -> None:
     load_dotenv()
-    logfire.configure(scrubbing=False)
+    # Mute Pydantic serializer warnings from LLM instrumentation
+    warnings.filterwarnings("ignore", message=".*[Pp]ydantic.*serializer.*", category=UserWarning)
+    warnings.filterwarnings("ignore", module="pydantic", category=UserWarning)
+    logfire.configure(scrubbing=False, console=False)
 
     # Initialize Logfire LLM instrumentation (see logfire.pydantic.dev/docs/integrations/llms/)
     # Each call instruments the corresponding SDK so traces show provider, model, tokens, and cost.
