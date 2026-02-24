@@ -118,6 +118,97 @@
   overflow: hidden;
 }
 
+.table-wrap.table-scroll {
+  max-height: min(70vh, 600px);
+  overflow: auto;
+  display: block;
+}
+
+.table-wrap.table-scroll table {
+  display: table;
+}
+
+.sessions-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sessions-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.sessions-pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sessions-range {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.sessions-page-size {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.sessions-page-size select {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.sessions-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sessions-page-num {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.table-wrap .col-checkbox {
+  width: 2.5rem;
+  padding-left: 0.75rem;
+  vertical-align: middle;
+}
+
+.table-wrap .col-checkbox input {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.btn-danger {
+  background: #b91c1c;
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+  filter: brightness(1.05);
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .table-wrap table {
   width: 100%;
   border-collapse: collapse;

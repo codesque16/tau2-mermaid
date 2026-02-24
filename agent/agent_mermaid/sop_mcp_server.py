@@ -19,6 +19,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse, HTMLResponse
 from starlette.routing import Mount, Route
@@ -53,10 +54,12 @@ class SpaStaticFiles(StaticFiles):
     """Serve static files and fallback to index.html for SPA client-side routes."""
 
     async def get_response(self, path: str, scope: Any) -> Any:
-        response = await super().get_response(path, scope)
-        if response.status_code == 404:
-            return await super().get_response("index.html", scope)
-        return response
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as e:
+            if e.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise
 @dataclass
 class ConnectionEvent:
     """A single tool-call event from a connection."""
@@ -569,6 +572,33 @@ async def get_connection_detail(request: Request) -> JSONResponse:
     return JSONResponse(detail)
 
 
+def _delete_session(session_id: str) -> bool:
+    """Remove a session from in-memory stores and delete its persisted file. Returns True if deleted."""
+    if not session_id or not session_id.strip():
+        return False
+    # Remove from global event list
+    _connection_events[:] = [e for e in _connection_events if e.session_id != session_id]
+    _session_to_events.pop(session_id, None)
+    _sessions.pop(session_id, None)
+    # Delete persisted file
+    path = SESSIONS_DATA_DIR / f"{_safe_session_filename(session_id)}.json"
+    if path.is_file():
+        try:
+            path.unlink()
+        except OSError as e:
+            logging.warning("Failed to delete session file %s: %s", path.name, e)
+    return True
+
+
+async def delete_connection(request: Request) -> JSONResponse:
+    """DELETE /api/connections/{session_id} — remove a session from the list and delete its data."""
+    session_id = request.path_params.get("session_id", "")
+    if not session_id or not session_id.strip():
+        return JSONResponse({"error": "session_id required"}, status_code=400)
+    _delete_session(session_id)
+    return JSONResponse({"deleted": True, "session_id": session_id})
+
+
 async def list_agents(_request: Request) -> JSONResponse:
     """GET /api/agents — list agent names (subdirectories of mermaid-agents that contain AGENTS.md)."""
     agents: list[str] = []
@@ -727,6 +757,7 @@ def build_sop_mcp_app() -> Starlette:
     api_routes = [
         Route("/api/connections", list_connections, methods=["GET"]),
         Route("/api/connections/{session_id}", get_connection_detail, methods=["GET"]),
+        Route("/api/connections/{session_id}", delete_connection, methods=["DELETE"]),
         Route("/api/agents", list_agents, methods=["GET"]),
         Route("/api/agents/{agent_name}", get_agent_content, methods=["GET"]),
         Route("/api/agents/{agent_name}/save", save_agent_content, methods=["POST"]),
