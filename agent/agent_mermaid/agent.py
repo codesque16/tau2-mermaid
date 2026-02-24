@@ -286,6 +286,7 @@ class MermaidAgent(BaseAgent):
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
                 reasoning_effort=getattr(self.config, "reasoning_effort", "low"),
+                drop_params=True,
             )
 
             choice = response.choices[0] if response.choices else None

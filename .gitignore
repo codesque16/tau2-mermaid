@@ -62,6 +62,9 @@ ehthumbs.db
 *.temp
 .cache/
 
+# Sessions data (MCP server persisted sessions)
+agent/agent_mermaid/sessions_data/
+
 # Node (e.g. tau2-bench/web/leaderboard)
 node_modules/
 .npm

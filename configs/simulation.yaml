@@ -1,19 +1,11 @@
-# Single simulation config. Set API keys in .env (ANTHROPIC_API_KEY, GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY).
-# model: default for both. Optional: assistant_model, user_model; assistant_agent_type, user_agent_type (anthropic | gemini | openai | litellm).
-# With litellm, one agent can use any model (e.g. gpt-4o-mini, claude-3-5-haiku, gemini/gemini-2.5-flash).
 model: gemini-2.5-flash-lite
-assistant_model: gemini/gemini-2.5-flash-lite
-# user_model: claude-haiku-4-5
-user_model: gpt-4o-mini
-assistant_agent_type: litellm
-user_agent_type: litellm
 max_turns: 10
-stop_phrases:
-  - "[GOAL_ACHIEVED]"
-# initial_message: optional; if omitted or empty, the assistant generates the first message
+stop_phrases: ["[GOAL_ACHIEVED]"]
 initial_message: "Hi! Can you help me write a merge sort function in Python?"
 
 assistant:
+  agent_type: litellm
+  model: gemini/gemini-2.5-flash-lite
   system_prompt: |
     You are a helpful coding assistant. You help developers write clean,
     correct code. When asked to write code, provide working implementations
@@ -22,6 +14,8 @@ assistant:
   max_tokens: 1024
 
 user:
+  agent_type: litellm
+  model: gpt-4o-mini
   system_prompt: |
     You are simulating a human developer talking to a coding assistant.
 
