@@ -16,9 +16,9 @@ import yaml
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal, Required, TypedDict
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
@@ -650,7 +650,10 @@ if HAS_MCP:
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Move to a node in the SOP graph. Returns the node description, prompt, tools, examples, and valid next edges. Validates that the transition is legal from the current position.
+        Move to a node in the SOP graph. Always call this before acting —
+        full instructions, tools, and policy are delivered here, not from
+        the mermaid graph. Returns prompt, tools, examples, and valid next
+        edges. Validates the transition is legal from the current position.
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
@@ -695,20 +698,19 @@ if HAS_MCP:
         else:
             state.path[graph_id] = path + [node_id] if path else [node_id]
 
-        node_type = g["node_id_to_shape"].get(node_id, "rectangle")
         edges_out = [{"to": to_id, "condition": lab} for (a, to_id, lab) in g["edges"] if a == node_id]
-        # Build node per MCP spec: id, type, description (from mermaid label), prompt, tools, examples from node_prompts
+        # Build node: id, node_instruction (prompt if present else mermaid label), tools, examples from node_prompts
         node_prompts_map = g.get("node_prompts") or {}
         prompt_entry = node_prompts_map.get(node_id)
         description = (g.get("node_id_to_label") or {}).get(node_id) or node_id
+        node_instruction = (prompt_entry.get("prompt") or "").strip() if prompt_entry else ""
+        if not node_instruction:
+            node_instruction = description
         node_payload: dict[str, Any] = {
             "id": node_id,
-            "type": node_type,
-            "description": description,
+            "node_instruction": node_instruction,
         }
         if prompt_entry:
-            if prompt_entry.get("prompt"):
-                node_payload["prompt"] = prompt_entry["prompt"]
             if prompt_entry.get("tools"):
                 node_payload["tools"] = list(prompt_entry["tools"])
             if prompt_entry.get("examples"):
@@ -726,34 +728,28 @@ if HAS_MCP:
         _log_mcp_tool("goto_node", {"node_id": node_id}, result)
         return result
 
-    class TodoItem(BaseModel):
-        """A single todo item per spec: content, status required; note, completion_node optional."""
-        content: str = Field(..., min_length=1, description="Task description")
-        status: Literal["pending", "in_progress", "completed"] = Field(
-            ..., description="Current task status"
-        )
-        note: str | None = Field(None, description="Optional context, dependencies, or findings from other tasks")
-        completion_node: str | None = Field(
-            None,
-            description="Terminal SOP node ID that marks this task as done. When goto_node reaches this node, it reminds the agent to update todos.",
-        )
+    class TodoItem(TypedDict, total=False):
+        content: Required[Annotated[str, Field(min_length=1, description="Task description, what needs to be done")]]
+        status: Required[Annotated[Literal["pending", "in_progress", "completed"], Field(description="Task Status")]]
+        note: Annotated[str, Field(default="", description="Scratchpad/Memory for context, dependencies, or findings relevant to this task")]
+        completion_node: Annotated[str, Field(default="", description="Expected terminal ([stadium]) node ID for this Task")]
 
     @mcp.tool()
     def todo(
-        todos: list[TodoItem],
+        todos: Annotated[list[TodoItem], Field(description="Full replacement todo list — always resend all items, not just changes")],
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Create and manage a structured task list for the current conversation. Write the full updated list on each call. Tasks are internal to the agent and not shown to the user.
+        Maintain a structured task list for the current session. Each call replaces the entire list, so always include all todos. Tasks are internal to the agent and not shown to the user. Use status transitions (pending → in_progress → completed) to track progress; use note to carry forward findings between tasks.
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
         normalized = [
             {
-                "content": t.content,
-                "status": t.status,
-                "note": t.note or "",
-                "completion_node": t.completion_node or "",
+                "content": t["content"],
+                "status": t["status"],
+                "note": t.get("note", ""),
+                "completion_node": t.get("completion_node", ""),
             }
             for t in todos
         ]
