@@ -130,3 +130,30 @@ uv run tau2 run --domain retail --agent llm_mermaid_agent --agent-llm "gpt-4.1-m
 - `--domain retail` — use the retail domain.
 - `--agent llm_mermaid_agent` — use the Mermaid-backed LLM agent.
 - `--mcp-server-url` and `--mcp-sop-file` — point the agent at the running MCP server and the retail SOP file.
+
+
+### Important Commands
+
+**Export trajectories to pages:**
+
+```bash
+uv run python scripts/export_trajectories_for_pages.py --add --name "[Retail][Mermaid_harness_v1][2026-02-25T13_34_45]" data/simulations/2026-02-25T13:34:45.328964_retail_llm_mermaid_agent_gpt-4.1-mini_user_simulator_gpt-4.1-mini.json
+```
+
+Example output:
+```
+Exported 114 tasks → docs/data/_Retail__Mermaid_harness_v1__2026-02-25T13_34_45_/
+Wrote runs manifest: docs/data/runs.json (30 runs)
+```
+
+**Run tau2 with Mermaid agent:**
+
+```bash
+uv run tau2 run --domain retail --agent llm_mermaid_agent --agent-llm "gpt-4.1-mini" --user-llm "gpt-4.1-mini" --service-name "retail-mermaid-tau2" --name "[MERMAID_AGENT][ALL]" --max-steps 60 --seed 12345 --mcp-server-url http://localhost:8000/mcp --mcp-sop-file "retail/AGENTS.md"
+```
+
+**Start the MCP server:**
+
+```bash
+uv run python -m agent.agent_mermaid.sop_mcp_server
+```
