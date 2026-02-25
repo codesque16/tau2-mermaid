@@ -103,3 +103,30 @@ python -m agent.agent_mermaid.sop_mcp_server
 source .venv/bin/activate
 python main.py configs/mermaid_human.yaml
 ```
+
+
+## Running the Retail Agent (Mermaid)
+
+The retail agent uses an MCP server for SOP (standard operating procedure) support. **Start the MCP server first**, then run the agent.
+
+### 1. Start the MCP server
+
+From the project root (where `agent/` lives):
+
+```bash
+uv run python -m agent.agent_mermaid.sop_mcp_server
+```
+
+Keep this terminal running. The server listens on `http://localhost:8000/mcp` by default.
+
+### 2. Run the retail agent
+
+In another terminal, from the `tau2-bench` directory:
+
+```bash
+uv run tau2 run --domain retail --agent llm_mermaid_agent --agent-llm "gpt-4.1-mini" --user-llm "gpt-4.1-mini" --name "[MERMAID_AGENT][TEST_ALL]" --max-steps 60 --task-ids 96 --mcp-server-url http://localhost:8000/mcp --mcp-sop-file "retail/AGENTS.md"
+```
+
+- `--domain retail` — use the retail domain.
+- `--agent llm_mermaid_agent` — use the Mermaid-backed LLM agent.
+- `--mcp-server-url` and `--mcp-sop-file` — point the agent at the running MCP server and the retail SOP file.
