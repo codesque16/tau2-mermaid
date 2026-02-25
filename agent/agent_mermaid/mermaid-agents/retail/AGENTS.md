@@ -175,7 +175,7 @@ node_prompts:
     prompt: |
       New task starting. Key reminders:
       - Greedy traversal: Always call goto_node before acting. Keep calling until you need user input. Never act on graph descriptions alone.
-      - Todo: If you have multiple tasks or are switching flows, ensure your todo list is up to date. Check notes for context already gathered.
+      - Todo: Always breakdown user requests as per the SOP flows. Execute one task at a time. Check notes for context already gathered.
       - Context: Never re-ask for information already in your todo notes or conversation history.
       - If the user is already authenticated, skip AUTH and go directly to ROUTE.
   AUTH:

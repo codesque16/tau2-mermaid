@@ -698,20 +698,19 @@ if HAS_MCP:
         else:
             state.path[graph_id] = path + [node_id] if path else [node_id]
 
-        node_type = g["node_id_to_shape"].get(node_id, "rectangle")
         edges_out = [{"to": to_id, "condition": lab} for (a, to_id, lab) in g["edges"] if a == node_id]
-        # Build node per MCP spec: id, type, description (from mermaid label), prompt, tools, examples from node_prompts
+        # Build node: id, node_instruction (prompt if present else mermaid label), tools, examples from node_prompts
         node_prompts_map = g.get("node_prompts") or {}
         prompt_entry = node_prompts_map.get(node_id)
         description = (g.get("node_id_to_label") or {}).get(node_id) or node_id
+        node_instruction = (prompt_entry.get("prompt") or "").strip() if prompt_entry else ""
+        if not node_instruction:
+            node_instruction = description
         node_payload: dict[str, Any] = {
             "id": node_id,
-            "type": node_type,
-            "description": description,
+            "node_instruction": node_instruction,
         }
         if prompt_entry:
-            if prompt_entry.get("prompt"):
-                node_payload["prompt"] = prompt_entry["prompt"]
             if prompt_entry.get("tools"):
                 node_payload["tools"] = list(prompt_entry["tools"])
             if prompt_entry.get("examples"):
