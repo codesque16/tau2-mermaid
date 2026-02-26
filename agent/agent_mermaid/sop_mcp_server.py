@@ -391,13 +391,27 @@ def _parse_frontmatter(frontmatter_str: str) -> dict[str, Any]:
         return {}
 
 
+def _build_system_prompt_from_agents_md(rest_md: str, mermaid_source: str) -> str:
+    """Build full system prompt: AGENTS.md minus frontmatter minus Node Prompts section.
+    I.e. rest_md (Role, Global Rules, Domain Reference, etc.) + SOP Flowchart with mermaid block.
+    """
+    parts = [rest_md.strip()] if (rest_md or "").strip() else []
+    parts.append("## SOP Flowchart")
+    parts.append("")
+    parts.append("```mermaid")
+    parts.append((mermaid_source or "").strip() or "flowchart TD")
+    parts.append("```")
+    return "\n\n".join(parts)
+
+
 def _build_load_graph_output_from_front(
     front: dict[str, Any],
     graph_parsed: dict[str, Any],
     nodes_with_prompts: list[str],
     system_prompt_sections: list[str],
+    system_prompt: str,
 ) -> dict[str, Any]:
-    """Build load_graph result per spec: agent, version, entry_node, model, mcp_servers, graph, system_prompt_sections."""
+    """Build load_graph result per spec: agent, version, entry_node, model, mcp_servers, graph, system_prompt_sections, system_prompt."""
     agent_name = front.get("agent") or "default"
     version = front.get("version") or "1.0"
     entry_node = front.get("entry_node") or graph_parsed.get("entry_node") or "START"
@@ -432,6 +446,7 @@ def _build_load_graph_output_from_front(
             "nodes_with_prompts": nodes_with_prompts,
         },
         "system_prompt_sections": system_prompt_sections,
+        "system_prompt": system_prompt,
     }
 
 
@@ -635,10 +650,12 @@ if HAS_MCP:
 
         nodes_set = set(graph_parsed.get("nodes") or [])
         nodes_with_prompts = sorted(k for k in node_prompts_dict if k in nodes_set)
-        system_prompt_sections = _system_prompt_sections_from_rest_md(parsed.get("rest_md", "") or "")
+        rest_md = parsed.get("rest_md", "") or ""
+        system_prompt_sections = _system_prompt_sections_from_rest_md(rest_md)
+        system_prompt = _build_system_prompt_from_agents_md(rest_md, mermaid_source)
 
         result = _build_load_graph_output_from_front(
-            front, graph_parsed, nodes_with_prompts, system_prompt_sections
+            front, graph_parsed, nodes_with_prompts, system_prompt_sections, system_prompt
         )
         _record_connection(session_id, "load_graph", {"sop_file": sop_file}, f"agent={agent_name}", result=result)
         _log_mcp_tool("load_graph", {"sop_file": sop_file}, result)
