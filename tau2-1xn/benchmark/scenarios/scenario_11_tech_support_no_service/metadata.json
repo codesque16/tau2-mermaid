@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_11_tech_support_no_service",
+  "name": "Tech Support Path 1: No Service/Connection",
+  "tier": 3,
+  "domain": "telecom",
+  "num_nodes": 35,
+  "num_edges": 38,
+  "num_branches": 12,
+  "description": "Complex telecom flow: no service troubleshooting (airplane, SIM, APN, line suspension)."
+}

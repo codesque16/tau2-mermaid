@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_11_test_02",
+  "scenario_id": "scenario_11_tech_support_no_service",
+  "user_prompt": "I had no bars but I just checked and my status bar shows signal now. Maybe it was a glitch.",
+  "expected_path": ["Start", "P1_Start", "P1_S0_CheckStatusBar", "P1_S0_Decision_NoService", "End_Resolve"],
+  "expected_actions": ["check_status_bar"],
+  "decision_points": {
+    "P1_S0_Decision_NoService": {
+      "condition": "service_available",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P1_S1_CheckAirplane",
+      "outcome_for_llm": "Status bar shows no service: no."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "early_termination"
+}

@@ -1,0 +1,49 @@
+flowchart TD
+    Start([Start: User reports MMS issue])
+    End_Resolve([Issue Resolved])
+    End_Escalate_Tech([Transfer to Human Agent])
+
+    Start --> P3_Start[Path 3: MMS Picture/Group Messaging]
+    P3_Start --> P3_S0_CheckMMS[Step 3.0: Check MMS issue]
+    P3_S0_CheckMMS --> P3_S0_Decision_MMSWorks{Can send MMS?}
+    P3_S0_Decision_MMSWorks -->|Yes| End_Resolve
+    P3_S0_Decision_MMSWorks -->|No| P3_S1_VerifyNetworkService[Step 3.1: Verify network service]
+
+    P3_S1_VerifyNetworkService --> P3_S1_AssumeServiceOK[Assume service OK / retest after service check]
+    P3_S1_AssumeServiceOK --> P3_S1_Action_RetestMMS_P1[Ask user try MMS again]
+    P3_S1_Action_RetestMMS_P1 --> P3_S2_VerifyMobileData[Step 3.2: Verify mobile data]
+    P3_S2_VerifyMobileData --> P3_S2_AssumeDataOK[Assume data connectivity OK]
+    P3_S2_AssumeDataOK --> P3_S2_Action_RetestMMS_P2[Ask user try MMS again]
+    P3_S2_Action_RetestMMS_P2 --> P3_S3_CheckNetworkTech[Step 3.3: Network technology]
+
+    P3_S3_CheckNetworkTech --> P3_S3_Decision_Is2G{Connected to 2G only?}
+    P3_S3_Decision_Is2G -->|Yes| P3_S3_Action_ChangeNetworkMode[Ask user change to 3G/4G/5G]
+    P3_S3_Action_ChangeNetworkMode --> P3_S3_Action_VerifyMMSWorks2G[Ask user try MMS again]
+    P3_S3_Action_VerifyMMSWorks2G --> P3_S3_Decision_MMSWorksAfter2G{MMS works?}
+    P3_S3_Decision_MMSWorksAfter2G -->|Yes| End_Resolve
+    P3_S3_Decision_MMSWorksAfter2G -->|No| P3_S4_CheckWifiCalling[Step 3.4: Wi-Fi Calling]
+    P3_S3_Decision_Is2G -->|No| P3_S4_CheckWifiCalling
+
+    P3_S4_CheckWifiCalling --> P3_S4_Decision_WifiCallingON{Wi-Fi Calling ON?}
+    P3_S4_Decision_WifiCallingON -->|Yes| P3_S4_Action_TurnWifiCallingOFF[Ask user turn Wi-Fi Calling OFF]
+    P3_S4_Action_TurnWifiCallingOFF --> P3_S4_Action_VerifyMMSWorksWifiOFF[Ask user try MMS again]
+    P3_S4_Action_VerifyMMSWorksWifiOFF --> P3_S4_Decision_MMSWorksAfterWifiOFF{MMS works?}
+    P3_S4_Decision_MMSWorksAfterWifiOFF -->|Yes| End_Resolve
+    P3_S4_Decision_MMSWorksAfterWifiOFF -->|No| P3_S5_VerifyAppPermissions[Step 3.5: App permissions]
+    P3_S4_Decision_WifiCallingON -->|No| P3_S5_VerifyAppPermissions
+
+    P3_S5_VerifyAppPermissions --> P3_S5_Decision_PermissionsMissing{Storage or SMS permission missing?}
+    P3_S5_Decision_PermissionsMissing -->|Yes| P3_S5_Action_GrantPermissions[Ask user grant both permissions]
+    P3_S5_Action_GrantPermissions --> P3_S5_Action_VerifyMMSWorksPerms[Ask user try MMS again]
+    P3_S5_Action_VerifyMMSWorksPerms --> P3_S5_Decision_MMSWorksAfterPerms{MMS works?}
+    P3_S5_Decision_MMSWorksAfterPerms -->|Yes| End_Resolve
+    P3_S5_Decision_MMSWorksAfterPerms -->|No| P3_S6_CheckAPNSettings[Step 3.6: APN settings]
+    P3_S5_Decision_PermissionsMissing -->|No| P3_S6_CheckAPNSettings
+
+    P3_S6_CheckAPNSettings --> P3_S6_Decision_MMSC_Missing{MMSC URL missing?}
+    P3_S6_Decision_MMSC_Missing -->|Yes| P3_S6_Action_ResetAPN[Ask user reset APN to carrier defaults]
+    P3_S6_Action_ResetAPN --> P3_S6_Action_VerifyMMSWorksAPN[Ask user try MMS again]
+    P3_S6_Action_VerifyMMSWorksAPN --> P3_S6_Decision_MMSWorksAfterAPN{MMS works?}
+    P3_S6_Decision_MMSWorksAfterAPN -->|Yes| End_Resolve
+    P3_S6_Decision_MMSWorksAfterAPN -->|No| End_Escalate_Tech
+    P3_S6_Decision_MMSC_Missing -->|No| End_Escalate_Tech

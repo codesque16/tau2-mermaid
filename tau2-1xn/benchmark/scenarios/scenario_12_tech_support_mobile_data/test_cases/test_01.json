@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_12_test_01",
+  "scenario_id": "scenario_12_tech_support_mobile_data",
+  "user_prompt": "I thought my mobile data was slow but I just ran the speed test and it shows Excellent. Maybe it was temporary.",
+  "expected_path": ["Start", "P2_Start", "P2_S0_RunSpeedTest", "P2_S0_Decision_Result", "End_Resolve"],
+  "expected_actions": ["run_speed_test"],
+  "decision_points": {
+    "P2_S0_Decision_Result": {
+      "condition": "excellent",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P2_1_Start",
+      "outcome_for_llm": "Speed test result: excellent."
+    }
+  },
+  "difficulty": "easy",
+  "path_type": "early_termination"
+}

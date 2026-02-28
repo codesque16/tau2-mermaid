@@ -1,0 +1,29 @@
+{
+  "test_id": "scenario_13_test_02",
+  "scenario_id": "scenario_13_tech_support_mms",
+  "user_prompt": "I can't send MMS. Network and data are fine. I'm on 2G only—I'll switch to 4G and try again. It works now.",
+  "expected_path": ["Start", "P3_Start", "P3_S0_CheckMMS", "P3_S0_Decision_MMSWorks", "P3_S1_VerifyNetworkService", "P3_S1_AssumeServiceOK", "P3_S1_Action_RetestMMS_P1", "P3_S2_VerifyMobileData", "P3_S2_AssumeDataOK", "P3_S2_Action_RetestMMS_P2", "P3_S3_CheckNetworkTech", "P3_S3_Decision_Is2G", "P3_S3_Action_ChangeNetworkMode", "P3_S3_Action_VerifyMMSWorks2G", "P3_S3_Decision_MMSWorksAfter2G", "End_Resolve"],
+  "expected_actions": ["check_mms", "verify_network", "verify_data", "check_network_tech", "change_network_mode", "retest_mms"],
+  "decision_points": {
+    "P3_S0_Decision_MMSWorks": {
+      "condition": "mms_fails",
+      "correct_branch": "P3_S1_VerifyNetworkService",
+      "wrong_branch": "End_Resolve",
+      "outcome_for_llm": "Can send MMS: no."
+    },
+    "P3_S3_Decision_Is2G": {
+      "condition": "on_2g",
+      "correct_branch": "P3_S3_Action_ChangeNetworkMode",
+      "wrong_branch": "P3_S4_CheckWifiCalling",
+      "outcome_for_llm": "Connected to 2G only: yes."
+    },
+    "P3_S3_Decision_MMSWorksAfter2G": {
+      "condition": "mms_works",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P3_S4_CheckWifiCalling",
+      "outcome_for_llm": "MMS works after network change: yes."
+    }
+  },
+  "difficulty": "hard",
+  "path_type": "happy_path"
+}

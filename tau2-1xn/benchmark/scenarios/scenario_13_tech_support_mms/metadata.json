@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_13_tech_support_mms",
+  "name": "Tech Support Path 3: MMS (Picture/Group Messaging)",
+  "tier": 3,
+  "domain": "telecom",
+  "num_nodes": 32,
+  "num_edges": 34,
+  "num_branches": 14,
+  "description": "Complex telecom flow: MMS troubleshooting (network, data, 2G, Wi-Fi Calling, permissions, APN)."
+}

@@ -1,0 +1,18 @@
+{
+  "test_id": "scenario_11_test_03",
+  "scenario_id": "scenario_11_tech_support_no_service",
+  "user_prompt": "No service. Airplane mode was on—I turned it off. Still no bars. SIM is in place and not locked. I already reset APN and restarted. Still nothing. I think my line might be suspended.",
+  "expected_path": ["Start", "P1_Start", "P1_S0_CheckStatusBar", "P1_S0_Decision_NoService", "P1_S1_CheckAirplane", "P1_S1_Decision_AirplaneON", "P1_S2_VerifySIM", "P1_S2_Decision_SIMMissing", "P1_S2_Decision_SIMLocked", "P1_S3_ResetAPN", "P1_S3_User_Action_ResetAPN", "P1_S3_RestartDevice", "P1_S3_VerifyService", "P1_S3_Decision_Resolved", "P1_S4_CheckSuspension", "P1_S4_Decision_Suspended", "P1_S4_Decision_SuspensionType", "End_Escalate_Tech"],
+  "expected_actions": ["check_status_bar", "check_airplane", "verify_sim", "reset_apn", "check_suspension"],
+  "decision_points": {
+    "P1_S0_Decision_NoService": { "condition": "no_service", "correct_branch": "P1_S1_CheckAirplane", "wrong_branch": "End_Resolve", "outcome_for_llm": "Status bar shows no service: yes." },
+    "P1_S1_Decision_AirplaneON": { "condition": "airplane_off", "correct_branch": "P1_S2_VerifySIM", "wrong_branch": "P1_S1_Action_TurnAirplaneOFF", "outcome_for_llm": "Airplane mode ON: no." },
+    "P1_S2_Decision_SIMMissing": { "condition": "sim_not_missing", "correct_branch": "P1_S2_Decision_SIMLocked", "wrong_branch": "P1_S2_Action_ReseatSIM", "outcome_for_llm": "SIM missing: no." },
+    "P1_S2_Decision_SIMLocked": { "condition": "sim_not_locked", "correct_branch": "P1_S3_ResetAPN", "wrong_branch": "End_Escalate_Tech", "outcome_for_llm": "SIM locked PIN/PUK: no." },
+    "P1_S3_Decision_Resolved": { "condition": "service_not_restored", "correct_branch": "P1_S4_CheckSuspension", "wrong_branch": "End_Resolve", "outcome_for_llm": "Service restored: no." },
+    "P1_S4_Decision_Suspended": { "condition": "suspended", "correct_branch": "P1_S4_Decision_SuspensionType", "wrong_branch": "End_Escalate_Tech", "outcome_for_llm": "Line suspended: yes." },
+    "P1_S4_Decision_SuspensionType": { "condition": "contract_end", "correct_branch": "End_Escalate_Tech", "wrong_branch": "P1_S4_Decision_OverdueBill", "outcome_for_llm": "Suspension type: contract end." }
+  },
+  "difficulty": "hard",
+  "path_type": "escalation"
+}

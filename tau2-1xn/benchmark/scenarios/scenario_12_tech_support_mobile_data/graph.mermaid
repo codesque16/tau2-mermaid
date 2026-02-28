@@ -1,0 +1,88 @@
+flowchart TD
+    Start([Start: User reports data issue])
+    End_Resolve([Issue Resolved])
+    End_Escalate_Tech([Transfer to Human Agent])
+
+    Start --> P2_Start[Path 2: Mobile Data Issues]
+    P2_Start --> P2_S0_RunSpeedTest[Step 2.0: Run speed test]
+    P2_S0_RunSpeedTest --> P2_S0_Decision_Result{Speed test result?}
+    P2_S0_Decision_Result -->|No connection| P2_1_Start[Path 2.1: Unavailable data]
+    P2_S0_Decision_Result -->|Excellent| End_Resolve
+    P2_S0_Decision_Result -->|Slow| P2_2_Start[Path 2.2: Slow data]
+
+    P2_1_Start --> P2_1_S0_Check[Step 2.1.0: Check unavailable data]
+    P2_1_S0_Check --> P2_S0_Decision_NoConnection{No connection?}
+    P2_S0_Decision_NoConnection -->|Yes| P2_1_S1_VerifyService[Step 2.1.1: Verify service]
+    P2_1_S1_VerifyService --> P2_1_RetestAfterVerify[Ask user rerun speed test]
+    P2_1_RetestAfterVerify --> P2_1_Decision_Connectivity{Data restored?}
+    P2_1_Decision_Connectivity -->|Yes| End_Resolve
+    P2_1_Decision_Connectivity -->|No| P2_1_S2_Decision_Traveling{User traveling?}
+    P2_S0_Decision_NoConnection -->|No| P2_2_Start
+
+    P2_1_S2_Decision_Traveling -->|Yes| P2_1_S2_CheckRoaming[Check roaming settings]
+    P2_1_S2_Decision_Traveling -->|No| P2_1_S3_CheckMobileData[Step 2.1.3: Mobile data settings]
+    P2_1_S2_CheckRoaming --> P2_1_S2_Decision_DataRoamingOFF{Data roaming OFF?}
+    P2_1_S2_Decision_DataRoamingOFF -->|Yes| P2_1_S2_Action_TurnRoamingON[Ask user turn Data Roaming ON]
+    P2_1_S2_Action_TurnRoamingON --> P2_1_S2_Retest[Ask user rerun speed test]
+    P2_1_S2_Retest --> P2_1_S2_Decision_RoamingWorks{Connectivity restored?}
+    P2_1_S2_Decision_RoamingWorks -->|Yes| End_Resolve
+    P2_1_S2_Decision_RoamingWorks -->|No| P2_1_S2_VerifyLineRoaming[Verify line roaming enabled]
+    P2_1_S2_Decision_DataRoamingOFF -->|No| P2_1_S2_VerifyLineRoaming
+    P2_1_S2_VerifyLineRoaming --> P2_1_S2_Decision_LineNotEnabled{Line not roaming enabled?}
+    P2_1_S2_Decision_LineNotEnabled -->|Yes| P2_1_S2_Action_EnableRoaming[Enable roaming for user]
+    P2_1_S2_Action_EnableRoaming --> P2_1_S2_RetestAfterEnable[Ask user rerun speed test]
+    P2_1_S2_RetestAfterEnable --> P2_1_S2_Decision_RoamingWorksAfterEnable{Connectivity restored?}
+    P2_1_S2_Decision_RoamingWorksAfterEnable -->|Yes| End_Resolve
+    P2_1_S2_Decision_RoamingWorksAfterEnable -->|No| P2_1_S3_CheckMobileData
+    P2_1_S2_Decision_LineNotEnabled -->|No| P2_1_S3_CheckMobileData
+
+    P2_1_S3_CheckMobileData --> P2_1_S3_Decision_MobileDataOFF{Mobile data OFF?}
+    P2_1_S3_Decision_MobileDataOFF -->|Yes| P2_1_S3_Action_TurnON[Ask user turn Mobile Data ON]
+    P2_1_S3_Action_TurnON --> P2_1_S3_Retest[Ask user rerun speed test]
+    P2_1_S3_Retest --> P2_1_S3_Decision_WorksAfterON{Connectivity restored?}
+    P2_1_S3_Decision_WorksAfterON -->|Yes| End_Resolve
+    P2_1_S3_Decision_WorksAfterON -->|No| P2_1_S4_CheckDataUsage[Step 2.1.4: Check data usage]
+    P2_1_S3_Decision_MobileDataOFF -->|No| P2_1_S4_CheckDataUsage
+    P2_1_S4_CheckDataUsage --> P2_1_S4_Decision_DataExceeded{Data exceeded?}
+    P2_1_S4_Decision_DataExceeded -->|No| End_Escalate_Tech
+    P2_1_S4_Decision_DataExceeded -->|Yes| P2_1_S4_AskPlanOrRefuel[Ask: change plan or refuel?]
+    P2_1_S4_AskPlanOrRefuel --> P2_1_S4_Decision_ChangePlan{Change plan?}
+    P2_1_S4_Decision_ChangePlan -->|Yes| P2_1_S4_GatherPlans[Gather plans]
+    P2_1_S4_GatherPlans --> P2_1_S4_AskSelectPlan[Ask user select plan]
+    P2_1_S4_AskSelectPlan --> P2_1_S4_ApplyPlan[Apply plan]
+    P2_1_S4_ApplyPlan --> P2_1_S4_RetestAfterData[Ask user rerun speed test]
+    P2_1_S4_Decision_ChangePlan -->|No| P2_1_S4_RefuelHowMuch[Ask how much data to refuel]
+    P2_1_S4_RefuelHowMuch --> P2_1_S4_ConfirmPrice[Confirm price]
+    P2_1_S4_ConfirmPrice --> P2_1_S4_Decision_ConfirmRefuel{User confirms refuel?}
+    P2_1_S4_Decision_ConfirmRefuel -->|Yes| P2_1_S4_ApplyRefuel[Apply refuel]
+    P2_1_S4_ApplyRefuel --> P2_1_S4_RetestAfterData
+    P2_1_S4_Decision_ConfirmRefuel -->|No| End_Escalate_Tech
+    P2_1_S4_RetestAfterData --> P2_1_S4_Decision_ConnectivityAfter{Connectivity restored?}
+    P2_1_S4_Decision_ConnectivityAfter -->|No| End_Escalate_Tech
+    P2_1_S4_Decision_ConnectivityAfter -->|Yes| P2_1_S4_Decision_Excellent{Speed excellent?}
+    P2_1_S4_Decision_Excellent -->|Yes| End_Resolve
+    P2_1_S4_Decision_Excellent -->|No| P2_2_Start
+
+    P2_2_Start --> P2_2_S0_CheckSlow[Step 2.2.0: Check slow data]
+    P2_2_S0_CheckSlow --> P2_2_S1_CheckDataRestriction[Step 2.2.1: Data restriction]
+    P2_2_S1_CheckDataRestriction --> P2_2_S1_Decision_DataSaverON{Data saver ON?}
+    P2_2_S1_Decision_DataSaverON -->|Yes| P2_2_S1_Action_TurnSaverOFF[Ask user turn Data Saver OFF]
+    P2_2_S1_Action_TurnSaverOFF --> P2_2_S1_Retest[Ask user rerun speed test]
+    P2_2_S1_Retest --> P2_2_S1_Decision_ExcellentAfterSaver{Speed excellent?}
+    P2_2_S1_Decision_ExcellentAfterSaver -->|Yes| End_Resolve
+    P2_2_S1_Decision_ExcellentAfterSaver -->|No| P2_2_S2_CheckNetworkMode[Step 2.2.2: Network mode]
+    P2_2_S1_Decision_DataSaverON -->|No| P2_2_S2_CheckNetworkMode
+    P2_2_S2_CheckNetworkMode --> P2_2_S2_Decision_OldMode{Set to 2G/3G?}
+    P2_2_S2_Decision_OldMode -->|Yes| P2_2_S2_Action_ChangeTo5G[Ask user include 5G]
+    P2_2_S2_Action_ChangeTo5G --> P2_2_S2_Retest[Ask user rerun speed test]
+    P2_2_S2_Retest --> P2_2_S2_Decision_ExcellentAfterNetwork{Speed excellent?}
+    P2_2_S2_Decision_ExcellentAfterNetwork -->|Yes| End_Resolve
+    P2_2_S2_Decision_ExcellentAfterNetwork -->|No| P2_2_S3_CheckVPN[Step 2.2.3: Check VPN]
+    P2_2_S2_Decision_OldMode -->|No| P2_2_S3_CheckVPN
+    P2_2_S3_CheckVPN --> P2_2_S3_Decision_VPNActive{VPN active?}
+    P2_2_S3_Decision_VPNActive -->|Yes| P2_2_S3_Action_TurnVPNOFF[Ask user turn VPN OFF]
+    P2_2_S3_Action_TurnVPNOFF --> P2_2_S3_Retest[Ask user rerun speed test]
+    P2_2_S3_Retest --> P2_2_S3_Decision_ExcellentAfterVPN{Speed excellent?}
+    P2_2_S3_Decision_ExcellentAfterVPN -->|Yes| End_Resolve
+    P2_2_S3_Decision_ExcellentAfterVPN -->|No| End_Escalate_Tech
+    P2_2_S3_Decision_VPNActive -->|No| End_Escalate_Tech

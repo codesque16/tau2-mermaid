@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_13_test_03",
+  "scenario_id": "scenario_13_tech_support_mms",
+  "user_prompt": "MMS not working. Service and data are OK. Not on 2G. Wi-Fi Calling is on—I turned it off and tried MMS again. Still doesn't work. I checked—storage and SMS permissions are missing. I granted both and tried again. MMS works now.",
+  "expected_path": ["Start", "P3_Start", "P3_S0_CheckMMS", "P3_S0_Decision_MMSWorks", "P3_S1_VerifyNetworkService", "P3_S1_AssumeServiceOK", "P3_S1_Action_RetestMMS_P1", "P3_S2_VerifyMobileData", "P3_S2_AssumeDataOK", "P3_S2_Action_RetestMMS_P2", "P3_S3_CheckNetworkTech", "P3_S3_Decision_Is2G", "P3_S4_CheckWifiCalling", "P3_S4_Decision_WifiCallingON", "P3_S4_Action_TurnWifiCallingOFF", "P3_S4_Action_VerifyMMSWorksWifiOFF", "P3_S4_Decision_MMSWorksAfterWifiOFF", "P3_S5_VerifyAppPermissions", "P3_S5_Decision_PermissionsMissing", "P3_S5_Action_GrantPermissions", "P3_S5_Action_VerifyMMSWorksPerms", "P3_S5_Decision_MMSWorksAfterPerms", "End_Resolve"],
+  "expected_actions": ["check_mms", "verify_network", "verify_data", "check_2g", "check_wifi_calling", "turn_wifi_calling_off", "check_permissions", "grant_permissions", "retest_mms"],
+  "decision_points": {
+    "P3_S0_Decision_MMSWorks": { "condition": "mms_fails", "correct_branch": "P3_S1_VerifyNetworkService", "wrong_branch": "End_Resolve", "outcome_for_llm": "Can send MMS: no." },
+    "P3_S3_Decision_Is2G": { "condition": "not_2g", "correct_branch": "P3_S4_CheckWifiCalling", "wrong_branch": "P3_S3_Action_ChangeNetworkMode", "outcome_for_llm": "Connected to 2G only: no." },
+    "P3_S4_Decision_WifiCallingON": { "condition": "wifi_calling_on", "correct_branch": "P3_S4_Action_TurnWifiCallingOFF", "wrong_branch": "P3_S5_VerifyAppPermissions", "outcome_for_llm": "Wi-Fi Calling ON: yes." },
+    "P3_S4_Decision_MMSWorksAfterWifiOFF": { "condition": "mms_still_fails", "correct_branch": "P3_S5_VerifyAppPermissions", "wrong_branch": "End_Resolve", "outcome_for_llm": "MMS works after Wi-Fi Calling off: no." },
+    "P3_S5_Decision_PermissionsMissing": { "condition": "permissions_missing", "correct_branch": "P3_S5_Action_GrantPermissions", "wrong_branch": "P3_S6_CheckAPNSettings", "outcome_for_llm": "Storage or SMS permission missing: yes." },
+    "P3_S5_Decision_MMSWorksAfterPerms": { "condition": "mms_works", "correct_branch": "End_Resolve", "wrong_branch": "P3_S6_CheckAPNSettings", "outcome_for_llm": "MMS works after granting permissions: yes." }
+  },
+  "difficulty": "hard",
+  "path_type": "happy_path"
+}

@@ -1,0 +1,29 @@
+{
+  "test_id": "scenario_12_test_02",
+  "scenario_id": "scenario_12_tech_support_mobile_data",
+  "user_prompt": "My mobile data shows no connection. I already checked my service and signal—both are fine. I reran the speed test and now it shows connectivity is back.",
+  "expected_path": ["Start", "P2_Start", "P2_S0_RunSpeedTest", "P2_S0_Decision_Result", "P2_1_Start", "P2_1_S0_Check", "P2_S0_Decision_NoConnection", "P2_1_S1_VerifyService", "P2_1_RetestAfterVerify", "P2_1_Decision_Connectivity", "End_Resolve"],
+  "expected_actions": ["run_speed_test", "verify_service", "retest"],
+  "decision_points": {
+    "P2_S0_Decision_Result": {
+      "condition": "no_connection",
+      "correct_branch": "P2_1_Start",
+      "wrong_branch": "End_Resolve",
+      "outcome_for_llm": "Speed test result: no connection."
+    },
+    "P2_S0_Decision_NoConnection": {
+      "condition": "no_connection_yes",
+      "correct_branch": "P2_1_S1_VerifyService",
+      "wrong_branch": "P2_2_Start",
+      "outcome_for_llm": "No connection: yes."
+    },
+    "P2_1_Decision_Connectivity": {
+      "condition": "data_restored",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P2_1_S2_Decision_Traveling",
+      "outcome_for_llm": "Data connectivity restored: yes."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "happy_path"
+}

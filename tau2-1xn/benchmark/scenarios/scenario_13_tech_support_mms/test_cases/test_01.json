@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_13_test_01",
+  "scenario_id": "scenario_13_tech_support_mms",
+  "user_prompt": "I can send MMS now—I tried again and it went through. Maybe it was a glitch.",
+  "expected_path": ["Start", "P3_Start", "P3_S0_CheckMMS", "P3_S0_Decision_MMSWorks", "End_Resolve"],
+  "expected_actions": ["check_mms"],
+  "decision_points": {
+    "P3_S0_Decision_MMSWorks": {
+      "condition": "mms_works",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P3_S1_VerifyNetworkService",
+      "outcome_for_llm": "Can send MMS: yes."
+    }
+  },
+  "difficulty": "easy",
+  "path_type": "early_termination"
+}

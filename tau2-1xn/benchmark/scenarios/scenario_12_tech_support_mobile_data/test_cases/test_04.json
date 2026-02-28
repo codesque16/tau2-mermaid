@@ -1,0 +1,41 @@
+{
+  "test_id": "scenario_12_test_04",
+  "scenario_id": "scenario_12_tech_support_mobile_data",
+  "user_prompt": "Data is slow. Speed test is not excellent. Data Saver is off, network is not set to 2G/3G. I have a VPN on—I'll turn it off and run the test again. Still not excellent.",
+  "expected_path": ["Start", "P2_Start", "P2_S0_RunSpeedTest", "P2_S0_Decision_Result", "P2_2_Start", "P2_2_S0_CheckSlow", "P2_2_S1_CheckDataRestriction", "P2_2_S1_Decision_DataSaverON", "P2_2_S2_CheckNetworkMode", "P2_2_S2_Decision_OldMode", "P2_2_S3_CheckVPN", "P2_2_S3_Decision_VPNActive", "P2_2_S3_Action_TurnVPNOFF", "P2_2_S3_Retest", "P2_2_S3_Decision_ExcellentAfterVPN", "End_Escalate_Tech"],
+  "expected_actions": ["run_speed_test", "check_restriction", "check_network_mode", "check_vpn", "turn_vpn_off", "retest"],
+  "decision_points": {
+    "P2_S0_Decision_Result": {
+      "condition": "slow",
+      "correct_branch": "P2_2_Start",
+      "wrong_branch": "P2_1_Start",
+      "outcome_for_llm": "Speed test result: slow."
+    },
+    "P2_2_S1_Decision_DataSaverON": {
+      "condition": "data_saver_off",
+      "correct_branch": "P2_2_S2_CheckNetworkMode",
+      "wrong_branch": "P2_2_S1_Action_TurnSaverOFF",
+      "outcome_for_llm": "Data saver ON: no."
+    },
+    "P2_2_S2_Decision_OldMode": {
+      "condition": "not_old_mode",
+      "correct_branch": "P2_2_S3_CheckVPN",
+      "wrong_branch": "P2_2_S2_Action_ChangeTo5G",
+      "outcome_for_llm": "Set to 2G/3G: no."
+    },
+    "P2_2_S3_Decision_VPNActive": {
+      "condition": "vpn_active",
+      "correct_branch": "P2_2_S3_Action_TurnVPNOFF",
+      "wrong_branch": "End_Escalate_Tech",
+      "outcome_for_llm": "VPN active: yes."
+    },
+    "P2_2_S3_Decision_ExcellentAfterVPN": {
+      "condition": "not_excellent",
+      "correct_branch": "End_Escalate_Tech",
+      "wrong_branch": "End_Resolve",
+      "outcome_for_llm": "Speed excellent after VPN off: no."
+    }
+  },
+  "difficulty": "hard",
+  "path_type": "escalation"
+}

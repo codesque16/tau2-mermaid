@@ -1,0 +1,51 @@
+flowchart TD
+    Start([Start: User reports issue])
+    End_Resolve([Issue Resolved])
+    End_Escalate_Tech([Transfer to Human Agent])
+
+    Start --> P1_Start[Path 1: No Service/Connection]
+    P1_Start --> P1_S0_CheckStatusBar[Step 1.0: Check no service issue]
+    P1_S0_CheckStatusBar --> P1_S0_Decision_NoService{Status bar no service?}
+    P1_S0_Decision_NoService -->|Yes| P1_S1_CheckAirplane[Step 1.1: Check Airplane Mode]
+    P1_S0_Decision_NoService -->|No| End_Resolve
+
+    P1_S1_CheckAirplane --> P1_S1_Decision_AirplaneON{Airplane Mode ON?}
+    P1_S1_Decision_AirplaneON -->|Yes| P1_S1_Action_TurnAirplaneOFF[Ask user turn Airplane OFF]
+    P1_S1_Action_TurnAirplaneOFF --> P1_S1_Action_VerifyRestored1[Ask user check status bar]
+    P1_S1_Action_VerifyRestored1 --> P1_S1_Decision_Restored1{Service restored?}
+    P1_S1_Decision_Restored1 -->|Yes| End_Resolve
+    P1_S1_Decision_Restored1 -->|No| P1_S2_VerifySIM[Step 1.2: Verify SIM]
+    P1_S1_Decision_AirplaneON -->|No| P1_S2_VerifySIM
+
+    P1_S2_VerifySIM --> P1_S2_Decision_SIMMissing{SIM missing?}
+    P1_S2_Decision_SIMMissing -->|Yes| P1_S2_Action_ReseatSIM[Ask user re-seat SIM]
+    P1_S2_Action_ReseatSIM --> P1_S2_Action_VerifySIMImprove[Ask user check status bar]
+    P1_S2_Action_VerifySIMImprove --> P1_S2_Decision_SIMImproved{Service restored?}
+    P1_S2_Decision_SIMImproved -->|Yes| P1_S3_ResetAPN[Step 1.3: Reset APN]
+    P1_S2_Decision_SIMImproved -->|No| End_Escalate_Tech
+    P1_S2_Decision_SIMMissing -->|No| P1_S2_Decision_SIMLocked{SIM locked PIN/PUK?}
+    P1_S2_Decision_SIMLocked -->|Yes| End_Escalate_Tech
+    P1_S2_Decision_SIMLocked -->|No| P1_S3_ResetAPN
+
+    P1_S3_ResetAPN --> P1_S3_User_Action_ResetAPN[Ask user reset APN]
+    P1_S3_User_Action_ResetAPN --> P1_S3_RestartDevice[Ask user restart device]
+    P1_S3_RestartDevice --> P1_S3_VerifyService[Ask user check if service restored]
+    P1_S3_VerifyService --> P1_S3_Decision_Resolved{Service restored?}
+    P1_S3_Decision_Resolved -->|Yes| End_Resolve
+    P1_S3_Decision_Resolved -->|No| P1_S4_CheckSuspension[Step 1.4: Check line suspension]
+
+    P1_S4_CheckSuspension --> P1_S4_Decision_Suspended{Line suspended?}
+    P1_S4_Decision_Suspended -->|No| End_Escalate_Tech
+    P1_S4_Decision_Suspended -->|Yes| P1_S4_Decision_SuspensionType{Suspension type?}
+    P1_S4_Decision_SuspensionType -->|Contract end| End_Escalate_Tech
+    P1_S4_Decision_SuspensionType -->|Due to bill| P1_S4_Decision_OverdueBill{Overdue bill?}
+    P1_S4_Decision_OverdueBill -->|No| P1_S4_Action_ResumeLine[Resume the line]
+    P1_S4_Decision_OverdueBill -->|Yes| P1_S4_Action_PaymentRequest[Send payment request]
+    P1_S4_Action_PaymentRequest --> P1_S4_Action_CheckPayment[Ask user check payment requests]
+    P1_S4_Action_CheckPayment --> P1_S4_Action_MakePayment[Ask user make payment]
+    P1_S4_Action_MakePayment --> P1_S4_Action_ResumeLine
+    P1_S4_Action_ResumeLine --> P1_S4_Action_Reboot[Ask user reboot device]
+    P1_S4_Action_Reboot --> P1_S4_Action_VerifyService[Ask user check service restored]
+    P1_S4_Action_VerifyService --> P1_S4_Decision_ServiceRestored{Service restored?}
+    P1_S4_Decision_ServiceRestored -->|Yes| End_Resolve
+    P1_S4_Decision_ServiceRestored -->|No| End_Escalate_Tech

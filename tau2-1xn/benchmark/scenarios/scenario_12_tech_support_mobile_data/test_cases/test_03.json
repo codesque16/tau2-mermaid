@@ -1,0 +1,29 @@
+{
+  "test_id": "scenario_12_test_03",
+  "scenario_id": "scenario_12_tech_support_mobile_data",
+  "user_prompt": "Mobile data is really slow. I ran the speed test—it's not excellent. I have Data Saver on; I can turn it off and try again.",
+  "expected_path": ["Start", "P2_Start", "P2_S0_RunSpeedTest", "P2_S0_Decision_Result", "P2_2_Start", "P2_2_S0_CheckSlow", "P2_2_S1_CheckDataRestriction", "P2_2_S1_Decision_DataSaverON", "P2_2_S1_Action_TurnSaverOFF", "P2_2_S1_Retest", "P2_2_S1_Decision_ExcellentAfterSaver", "End_Resolve"],
+  "expected_actions": ["run_speed_test", "check_data_restriction", "turn_data_saver_off", "retest"],
+  "decision_points": {
+    "P2_S0_Decision_Result": {
+      "condition": "slow",
+      "correct_branch": "P2_2_Start",
+      "wrong_branch": "P2_1_Start",
+      "outcome_for_llm": "Speed test result: slow."
+    },
+    "P2_2_S1_Decision_DataSaverON": {
+      "condition": "data_saver_on",
+      "correct_branch": "P2_2_S1_Action_TurnSaverOFF",
+      "wrong_branch": "P2_2_S2_CheckNetworkMode",
+      "outcome_for_llm": "Data saver ON: yes."
+    },
+    "P2_2_S1_Decision_ExcellentAfterSaver": {
+      "condition": "excellent",
+      "correct_branch": "End_Resolve",
+      "wrong_branch": "P2_2_S2_CheckNetworkMode",
+      "outcome_for_llm": "Speed excellent after retest: yes."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "happy_path"
+}

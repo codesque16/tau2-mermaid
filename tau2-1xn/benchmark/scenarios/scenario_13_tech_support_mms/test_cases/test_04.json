@@ -1,0 +1,16 @@
+{
+  "test_id": "scenario_13_test_04",
+  "scenario_id": "scenario_13_tech_support_mms",
+  "user_prompt": "MMS broken. Service, data, and network tech are fine. Wi-Fi Calling is off, permissions are OK. APN has MMSC URL. I reset APN and tried MMS again—still doesn't work.",
+  "expected_path": ["Start", "P3_Start", "P3_S0_CheckMMS", "P3_S0_Decision_MMSWorks", "P3_S1_VerifyNetworkService", "P3_S1_AssumeServiceOK", "P3_S1_Action_RetestMMS_P1", "P3_S2_VerifyMobileData", "P3_S2_AssumeDataOK", "P3_S2_Action_RetestMMS_P2", "P3_S3_CheckNetworkTech", "P3_S3_Decision_Is2G", "P3_S4_CheckWifiCalling", "P3_S4_Decision_WifiCallingON", "P3_S5_VerifyAppPermissions", "P3_S5_Decision_PermissionsMissing", "P3_S6_CheckAPNSettings", "P3_S6_Decision_MMSC_Missing", "End_Escalate_Tech"],
+  "expected_actions": ["check_mms", "verify_network", "verify_data", "check_network_tech", "check_wifi_calling", "check_permissions", "check_apn"],
+  "decision_points": {
+    "P3_S0_Decision_MMSWorks": { "condition": "mms_fails", "correct_branch": "P3_S1_VerifyNetworkService", "wrong_branch": "End_Resolve", "outcome_for_llm": "Can send MMS: no." },
+    "P3_S3_Decision_Is2G": { "condition": "not_2g", "correct_branch": "P3_S4_CheckWifiCalling", "wrong_branch": "P3_S3_Action_ChangeNetworkMode", "outcome_for_llm": "Connected to 2G only: no." },
+    "P3_S4_Decision_WifiCallingON": { "condition": "wifi_calling_off", "correct_branch": "P3_S5_VerifyAppPermissions", "wrong_branch": "P3_S4_Action_TurnWifiCallingOFF", "outcome_for_llm": "Wi-Fi Calling ON: no." },
+    "P3_S5_Decision_PermissionsMissing": { "condition": "permissions_ok", "correct_branch": "P3_S6_CheckAPNSettings", "wrong_branch": "P3_S5_Action_GrantPermissions", "outcome_for_llm": "Storage or SMS permission missing: no." },
+    "P3_S6_Decision_MMSC_Missing": { "condition": "mmsc_present", "correct_branch": "End_Escalate_Tech", "wrong_branch": "P3_S6_Action_ResetAPN", "outcome_for_llm": "MMSC URL missing: no." }
+  },
+  "difficulty": "hard",
+  "path_type": "escalation"
+}

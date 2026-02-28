@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_12_tech_support_mobile_data",
+  "name": "Tech Support Path 2: Mobile Data Issues",
+  "tier": 3,
+  "domain": "telecom",
+  "num_nodes": 55,
+  "num_edges": 62,
+  "num_branches": 22,
+  "description": "Complex telecom flow: mobile data unavailable (roaming, settings, data usage) and slow data (data saver, network mode, VPN)."
+}
