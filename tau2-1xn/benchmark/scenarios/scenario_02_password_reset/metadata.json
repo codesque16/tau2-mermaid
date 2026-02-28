@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_02_password_reset",
+  "name": "Password Reset",
+  "tier": 1,
+  "domain": "it_support",
+  "num_nodes": 7,
+  "num_edges": 6,
+  "num_branches": 0,
+  "description": "Linear IT support flow for resetting a user password."
+}

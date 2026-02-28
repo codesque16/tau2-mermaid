@@ -1,0 +1,9 @@
+{
+  "test_id": "scenario_01_test_01",
+  "scenario_id": "scenario_01_order_cancellation",
+  "user_prompt": "I need to cancel my order. My order number is ORD-7842.",
+  "expected_path": ["start", "verify_order", "check_status", "confirm_cancel", "process_refund", "send_confirmation", "end"],
+  "expected_actions": ["lookup_order", "check_shipping_status", "confirm_with_customer", "initiate_refund", "send_email"],
+  "difficulty": "easy",
+  "path_type": "happy_path"
+}

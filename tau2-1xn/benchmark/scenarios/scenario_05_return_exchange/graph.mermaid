@@ -1,0 +1,21 @@
+flowchart TD
+    start([Start: Customer requests return or exchange])
+    start --> verify_purchase[Verify purchase and identity]
+    verify_purchase --> check_window{Within return window?}
+    check_window -->|No| deny_return[Inform outside window]
+    check_window -->|Yes| check_condition[Check item condition]
+    deny_return --> offer_alternatives[Offer repair or store credit]
+    offer_alternatives --> end1([End])
+    check_condition --> choice{Refund or exchange?}
+    choice -->|Refund| process_refund[Process refund to original payment]
+    choice -->|Exchange| check_stock[Check replacement availability]
+    choice -->|Store credit| issue_credit[Issue store credit]
+    process_refund --> send_refund_confirmation[Send refund confirmation]
+    send_refund_confirmation --> end2([End])
+    check_stock -->|Available| process_exchange[Process exchange]
+    check_stock -->|Unavailable| offer_refund_or_credit[Offer refund or store credit]
+    process_exchange --> send_exchange_confirmation[Send exchange confirmation]
+    send_exchange_confirmation --> end3([End])
+    issue_credit --> send_credit_confirmation[Send credit confirmation]
+    send_credit_confirmation --> end4([End])
+    offer_refund_or_credit --> end5([End])

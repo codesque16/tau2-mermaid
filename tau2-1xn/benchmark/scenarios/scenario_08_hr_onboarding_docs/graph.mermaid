@@ -1,0 +1,13 @@
+flowchart TD
+    start([Start: New hire onboarding])
+    start --> send_checklist[Send document checklist]
+    send_checklist --> collect_docs[Collect submitted documents]
+    collect_docs --> docs_complete{All required docs received?}
+    docs_complete -->|No| send_reminder[Send reminder for missing docs]
+    docs_complete -->|Yes| verify_docs[Verify document validity]
+    send_reminder --> wait_resubmit[Wait for resubmission]
+    wait_resubmit --> collect_docs
+    verify_docs --> setup_accounts[Setup system accounts]
+    setup_accounts --> schedule_orientation[Schedule orientation]
+    schedule_orientation --> send_welcome[Send welcome packet]
+    send_welcome --> end([End])

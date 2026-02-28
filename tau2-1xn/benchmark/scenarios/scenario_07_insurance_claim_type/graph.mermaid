@@ -1,0 +1,16 @@
+flowchart TD
+    start([Start: Customer files claim])
+    start --> verify_policy[Verify policy and identity]
+    verify_policy --> claim_type{Type of claim?}
+    claim_type -->|Auto| collect_auto[Collect auto incident details]
+    claim_type -->|Home| collect_home[Collect property damage details]
+    claim_type -->|Health| collect_health[Collect medical treatment details]
+    collect_auto --> assign_auto[Assign to auto claims adjuster]
+    collect_home --> assign_home[Assign to property adjuster]
+    collect_health --> assign_health[Assign to health claims team]
+    assign_auto --> send_auto_confirmation[Send auto claim acknowledgment]
+    assign_home --> send_home_confirmation[Send property claim acknowledgment]
+    assign_health --> send_health_confirmation[Send health claim acknowledgment]
+    send_auto_confirmation --> end1([End])
+    send_home_confirmation --> end2([End])
+    send_health_confirmation --> end3([End])

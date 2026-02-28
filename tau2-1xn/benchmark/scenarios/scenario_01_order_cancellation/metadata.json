@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_01_order_cancellation",
+  "name": "Simple Order Cancellation",
+  "tier": 1,
+  "domain": "retail",
+  "num_nodes": 7,
+  "num_edges": 6,
+  "num_branches": 0,
+  "description": "Linear flow for cancelling an order before shipment."
+}

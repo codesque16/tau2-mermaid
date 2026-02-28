@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_09_insurance_claim_investigation",
+  "name": "Insurance Claim with Investigation Loop",
+  "tier": 3,
+  "domain": "insurance",
+  "num_nodes": 18,
+  "num_edges": 20,
+  "num_branches": 5,
+  "description": "Complex flow: policy check, damage threshold, investigation loop, approval chain, escalation."
+}

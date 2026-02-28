@@ -1,0 +1,23 @@
+{
+  "test_id": "scenario_09_test_02",
+  "scenario_id": "scenario_09_insurance_claim_investigation",
+  "user_prompt": "My warehouse had a fire. Estimated loss $150K. Policy POL-8833. I have the fire report and photos ready.",
+  "expected_path": ["start", "verify_policyholder", "policy_active", "assess_damage", "high_value", "assign_senior", "investigation_needed", "request_docs", "review_docs", "docs_sufficient", "calculate_payout", "approval_required", "escalate_approval", "manager_decision", "issue_payment", "end_success"],
+  "expected_actions": ["verify_policy", "assess_damage", "assign_senior", "request_docs", "review_docs", "calculate_payout", "escalate", "issue_payment"],
+  "decision_points": {
+    "high_value": {
+      "condition": "damage > 5000",
+      "correct_branch": "assign_senior",
+      "wrong_branch": "auto_approve",
+      "outcome_for_llm": "Damage over $5000: yes."
+    },
+    "docs_sufficient": {
+      "condition": "yes",
+      "correct_branch": "calculate_payout",
+      "wrong_branch": "request_docs",
+      "outcome_for_llm": "Documentation sufficient: yes."
+    }
+  },
+  "difficulty": "hard",
+  "path_type": "investigation_loop"
+}

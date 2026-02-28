@@ -1,0 +1,9 @@
+{
+  "test_id": "scenario_02_test_01",
+  "scenario_id": "scenario_02_password_reset",
+  "user_prompt": "I forgot my password. Can you help me reset it? My email is jane@company.com.",
+  "expected_path": ["start", "verify_identity", "send_reset_link", "wait_for_click", "validate_token", "set_new_password", "end"],
+  "expected_actions": ["verify_user", "send_email", "validate_token", "confirm_new_password"],
+  "difficulty": "easy",
+  "path_type": "happy_path"
+}

@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_07_test_01",
+  "scenario_id": "scenario_07_insurance_claim_type",
+  "user_prompt": "I was in a car accident yesterday. I need to file an auto claim. Policy number POL-8821.",
+  "expected_path": ["start", "verify_policy", "claim_type", "collect_auto", "assign_auto", "send_auto_confirmation", "end1"],
+  "expected_actions": ["verify_policy", "collect_incident_details", "assign_adjuster", "send_acknowledgment"],
+  "decision_points": {
+    "claim_type": {
+      "condition": "auto_claim",
+      "correct_branch": "collect_auto",
+      "wrong_branch": "collect_home",
+      "outcome_for_llm": "Claim type: auto."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "happy_path"
+}

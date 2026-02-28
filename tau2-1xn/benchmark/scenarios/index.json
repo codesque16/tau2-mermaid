@@ -1,0 +1,16 @@
+{
+  "benchmark_version": "0.1",
+  "design_doc": "graph_traversal_benchmark_design.md",
+  "scenarios": [
+    {"scenario_number": 1, "scenario_id": "scenario_01_order_cancellation", "name": "Simple Order Cancellation", "tier": 1, "domain": "retail", "tests": [1]},
+    {"scenario_number": 2, "scenario_id": "scenario_02_password_reset", "name": "Password Reset", "tier": 1, "domain": "it_support", "tests": [1]},
+    {"scenario_number": 3, "scenario_id": "scenario_03_appointment_booking", "name": "Appointment Booking", "tier": 1, "domain": "customer_service", "tests": [1]},
+    {"scenario_number": 4, "scenario_id": "scenario_04_leave_request", "name": "Leave Request Submission", "tier": 1, "domain": "hr", "tests": [1]},
+    {"scenario_number": 5, "scenario_id": "scenario_05_return_exchange", "name": "Return and Exchange with Eligibility", "tier": 2, "domain": "retail", "tests": [1, 2]},
+    {"scenario_number": 6, "scenario_id": "scenario_06_it_ticket_routing", "name": "IT Ticket Routing by Priority", "tier": 2, "domain": "it_support", "tests": [1]},
+    {"scenario_number": 7, "scenario_id": "scenario_07_insurance_claim_type", "name": "Insurance Claim Type Routing", "tier": 2, "domain": "insurance", "tests": [1]},
+    {"scenario_number": 8, "scenario_id": "scenario_08_hr_onboarding_docs", "name": "HR Onboarding Document Submission", "tier": 2, "domain": "hr", "tests": [1]},
+    {"scenario_number": 9, "scenario_id": "scenario_09_insurance_claim_investigation", "name": "Insurance Claim with Investigation Loop", "tier": 3, "domain": "insurance", "tests": [1, 2]},
+    {"scenario_number": 10, "scenario_id": "scenario_10_customer_complaint_escalation", "name": "Customer Complaint Escalation and Callback", "tier": 3, "domain": "customer_service", "tests": [1, 2]}
+  ]
+}

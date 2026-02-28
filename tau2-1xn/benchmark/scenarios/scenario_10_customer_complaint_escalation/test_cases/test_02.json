@@ -1,0 +1,23 @@
+{
+  "test_id": "scenario_10_test_02",
+  "scenario_id": "scenario_10_customer_complaint_escalation",
+  "user_prompt": "I need a callback—I reported a billing error last week and nobody got back to me. Case #8821.",
+  "expected_path": ["start", "acknowledge", "gather_details", "can_resolve", "escalate_l2", "l2_investigate", "callback_needed", "schedule_callback", "attempt_callback", "callback_success", "l2_resolve", "still_escalate", "confirm_satisfaction", "close_ticket", "end_resolved"],
+  "expected_actions": ["acknowledge", "gather_details", "escalate_l2", "schedule_callback", "attempt_callback", "l2_resolve", "confirm_satisfaction", "close_ticket"],
+  "decision_points": {
+    "can_resolve": {
+      "condition": "no",
+      "correct_branch": "escalate_l2",
+      "wrong_branch": "attempt_resolution",
+      "outcome_for_llm": "L1 can resolve this: no."
+    },
+    "callback_needed": {
+      "condition": "yes",
+      "correct_branch": "schedule_callback",
+      "wrong_branch": "l2_resolve",
+      "outcome_for_llm": "Callback needed: yes."
+    }
+  },
+  "difficulty": "hard",
+  "path_type": "escalation_with_callback"
+}

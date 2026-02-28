@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_10_customer_complaint_escalation",
+  "name": "Customer Complaint Escalation and Callback",
+  "tier": 3,
+  "domain": "customer_service",
+  "num_nodes": 18,
+  "num_edges": 20,
+  "num_branches": 5,
+  "description": "Complex flow: L1/L2 escalation, resolution check, callback loop, manager escalation."
+}

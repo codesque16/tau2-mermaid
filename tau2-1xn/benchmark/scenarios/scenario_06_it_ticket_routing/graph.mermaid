@@ -1,0 +1,13 @@
+flowchart TD
+    start([Start: User submits IT ticket])
+    start --> capture_issue[Capture issue description]
+    capture_issue --> classify_priority{Priority?}
+    classify_priority -->|Low| assign_l1[Assign to L1 support]
+    classify_priority -->|Medium| assign_l2[Assign to L2 support]
+    classify_priority -->|High| assign_l2_urgent[Assign to L2 urgent queue]
+    assign_l1 --> send_auto_response[Send auto-response with ticket ID]
+    assign_l2 --> send_auto_response
+    assign_l2_urgent --> send_urgent_response[Send urgent acknowledgment]
+    send_auto_response --> notify_user[Notify user of assignment]
+    send_urgent_response --> notify_user
+    notify_user --> end([End])

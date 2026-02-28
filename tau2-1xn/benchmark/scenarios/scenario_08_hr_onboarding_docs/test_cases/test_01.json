@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_08_test_01",
+  "scenario_id": "scenario_08_hr_onboarding_docs",
+  "user_prompt": "I'm a new hire. I've uploaded my ID and W-4. I still need to upload my direct deposit form—I'll do it tomorrow.",
+  "expected_path": ["start", "send_checklist", "collect_docs", "docs_complete", "send_reminder", "wait_resubmit", "collect_docs"],
+  "expected_actions": ["send_checklist", "collect_docs", "identify_missing", "send_reminder"],
+  "decision_points": {
+    "docs_complete": {
+      "condition": "docs_incomplete",
+      "correct_branch": "send_reminder",
+      "wrong_branch": "verify_docs",
+      "outcome_for_llm": "All required docs received: no."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "loop_path"
+}

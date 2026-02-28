@@ -1,0 +1,9 @@
+{
+  "test_id": "scenario_04_test_01",
+  "scenario_id": "scenario_04_leave_request",
+  "user_prompt": "I need to request leave for March 10–12. I have 15 days of PTO left.",
+  "expected_path": ["start", "validate_dates", "check_balance", "submit_request", "record_approval", "notify_employee", "end"],
+  "expected_actions": ["validate_dates", "check_balance", "submit_to_manager", "record_approval", "notify_employee"],
+  "difficulty": "easy",
+  "path_type": "happy_path"
+}

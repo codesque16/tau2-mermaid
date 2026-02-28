@@ -1,0 +1,17 @@
+{
+  "test_id": "scenario_06_test_01",
+  "scenario_id": "scenario_06_it_ticket_routing",
+  "user_prompt": "My laptop won't connect to the VPN. This is blocking me from work. I need this fixed ASAP.",
+  "expected_path": ["start", "capture_issue", "classify_priority", "assign_l2_urgent", "send_urgent_response", "notify_user", "end"],
+  "expected_actions": ["capture_description", "classify_high_priority", "assign_urgent", "send_acknowledgment", "notify_user"],
+  "decision_points": {
+    "classify_priority": {
+      "condition": "high_priority",
+      "correct_branch": "assign_l2_urgent",
+      "wrong_branch": "assign_l1",
+      "outcome_for_llm": "Priority: high."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "happy_path"
+}

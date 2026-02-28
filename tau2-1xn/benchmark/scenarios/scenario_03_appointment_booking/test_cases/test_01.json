@@ -1,0 +1,9 @@
+{
+  "test_id": "scenario_03_test_01",
+  "scenario_id": "scenario_03_appointment_booking",
+  "user_prompt": "I'd like to book an appointment for next Tuesday afternoon, any time after 2 PM.",
+  "expected_path": ["start", "collect_preferences", "check_availability", "propose_slots", "confirm_booking", "send_reminder", "end"],
+  "expected_actions": ["ask_preferences", "lookup_calendar", "offer_slots", "confirm_details", "send_confirmation"],
+  "difficulty": "easy",
+  "path_type": "happy_path"
+}

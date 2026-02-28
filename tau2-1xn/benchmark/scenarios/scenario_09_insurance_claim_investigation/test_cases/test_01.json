@@ -1,0 +1,23 @@
+{
+  "test_id": "scenario_09_test_01",
+  "scenario_id": "scenario_09_insurance_claim_investigation",
+  "user_prompt": "I had a minor fender bender, damage is about $2000. Claim number CLM-4421.",
+  "expected_path": ["start", "verify_policyholder", "policy_active", "assess_damage", "high_value", "auto_approve", "calculate_payout", "approval_required", "issue_payment", "end_success"],
+  "expected_actions": ["verify_policy", "assess_damage", "auto_approve", "calculate_payout", "issue_payment"],
+  "decision_points": {
+    "policy_active": {
+      "condition": "active",
+      "correct_branch": "assess_damage",
+      "wrong_branch": "reject_claim",
+      "outcome_for_llm": "Policy active: yes."
+    },
+    "high_value": {
+      "condition": "damage <= 5000",
+      "correct_branch": "auto_approve",
+      "wrong_branch": "assign_senior",
+      "outcome_for_llm": "Damage over $5000: no."
+    }
+  },
+  "difficulty": "hard",
+  "path_type": "happy_path"
+}

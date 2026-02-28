@@ -1,0 +1,8 @@
+flowchart TD
+    start([Start: User requests password reset])
+    start --> verify_identity[Verify user identity]
+    verify_identity --> send_reset_link[Send reset link to email]
+    send_reset_link --> wait_for_click[Wait for user to click link]
+    wait_for_click --> validate_token[Validate reset token]
+    validate_token --> set_new_password[User sets new password]
+    set_new_password --> end([End: Confirmation])

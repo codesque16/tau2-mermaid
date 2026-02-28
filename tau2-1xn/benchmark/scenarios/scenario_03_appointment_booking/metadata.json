@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_03_appointment_booking",
+  "name": "Appointment Booking",
+  "tier": 1,
+  "domain": "customer_service",
+  "num_nodes": 7,
+  "num_edges": 6,
+  "num_branches": 0,
+  "description": "Linear flow for booking a customer appointment."
+}

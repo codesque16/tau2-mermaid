@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_04_leave_request",
+  "name": "Leave Request Submission",
+  "tier": 1,
+  "domain": "hr",
+  "num_nodes": 7,
+  "num_edges": 6,
+  "num_branches": 0,
+  "description": "Linear HR flow for submitting and recording a leave request."
+}

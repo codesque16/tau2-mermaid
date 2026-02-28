@@ -1,0 +1,23 @@
+{
+  "test_id": "scenario_05_test_01",
+  "scenario_id": "scenario_05_return_exchange",
+  "user_prompt": "I bought a jacket 2 weeks ago and it doesn't fit. I'd like a refund to my card.",
+  "expected_path": ["start", "verify_purchase", "check_window", "check_condition", "choice", "process_refund", "send_refund_confirmation", "end2"],
+  "expected_actions": ["verify_order", "check_return_window", "check_condition", "process_refund", "send_confirmation"],
+  "decision_points": {
+    "check_window": {
+      "condition": "within_30_days",
+      "correct_branch": "check_condition",
+      "wrong_branch": "deny_return",
+      "outcome_for_llm": "Within return window: yes."
+    },
+    "choice": {
+      "condition": "customer_wants_refund",
+      "correct_branch": "process_refund",
+      "wrong_branch": "process_exchange",
+      "outcome_for_llm": "Customer wants: refund."
+    }
+  },
+  "difficulty": "medium",
+  "path_type": "happy_path"
+}

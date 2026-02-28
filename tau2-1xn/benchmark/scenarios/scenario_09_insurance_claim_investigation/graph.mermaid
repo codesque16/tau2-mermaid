@@ -1,0 +1,25 @@
+flowchart TD
+    start([Start: Claim received])
+    start --> verify_policyholder[Verify policyholder]
+    verify_policyholder --> policy_active{Policy active?}
+    policy_active -->|No| reject_claim[Reject claim]
+    policy_active -->|Yes| assess_damage[Assess damage type and amount]
+    reject_claim --> end_reject([End])
+    assess_damage --> high_value{Damage > 5000?}
+    high_value -->|No| auto_approve[Auto-approve]
+    high_value -->|Yes| assign_senior[Assign senior adjuster]
+    auto_approve --> calculate_payout[Calculate payout]
+    assign_senior --> investigation_needed{Investigation needed?}
+    investigation_needed -->|No| calculate_payout
+    investigation_needed -->|Yes| request_docs[Request documentation]
+    request_docs --> review_docs[Review documents]
+    review_docs --> docs_sufficient{Docs sufficient?}
+    docs_sufficient -->|No| request_docs
+    docs_sufficient -->|Yes| calculate_payout
+    calculate_payout --> approval_required{Approval required?}
+    approval_required -->|No| issue_payment[Issue payment]
+    approval_required -->|Yes| escalate_approval[Escalate to manager]
+    escalate_approval --> manager_decision{Manager decision}
+    manager_decision -->|Approve| issue_payment
+    manager_decision -->|Reject| reject_claim
+    issue_payment --> end_success([End])

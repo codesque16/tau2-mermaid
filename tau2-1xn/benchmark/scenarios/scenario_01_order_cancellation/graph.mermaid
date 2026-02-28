@@ -1,0 +1,8 @@
+flowchart TD
+    start([Start: Customer requests cancellation])
+    start --> verify_order[Verify order number]
+    verify_order --> check_status[Check order status]
+    check_status --> confirm_cancel[Confirm cancellation with customer]
+    confirm_cancel --> process_refund[Process refund]
+    process_refund --> send_confirmation[Send confirmation email]
+    send_confirmation --> end([End])

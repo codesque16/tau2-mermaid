@@ -1,0 +1,26 @@
+flowchart TD
+    start([Start: Customer complaint received])
+    start --> acknowledge[Acknowledge complaint]
+    acknowledge --> gather_details[Gather complaint details]
+    gather_details --> can_resolve{L1 can resolve?}
+    can_resolve -->|Yes| attempt_resolution[Attempt resolution]
+    can_resolve -->|No| escalate_l2[Escalate to L2]
+    attempt_resolution --> resolved{Resolved?}
+    resolved -->|Yes| confirm_satisfaction[Confirm customer satisfaction]
+    resolved -->|No| escalate_l2
+    confirm_satisfaction --> close_ticket[Close ticket]
+    close_ticket --> end_resolved([End])
+    escalate_l2 --> l2_investigate[L2 investigates]
+    l2_investigate --> callback_needed{Callback needed?}
+    callback_needed -->|Yes| schedule_callback[Schedule callback]
+    callback_needed -->|No| l2_resolve[L2 provides resolution]
+    schedule_callback --> attempt_callback[Attempt callback]
+    attempt_callback --> callback_success{Callback successful?}
+    callback_success -->|No| reschedule[Reschedule callback]
+    reschedule --> attempt_callback
+    callback_success -->|Yes| l2_resolve
+    l2_resolve --> still_escalate{Further escalation?}
+    still_escalate -->|No| confirm_satisfaction
+    still_escalate -->|Yes| escalate_manager[Escalate to manager]
+    escalate_manager --> manager_resolution[Manager resolution]
+    manager_resolution --> confirm_satisfaction

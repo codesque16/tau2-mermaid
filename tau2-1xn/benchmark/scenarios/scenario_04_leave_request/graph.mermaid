@@ -1,0 +1,8 @@
+flowchart TD
+    start([Start: Employee submits leave request])
+    start --> validate_dates[Validate leave dates]
+    validate_dates --> check_balance[Check leave balance]
+    check_balance --> submit_request[Submit request to manager]
+    submit_request --> record_approval[Record approval in system]
+    record_approval --> notify_employee[Notify employee of outcome]
+    notify_employee --> end([End])

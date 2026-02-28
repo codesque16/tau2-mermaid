@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_05_return_exchange",
+  "name": "Return and Exchange with Eligibility",
+  "tier": 2,
+  "domain": "retail",
+  "num_nodes": 16,
+  "num_edges": 17,
+  "num_branches": 3,
+  "description": "Branching flow: return window check, then refund vs exchange vs store credit paths."
+}

@@ -1,0 +1,10 @@
+{
+  "scenario_id": "scenario_07_insurance_claim_type",
+  "name": "Insurance Claim Type Routing",
+  "tier": 2,
+  "domain": "insurance",
+  "num_nodes": 13,
+  "num_edges": 12,
+  "num_branches": 1,
+  "description": "Branching flow: route claim by type (auto, home, health) to appropriate team."
+}
