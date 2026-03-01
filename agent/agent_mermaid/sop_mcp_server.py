@@ -82,6 +82,11 @@ _session_to_events: dict[str, list[ConnectionEvent]] = defaultdict(list)
 _MAX_EVENTS_PER_SESSION = 500
 _MAX_TOTAL_EVENTS = 10_000
 
+import os
+import sys
+
+strict_mode_default: bool = "--strict" in sys.argv 
+
 
 def _safe_session_filename(session_id: str) -> str:
     """Safe filename for session_id (alnum, dash, underscore only)."""
@@ -167,7 +172,7 @@ def _load_persisted_sessions() -> None:
 
 def _log_mcp_tool(name: str, params: dict[str, Any], result: Any) -> None:
     """Log MCP tool call in a readable format (Tool, Input, Output) like the chat display."""
-    _max_out = 800
+    _max_out = 1000
     input_str = json.dumps(params, indent=2)
     try:
         out_str = json.dumps(result, indent=2) if isinstance(result, dict) else str(result)
@@ -675,6 +680,7 @@ if HAS_MCP:
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
         graph_id = state.current_graph_id
+
         if not graph_id or graph_id not in state.graphs:
             err_result = {"valid": False, "error": "Graph not loaded. Call load_graph first.", "current_node": None, "valid_next": []}
             _record_connection(session_id, "goto_node", {"node_id": node_id}, "error: graph not loaded", result=err_result)
@@ -690,17 +696,23 @@ if HAS_MCP:
             _log_mcp_tool("goto_node", {"node_id": node_id}, err_result)
             return err_result
 
-        # Valid if START (and path empty) or node_id is a direct next from current
+        # Valid if START (and path empty) or node_id is a direct next from current, or coming from a terminal node
         current = path[-1] if path else None
         edges_from_current = [(to_id, lab) for (a, to_id, lab) in g["edges"] if a == current] if current else []
-        valid = (node_id == g["entry_node"] and not path) or any(to_id == node_id for to_id, _ in edges_from_current)
-        valid=True # TODO: test and take a call whether we want to validate the transition or not
-        if not valid and path:
+
+        # logging.info(f"current: {current}, node_id: {node_id}, edges_from_current: {edges_from_current}")
+        if(strict_mode_default):
+            valid = (node_id == g["entry_node"] ) or (node_id == current) or any(to_id == node_id for to_id, _ in edges_from_current) or (current in g["terminal_nodes"])
+        else:
+            valid = True
+
+        if not valid:
+            err_msg = f"Cannot reach {node_id} from {current}" if current else f"Initial transition must be to '{g['entry_node']}', not '{node_id}'"
             err_result = {
                 "valid": False,
-                "error": f"Cannot reach {node_id} from {current}",
+                "error": err_msg,
                 "current_node": current,
-                "valid_next": [t for t, _ in edges_from_current],
+                "valid_next_nodes": [t for t, _ in edges_from_current] if current else [g["entry_node"]],
             }
             _record_connection(
                 session_id, "goto_node", {"node_id": node_id},
@@ -715,7 +727,7 @@ if HAS_MCP:
         else:
             state.path[graph_id] = path + [node_id] if path else [node_id]
 
-        edges_out = [{"to": to_id, "condition": lab} for (a, to_id, lab) in g["edges"] if a == node_id]
+        edges_out = [{"to": to_id, "condition": lab if lab else "always"} for (a, to_id, lab) in g["edges"] if a == node_id]
         # Build node: id, node_instruction (prompt if present else mermaid label), tools, examples from node_prompts
         node_prompts_map = g.get("node_prompts") or {}
         prompt_entry = node_prompts_map.get(node_id)
@@ -725,48 +737,65 @@ if HAS_MCP:
             node_instruction = description
         node_payload: dict[str, Any] = {
             "id": node_id,
-            "node_instruction": node_instruction,
+            "node_instructions": node_instruction, 
         }
         if prompt_entry:
             if prompt_entry.get("tools"):
-                node_payload["tools"] = list(prompt_entry["tools"])
+                node_payload["tool_hints"] = list(prompt_entry["tools"])
             if prompt_entry.get("examples"):
                 node_payload["examples"] = list(prompt_entry["examples"])
         result = {
             "node": node_payload,
             "edges": edges_out,
-            "path": state.path[graph_id],
-            "valid": True,
+            "path_trace": " -> ".join(state.path[graph_id]),
         }
+        if strict_mode_default:
+            result["valid"] = True
+            
         if node_id in g["terminal_nodes"]:
-            result["todo_reminder"] = f"Reached completion node {node_id}. Update todos and proceed to next task."
+            state = _sessions[session_id] 
+            todos = state.todos
+            normalized = [
+                {
+                    "desc": t["desc"],
+                    "status": t["status"],
+                    "note": t.get("note", ""),
+                    "task_completion_node": t.get("task_completion_node", ""),
+                }
+                for t in todos
+            ]        
+            result["todos"] = normalized
+            result["system_reminder"] = f"Reached completion node {node_id}: Update todos, SHARE AN UPDATE WITH USER and proceed to next task."
 
         _record_connection(session_id, "goto_node", {"node_id": node_id}, f"path_len={len(state.path[graph_id])}", result=result)
         _log_mcp_tool("goto_node", {"node_id": node_id}, result)
         return result
 
-    class TodoItem(TypedDict, total=False):
-        content: Required[Annotated[str, Field(min_length=1, description="Task description, what needs to be done")]]
+    class TaskItem(TypedDict):
+        desc: Required[Annotated[str, Field(min_length=1, description="Task description, what needs to be done")]]
         status: Required[Annotated[Literal["pending", "in_progress", "completed"], Field(description="Task Status")]]
         note: Annotated[str, Field(default="", description="Scratchpad/Memory for context, dependencies, or findings relevant to this task")]
-        completion_node: Annotated[str, Field(default="", description="Expected terminal ([stadium]) node ID for this Task")]
+        task_completion_node: Annotated[str, Field(default="", description="Expected terminal ([stadium]) node ID for this Task")]
 
     @mcp.tool()
-    def todo(
-        todos: Annotated[list[TodoItem], Field(description="Full replacement todo list — always resend all items, not just changes")],
+    def todo_tasks(
+        todos: Annotated[list[TaskItem], Field(description="The updated todo list — always resend all items, not just changes")],
         ctx: Context | None = None,
-    ) -> dict[str, Any]:
+    ) -> str:
         """
-        Maintain a structured task list for the current session. Each call replaces the entire list, so always include all todos. Tasks are internal to the agent and not shown to the user. Use status transitions (pending → in_progress → completed) to track progress; use note to carry forward findings between tasks.
+        Use this tool to create and manage a structured task list for your current sessiion. Tasks are internal to the agent and not shown to the user. 
+        Use notes to keep track of context, dependencies, or findings relevant to this task.
+        Use status transitions (pending → in_progress → completed) to track progress.
+        Use task_completion_node to specify the expected terminal ([stadium]) node ID for this Task
         """
         session_id = _get_session_id_from_context(ctx)
-        state = _sessions[session_id]
+        state = _sessions[session_id] 
         normalized = [
             {
-                "content": t["content"],
+                "desc": t["desc"],
                 "status": t["status"],
                 "note": t.get("note", ""),
-                "completion_node": t.get("completion_node", ""),
+                "task_completion_node": t.get("task_completion_node", ""),
             }
             for t in todos
         ]
@@ -774,19 +803,18 @@ if HAS_MCP:
         pending = sum(1 for t in normalized if t["status"] == "pending")
         in_progress = sum(1 for t in normalized if t["status"] == "in_progress")
         completed = sum(1 for t in normalized if t["status"] == "completed")
-        result = {
-            "todos": normalized,
-            "summary": {"pending": pending, "in_progress": in_progress, "completed": completed},
-        }
+        ret = f"Todos created successfully: {pending} pending, {in_progress} in progress, {completed} completed"
+
         _record_connection(
             session_id,
             "todo",
-            {"todos": [{"content": (t["content"] or "")[:80], "status": t["status"]} for t in normalized]},
+            {"todos": [{"desc": (t["desc"] or "")[:80], "status": t["status"]} for t in normalized]},
             f"pending={pending} in_progress={in_progress} completed={completed}",
-            result=result,
+            result=ret,
         )
-        _log_mcp_tool("todo", {"todos": normalized}, result)
-        return result
+
+        _log_mcp_tool("todo", {"todos": normalized}, ret)
+        return ret
 
 
 # --- HTTP routes for viewing connections ---
@@ -1050,7 +1078,7 @@ def build_sop_mcp_app() -> Starlette:
                         except json.JSONDecodeError:
                             call_params = {}
                     input_str = json.dumps(call_params, indent=2)
-                    logging.info("MCP Request: tools/call  Tool: %s\nInput:\n%s", name, input_str)
+                    # logging.info("MCP Request: tools/call  Tool: %s\nInput:\n%s", name, input_str)
             except (json.JSONDecodeError, UnicodeDecodeError):
                 pass
         sent = [False]
@@ -1085,6 +1113,8 @@ if __name__ == "__main__":
     import uvicorn
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    logging.info("Strict mode: %s", strict_mode_default)
     # Run with streamable HTTP so all connections can be viewed at GET /api/connections
     # MCP endpoint: http://localhost:8000/mcp
     uvicorn.run(
