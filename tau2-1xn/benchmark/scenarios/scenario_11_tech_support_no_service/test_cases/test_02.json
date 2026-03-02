@@ -5,11 +5,11 @@
   "expected_path": ["Start", "P1_Start", "P1_S0_CheckStatusBar", "P1_S0_Decision_NoService", "End_Resolve"],
   "expected_actions": ["check_status_bar"],
   "decision_points": {
-    "P1_S0_Decision_NoService": {
+    "P1_S0_CheckStatusBar": {
       "condition": "service_available",
       "correct_branch": "End_Resolve",
       "wrong_branch": "P1_S1_CheckAirplane",
-      "outcome_for_llm": "Status bar shows no service: no."
+      "outcome_for_llm": "Check status bar result: Status bar shows no service: no."
     }
   },
   "difficulty": "medium",

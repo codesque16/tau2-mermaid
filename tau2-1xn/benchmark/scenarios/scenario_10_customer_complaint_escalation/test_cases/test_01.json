@@ -5,13 +5,13 @@
   "expected_path": ["start", "acknowledge", "gather_details", "can_resolve", "attempt_resolution", "resolved", "confirm_satisfaction", "close_ticket", "end_resolved"],
   "expected_actions": ["acknowledge", "gather_details", "attempt_resolution", "confirm_satisfaction", "close_ticket"],
   "decision_points": {
-    "can_resolve": {
+    "gather_details": {
       "condition": "l1_can_resolve",
       "correct_branch": "attempt_resolution",
       "wrong_branch": "escalate_l2",
       "outcome_for_llm": "L1 can resolve this: yes."
     },
-    "resolved": {
+    "attempt_resolution": {
       "condition": "yes",
       "correct_branch": "confirm_satisfaction",
       "wrong_branch": "escalate_l2",

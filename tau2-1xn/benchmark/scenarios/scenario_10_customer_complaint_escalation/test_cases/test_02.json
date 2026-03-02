@@ -5,17 +5,23 @@
   "expected_path": ["start", "acknowledge", "gather_details", "can_resolve", "escalate_l2", "l2_investigate", "callback_needed", "schedule_callback", "attempt_callback", "callback_success", "l2_resolve", "still_escalate", "confirm_satisfaction", "close_ticket", "end_resolved"],
   "expected_actions": ["acknowledge", "gather_details", "escalate_l2", "schedule_callback", "attempt_callback", "l2_resolve", "confirm_satisfaction", "close_ticket"],
   "decision_points": {
-    "can_resolve": {
+    "gather_details": {
       "condition": "no",
       "correct_branch": "escalate_l2",
       "wrong_branch": "attempt_resolution",
-      "outcome_for_llm": "L1 can resolve this: no."
+      "outcome_for_llm": "L1 cannot resolve this."
     },
-    "callback_needed": {
+    "l2_investigate": {
       "condition": "yes",
       "correct_branch": "schedule_callback",
       "wrong_branch": "l2_resolve",
-      "outcome_for_llm": "Callback needed: yes."
+      "outcome_for_llm": "Callback is required."
+    },
+    "l2_resolve": {
+      "condition": "no",
+      "correct_branch": "confirm_satisfaction",
+      "wrong_branch": "escalate_manager",
+      "outcome_for_llm": "No further escalation."
     }
   },
   "difficulty": "hard",
