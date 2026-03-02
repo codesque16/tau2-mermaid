@@ -672,10 +672,8 @@ if HAS_MCP:
         ctx: Context | None = None,
     ) -> dict[str, Any]:
         """
-        Move to a node in the SOP graph. Always call this before acting —
-        full instructions, tools, and policy are delivered here, not from
-        the mermaid graph. Returns prompt, tools, examples, and valid next
-        edges. Validates the transition is legal from the current position.
+        Move to a node in the graph and get details for that node. Always call this before acting —
+        full instructions, tools, and policy are delivered here. Validates the transition is legal from the current position.
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id]
@@ -742,11 +740,11 @@ if HAS_MCP:
         if prompt_entry:
             if prompt_entry.get("tools"):
                 node_payload["tool_hints"] = list(prompt_entry["tools"])
-            if prompt_entry.get("examples"):
-                node_payload["examples"] = list(prompt_entry["examples"])
+            # if prompt_entry.get("examples"):
+            #     node_payload["examples"] = list(prompt_entry["examples"])
         result = {
             "node": node_payload,
-            "edges": edges_out,
+            "valid_next_nodes": edges_out,
             "path_trace": " -> ".join(state.path[graph_id]),
         }
         if strict_mode_default:
@@ -760,7 +758,7 @@ if HAS_MCP:
                     "desc": t["desc"],
                     "status": t["status"],
                     "note": t.get("note", ""),
-                    "task_completion_node": t.get("task_completion_node", ""),
+                    #"task_completion_node": t.get("task_completion_node", ""),
                 }
                 for t in todos
             ]        
@@ -775,7 +773,7 @@ if HAS_MCP:
         desc: Required[Annotated[str, Field(min_length=1, description="Task description, what needs to be done")]]
         status: Required[Annotated[Literal["pending", "in_progress", "completed"], Field(description="Task Status")]]
         note: Annotated[str, Field(default="", description="Scratchpad/Memory for context, dependencies, or findings relevant to this task")]
-        task_completion_node: Annotated[str, Field(default="", description="Expected terminal ([stadium]) node ID for this Task")]
+        #task_completion_node: Annotated[str, Field(default="", description="Expected terminal ([stadium]) node ID for this Task")]
 
     @mcp.tool()
     def todo_tasks(
@@ -786,7 +784,6 @@ if HAS_MCP:
         Use this tool to create and manage a structured task list for your current sessiion. Tasks are internal to the agent and not shown to the user. 
         Use notes to keep track of context, dependencies, or findings relevant to this task.
         Use status transitions (pending → in_progress → completed) to track progress.
-        Use task_completion_node to specify the expected terminal ([stadium]) node ID for this Task
         """
         session_id = _get_session_id_from_context(ctx)
         state = _sessions[session_id] 
@@ -795,7 +792,7 @@ if HAS_MCP:
                 "desc": t["desc"],
                 "status": t["status"],
                 "note": t.get("note", ""),
-                "task_completion_node": t.get("task_completion_node", ""),
+                #"task_completion_node": t.get("task_completion_node", ""),
             }
             for t in todos
         ]
@@ -816,6 +813,23 @@ if HAS_MCP:
         _log_mcp_tool("todo", {"todos": normalized}, ret)
         return ret
 
+    @mcp.tool()
+    def get_todos(ctx: Context | None = None) -> str:
+        """
+        Get the current todo list
+        """
+        session_id = _get_session_id_from_context(ctx)
+        state = _sessions[session_id] 
+        pending = sum(1 for t in state.todos if t["status"] == "pending")
+        in_progress = sum(1 for t in state.todos if t["status"] == "in_progress")
+        completed = sum(1 for t in state.todos if t["status"] == "completed")
+        if (pending > 0 or in_progress > 0):
+            ret = f"Todo Tasks: {pending} pending, {in_progress} in progress, {completed} completed"
+        else:
+            ret = ""
+
+        _log_mcp_tool("get_todos", {}, ret)
+        return ret
 
 # --- HTTP routes for viewing connections ---
 async def list_connections(_request: Request) -> JSONResponse:
