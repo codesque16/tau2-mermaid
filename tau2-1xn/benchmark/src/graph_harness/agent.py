@@ -8,6 +8,7 @@ import json
 from typing import Any
 
 import litellm
+import logfire
 
 from .conditions import (
     CONDITION_MERMAID_HARNESS,
@@ -28,6 +29,9 @@ def run_agent(
     reminder_every_n: int = 5,
     expected_path: list[str] | None = None,
     decision_points: dict[str, Any] | None = None,
+    scenario_id: str | None = None,
+    test_id: str | None = None,
+    trial: int | None = None,
 ) -> tuple[list[str], list[dict[str, Any]], bool]:
     """
     Run the agent on a single test case. Returns (path, messages, completed).
@@ -60,12 +64,28 @@ def run_agent(
 
     while turn < max_turns:
         turn += 1
-        response = litellm.completion(
-            model=model,
-            messages=messages,
-            tools=tools,
-            tool_choice="auto",
-        )
+        # Parent span so LiteLLM completion spans appear nested under an "agent" span,
+        # similar to tau2-bench's generate() helper.
+        span_kwargs: dict[str, Any] = {"condition": condition, "turn": turn}
+        if scenario_id is not None:
+            span_kwargs["scenario_id"] = scenario_id
+        if test_id is not None:
+            span_kwargs["test_id"] = test_id
+        if trial is not None:
+            span_kwargs["trial"] = trial
+
+        def _do_completion() -> Any:
+            # Keep metadata so completions can still be filtered by these fields directly.
+            return litellm.completion(
+                model=model,
+                messages=messages,
+                tools=tools,
+                tool_choice="auto",
+                metadata=span_kwargs,
+            )
+
+        with logfire.span("agent", **span_kwargs):
+            response = _do_completion()
 
         msg = response.choices[0].message
         assistant_content = msg.content or ""

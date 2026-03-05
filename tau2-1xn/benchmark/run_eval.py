@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -87,17 +88,37 @@ def list_scenarios() -> list[Path]:
 
 def _run_one(args: dict) -> bool:
     """Single run for concurrent execution. Returns passed (path match)."""
-    path, _, _ = run_agent(
-        prose=args["prose"],
-        mermaid=args["mermaid"],
-        condition=args["condition"],
-        user_prompt=args["user_prompt"],
-        model=args["model"],
-        max_turns=args["max_turns"],
-        expected_path=args["expected_path"],
-        decision_points=args.get("decision_points"),
+    span_name = (
+        f"{args['condition']} | {args.get('scenario_id', 'unknown')} | "
+        f"{args.get('test_id', 'unknown')} | trial {args.get('trial', 'unknown')}"
     )
-    return paths_match(path, args["expected_path"])
+    with logfire.span(
+        span_name,
+        scenario_id=args.get("scenario_id"),
+        test_id=args.get("test_id"),
+        condition=args["condition"],
+        trial=args.get("trial"),
+    ) as span:
+        path, messages, completed = run_agent(
+            prose=args["prose"],
+            mermaid=args["mermaid"],
+            condition=args["condition"],
+            user_prompt=args["user_prompt"],
+            model=args["model"],
+            max_turns=args["max_turns"],
+            expected_path=args["expected_path"],
+            decision_points=args.get("decision_points"),
+            scenario_id=args.get("scenario_id"),
+            test_id=args.get("test_id"),
+            trial=args.get("trial"),
+        )
+        passed = paths_match(path, args["expected_path"])
+        span.set_attribute("path", path)
+        span.set_attribute("expected_path", args["expected_path"])
+        span.set_attribute("passed", passed)
+        span.set_attribute("completed", completed)
+        span.set_attribute("turns", len(messages) // 2)
+    return passed
 
 
 def run_eval(
@@ -149,18 +170,24 @@ def run_eval(
         sid = scenario_dir.name
         prose, mermaid = load_scenario(scenario_dir)
         for tc in test_cases:
+            test_id = tc.get("test_id", "unknown")
             for cond in conditions:
                 for trial in range(trials):
-                    work_items.append({
-                        "prose": prose,
-                        "mermaid": mermaid,
-                        "condition": cond,
-                        "user_prompt": tc.get("user_prompt", ""),
-                        "expected_path": tc.get("expected_path", []),
-                        "decision_points": tc.get("decision_points"),
-                        "model": model,
-                        "max_turns": max_turns,
-                    })
+                    work_items.append(
+                        {
+                            "prose": prose,
+                            "mermaid": mermaid,
+                            "condition": cond,
+                            "user_prompt": tc.get("user_prompt", ""),
+                            "expected_path": tc.get("expected_path", []),
+                            "decision_points": tc.get("decision_points"),
+                            "model": model,
+                            "max_turns": max_turns,
+                            "scenario_id": sid,
+                            "test_id": test_id,
+                            "trial": trial + 1,
+                        }
+                    )
 
     progress = create_progress(total_runs, "Evaluating")
     conditions_str = ", ".join(conditions)
@@ -204,6 +231,9 @@ def run_eval(
                                             max_turns=max_turns,
                                             expected_path=tc.get("expected_path", []),
                                             decision_points=tc.get("decision_points"),
+                                            scenario_id=sid,
+                                            test_id=test_id,
+                                            trial=trial + 1,
                                         )
                                         passed = paths_match(path, tc.get("expected_path", []))
                                         trial_results.append(passed)
@@ -355,6 +385,9 @@ def main():
         help="Disable Logfire (no tracing, no instrument_litellm)",
     )
     args = parser.parse_args()
+
+    if args.no_logfire:
+        os.environ["LOGFIRE_IGNORE_NO_CONFIG"] = "1"
 
     # Resolve --scenario to scenario_ids via index
     scenario_ids = args.scenarios

@@ -179,6 +179,7 @@ node_prompts:
       - price
 
       Note: Product ID and Item ID have no relations and should not be confused!
+      Remember that user is generally interested in **available** variants.
 
       ### Order
 
@@ -226,7 +227,7 @@ node_prompts:
     tools: [get_order_details]
     prompt: |
       Look up the order and check its status before proceeding.
-      - Only cancel orders whose status is 'pending'.
+      - If the order is delivered, treat cancellation as invalid and route into the return / exchange flows as appropriate.
       - Do not call cancel_pending_order on non-pending orders.
 
   COLLECT_CANCEL:
@@ -234,13 +235,14 @@ node_prompts:
       Ensure you have:
       1. **order_id**
       2. **reason**: must be 'no longer needed' OR 'ordered by mistake'.
-      If the reason in the ticket is outside this set, it is not acceptable for cancellation under this policy.
+
+      If the reason in the ticket is outside this set, treat it as invalid for cancellation and prefer the return or exchange flow when appropriate.
 
   DO_CANCEL:
     tools: [cancel_pending_order, calculate]
     prompt: |
       Once all required fields and policy checks pass, cancel the pending order.
-      Apply refund timing according to policy:
+      Use calculate to confirm refund amounts and timing:
       - Gift card: immediate refund.
       - Other methods: 5–7 business days.
 
@@ -282,7 +284,10 @@ node_prompts:
       1. **order_id**
       2. **list of item_id → new_item_id** (same product type, different option, must be available)
       3. **payment method** for price difference (gift card must cover difference).
+
       - This modification can only be done ONCE — after calling modify_pending_order_items, no further modify or cancel actions are allowed on this order.
+      - Infer missing details from the ticket and prior tool results; do not assume additional user clarification.
+      - For items with sizes or personalization options, match original options by default unless the ticket explicitly requests a change.
 
   DO_MOD_ITEMS:
     tools: [calculate, modify_pending_order_items]

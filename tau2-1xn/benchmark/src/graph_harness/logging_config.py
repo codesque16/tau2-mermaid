@@ -4,6 +4,7 @@ Rich console logging and Logfire integration for the benchmark.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import logfire
@@ -30,10 +31,11 @@ def configure_logfire(
     console: bool = True,
 ) -> None:
     """Configure Logfire (tracing + optional console). Instruments LiteLLM for LLM spans."""
+    # Use env var for console; newer logfire expects ConsoleConfig, not bool.
+    os.environ.setdefault("LOGFIRE_CONSOLE", "true" if console else "false")
     logfire.configure(
         scrubbing=False,
         service_name=service_name,
-        console=console,
     )
     logfire.instrument_litellm()
 
