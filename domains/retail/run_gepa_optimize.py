@@ -113,13 +113,24 @@ class GEPAPanelLogger:
 
     _ITER_RE = re.compile(r"Iteration\s*[:#]?\s*(\d+)", re.I)
 
-    def __init__(self, state: ViewState, iteration_span_manager: Any = None) -> None:
+    def __init__(
+        self,
+        state: ViewState | None,
+        iteration_span_manager: Any = None,
+        echo_to_console: bool = False,
+    ) -> None:
         self._state = state
         self._iter_span_mgr = iteration_span_manager
+        self._echo_to_console = echo_to_console
 
     def log(self, message: str) -> None:
         line = (message or "").strip()
-        self._state.add_gepa(line or "")
+        if self._state is not None:
+            self._state.add_gepa(line or "")
+        if line and self._echo_to_console:
+            # Stream GEPA log lines to stdout with a clear prefix instead of
+            # taking over the whole terminal via a Rich live dashboard.
+            print(f"[GEPA] {line}")
         if line and self._iter_span_mgr is not None:
             m = self._ITER_RE.search(line)
             if m:
@@ -350,6 +361,19 @@ def _write_candidate_graph(
     return out_path
 
 
+def _write_candidate_instructions(candidate_body: str, out_dir: Path) -> Path:
+    """Write a candidate instructions text to disk and return its path.
+
+    This mirrors the mermaid candidate graph writer so that every GEPA candidate
+    has a stable, digested file on disk for later inspection or replay.
+    """
+    digest = hashlib.sha1(candidate_body.encode("utf-8")).hexdigest()[:12]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"instructions_candidate.{digest}.md"
+    out_path.write_text(candidate_body, encoding="utf-8")
+    return out_path
+
+
 def _short_file_digest(path: Path, max_bytes: int = 200_000) -> str:
     """Short stable digest of a file's content (bounded read)."""
     h = hashlib.sha1()
@@ -411,6 +435,7 @@ async def _run_one_eval(
         seed=seed,
         mermaid_graph_path=mermaid_graph_path,
         quiet=True,
+        include_policy=False,
     )
 
 
@@ -426,6 +451,7 @@ def _make_evaluator(
     qualitative_eval_lm: str = "openai/gpt-4.1-mini",
     mermaid_base_graph_path: Path | None = None,
     mermaid_candidate_dir: Path | None = None,
+    instructions_candidate_dir: Path | None = None,
     view_state: ViewState | None = None,
     progress_logger: GEPAFileLogger | None = None,
     use_logfire: bool = True,
@@ -438,13 +464,17 @@ def _make_evaluator(
             view_state.inc_eval()
             view_state.set_stage(f"Evaluating task_id={task_id}")
             view_state.add_sim(f"[Eval {view_state.eval_count}] task_id={task_id} started …")
+        else:
+            # Console-friendly simulation log for this evaluation.
+            print(f"[SIM ] task_id={task_id} started …")
 
         # Set by _run_eval() so we can include it in side_info.
         mermaid_graph_override: str | None = None
         mermaid_graph_digest: str | None = None
+        instructions_path: str | None = None
 
         def _run_eval():
-            nonlocal mermaid_graph_override, mermaid_graph_digest
+            nonlocal mermaid_graph_override, mermaid_graph_digest, instructions_path
             if isinstance(candidate, str):
                 instructions_text = candidate
             elif isinstance(candidate, dict):
@@ -456,6 +486,18 @@ def _make_evaluator(
                 instructions_text = instructions_text if isinstance(instructions_text, str) else str(candidate)
             else:
                 instructions_text = str(candidate)
+
+            # Persist the raw instructions candidate to disk (for inspection / replay)
+            # in a stable, digest-based path, similar to how we store mermaid graphs.
+            instructions_path = None
+            if instructions_candidate_dir is not None:
+                try:
+                    instr_path = _write_candidate_instructions(
+                        instructions_text, instructions_candidate_dir
+                    )
+                    instructions_path = str(instr_path)
+                except Exception:
+                    instructions_path = None
 
             mermaid_graph_override = None
             mermaid_graph_digest = None
@@ -472,8 +514,8 @@ def _make_evaluator(
                     mermaid_graph_override = None
                     mermaid_graph_digest = None
 
-            # Visible, nested trace: which SOP file is used for this eval.
-            if use_logfire:
+            # Visible, nested trace: which SOP file is used for this eval (when using mermaid).
+            if use_logfire and mermaid_graph_override is not None:
                 with logfire.span(
                     "mermaid_graph",
                     _span_name="mermaid_graph",
@@ -514,15 +556,14 @@ def _make_evaluator(
                 task_id=task_id,
                 candidate_preview=candidate_preview,
             ) as eval_span:
-                eval_span.message = f"eval: Task: {task_id}"
                 _db_ok, eval_result = _run_eval()
                 db_match = eval_result.get("db_match", False)
                 path_match = eval_result.get("path_match", True)
-                has_golden_path = bool(eval_result.get("golden_mermaid_path"))
-                if has_golden_path:
-                    score = 0.5 * (1.0 if db_match else 0.0) + 0.5 * (1.0 if path_match else 0.0)
-                else:
-                    score = 1.0 if db_match else 0.0
+                # New reward: depend only on DB correctness. Path details are kept
+                # for qualitative diagnosis and logging, but do not affect the score.
+                score = 1.0 if db_match else 0.0
+                outcome_label = "PASS" if score >= 1.0 else "FAIL"
+                eval_span.message = f"eval: Task: {task_id} [{outcome_label}]"
                 eval_span.set_attribute("score", score)
                 eval_span.set_attribute("db_match", db_match)
                 eval_span.set_attribute("path_match", path_match)
@@ -530,15 +571,7 @@ def _make_evaluator(
             _db_ok, eval_result = _run_eval()
             db_match = eval_result.get("db_match", False)
             path_match = eval_result.get("path_match", True)
-            has_golden_path = bool(eval_result.get("golden_mermaid_path"))
-            if has_golden_path:
-                score = 0.5 * (1.0 if db_match else 0.0) + 0.5 * (1.0 if path_match else 0.0)
-            else:
-                score = 1.0 if db_match else 0.0
-
-        golden_path = eval_result.get("golden_mermaid_path") or []
-        predicted_path = eval_result.get("predicted_goto_sequence") or []
-        mismatch = eval_result.get("path_mismatch")
+            score = 1.0 if db_match else 0.0
 
         side_info: dict[str, Any] = {
             "task_id": task_id,
@@ -547,12 +580,13 @@ def _make_evaluator(
             "path_match": bool(path_match),
             "golden_hash": eval_result.get("golden_hash"),
             "predicted_hash": eval_result.get("predicted_hash"),
-            "golden_mermaid_path": golden_path,
-            "predicted_goto_sequence": predicted_path,
-            "path_mismatch": mismatch,
+            "golden_mermaid_path": eval_result.get("golden_mermaid_path") or [],
+            "predicted_goto_sequence": eval_result.get("predicted_goto_sequence") or [],
+            "path_mismatch": eval_result.get("path_mismatch"),
             "trace_preview": eval_result.get("trace_preview") or "",
             "mermaid_sop_file": mermaid_graph_override,
             "mermaid_sop_digest": mermaid_graph_digest,
+            "instructions_file": instructions_path,
         }
 
         if qualitative_eval:
@@ -560,16 +594,23 @@ def _make_evaluator(
                 import litellm
 
                 # Keep this short and diagnostic; it becomes GEPA's ASI.
+                # The evaluator sees the full policy, DB/hash results, and trace preview.
+                # Scalar reward is based only on DB correctness; qualitative text should
+                # explain what went right or wrong with respect to the DB outcome and actions.
+                policy_snippet = policy_text or ""
                 judge_prompt = (
-                    "You are an evaluator. Compare predicted vs golden mermaid goto_node path and DB outcome.\n\n"
-                    "Return a concise diagnostic that pinpoints the first mismatch and what should have happened.\n"
-                    "Do NOT propose prompt edits; only describe what went wrong and the ideal behavior.\n\n"
+                    "You are an evaluator. Use the retail policy and the traces below to judge the run.\n\n"
+                    "Your primary job is to assess whether the final database state matches the golden outcome.\n"
+                    "If db_match is False, explain which actions or missing actions most likely caused the mismatch.\n"
+                    "If db_match is True, briefly confirm that the actions are consistent with the policy.\n"
+                    "Do NOT propose prompt edits; only describe what went wrong or right.\n\n"
+                    "=== Policy (truncated) ===\n"
+                    f"{policy_snippet}\n\n"
+                    "=== Evaluation context ===\n"
                     f"task_id: {task_id}\n"
                     f"db_match: {db_match}\n"
-                    f"path_match: {path_match}\n\n"
-                    f"golden_mermaid_path: {golden_path}\n"
-                    f"predicted_goto_sequence: {predicted_path}\n"
-                    f"path_mismatch: {mismatch}\n\n"
+                    f"golden_hash: {side_info.get('golden_hash')}\n"
+                    f"predicted_hash: {side_info.get('predicted_hash')}\n\n"
                     "trace_preview:\n"
                     f"{(side_info['trace_preview'] or '')[:2500]}\n"
                 )
@@ -599,9 +640,16 @@ def _make_evaluator(
                 f"[Eval {view_state.eval_count}] task_id={task_id} {status} "
                 f"(db={db_match}, path={path_match}, score={score})"
             )
+        else:
+            status = "PASS" if score >= 1.0 else "FAIL"
+            extra = f" instr_file={instructions_path}" if instructions_path else ""
+            print(f"[SIM ] task_id={task_id} {status} (db={db_match}, score={score}){extra}")
         try:
             import gepa.optimize_anything as oa
             # Rich ASI for reflection: mismatch details and sequences.
+            golden_path = side_info.get("golden_mermaid_path") or []
+            predicted_path = side_info.get("predicted_goto_sequence") or []
+            mismatch = side_info.get("path_mismatch")
             oa.log(f"# Task {task_id}")
             oa.log(f"score={score} db_match={db_match} path_match={path_match}")
             if mermaid_graph_override:
@@ -625,8 +673,9 @@ def _make_evaluator(
 def main() -> None:
     logfire.configure(scrubbing=False, console=False)
     os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
-    # IMPORTANT: instrumenting LiteLLM creates many low-level spans that flatten the Logfire view.
-    # We prefer explicit spans (eval / evaluator_completion / optimization_completion).
+    # Instrument LiteLLM so individual model calls (including agent rollouts)
+    # are visible as spans in Logfire, consistent with run_solo_tasks.
+    logfire.instrument_litellm()
 
     parser = argparse.ArgumentParser(
         description="Run GEPA optimization for retail domain (config-driven)."
@@ -642,6 +691,12 @@ def main() -> None:
         type=Path,
         default=None,
         help="Write GEPA logs to this file (for tmux: other pane runs tail -f). Disables Rich live display.",
+    )
+    parser.add_argument(
+        "--live-display",
+        action="store_true",
+        help="Enable the Rich live dashboard in this terminal (split view). "
+        "By default, normal logs are printed without the live UI; use this flag to opt in.",
     )
     args = parser.parse_args()
 
@@ -676,19 +731,18 @@ def main() -> None:
 
     policy_text = Path(policy_path).read_text(encoding="utf-8")
     seed_path = gepa_cfg.get("seed_path") or instructions_path
-    # If mermaid is enabled, optimize the system-prompt-relevant section inside the mermaid graph file
-    # (between '## Role' and '## SOP Flowchart') so changes actually affect load_graph() output.
+    # Optimization should start from a minimal instructions seed (no baked-in policy).
+    # We always take the seed text from seed_path, and then, if mermaid is enabled,
+    # we apply that evolving instructions block into the AGENTS_SOLO.md Role section.
     assistant_base_cfg = sim_cfg.assistant
     mermaid_cfg = getattr(assistant_base_cfg, "mermaid", None)
     mermaid_graph_path: Path | None = None
     if isinstance(mermaid_cfg, dict) and mermaid_cfg.get("graph"):
         mermaid_graph_path = Path(str(mermaid_cfg.get("graph")))
 
-    if mermaid_graph_path is not None and mermaid_graph_path.exists():
-        base_graph_text = mermaid_graph_path.read_text(encoding="utf-8")
-        seed_candidate = _extract_optimizable_section(base_graph_text)
-    else:
-        seed_candidate = Path(seed_path).read_text(encoding="utf-8")
+    # Seed candidate is always the bare instructions text (e.g. instructions_seed.md);
+    # we no longer extract from the existing AGENTS_SOLO.md Role section.
+    seed_candidate = Path(seed_path).read_text(encoding="utf-8")
 
     db_path = Path(domain_cfg.get("db_path", "domains/retail/db.json"))
     assistant_mcps = getattr(assistant_base_cfg, "mcps", None) or []
@@ -717,7 +771,10 @@ def main() -> None:
     gepa_log_path: Path | None = args.gepa_log_file or gepa_cfg.get("log_file")
     if gepa_log_path is not None:
         gepa_log_path = Path(gepa_log_path)
-    use_live_display = gepa_log_path is None
+    # Only enable the Rich live dashboard when explicitly requested and when we are
+    # not already writing GEPA logs to a file. This avoids terminal jitter and lets
+    # normal logs stream cleanly by default.
+    use_live_display = bool(args.live_display) and gepa_log_path is None
     view_state = ViewState(max_metric_calls=max_metric_calls) if use_live_display else None
 
     from gepa.optimize_anything import (
@@ -749,7 +806,13 @@ def main() -> None:
             print(f"GEPA logs → {gepa_log_path} (run 'tail -f {gepa_log_path}' in another pane)", flush=True)
         else:
             iter_mgr = IterationSpanManager()
-            gepa_logger = GEPAPanelLogger(view_state, iteration_span_manager=iter_mgr)
+            # When not using the Rich live dashboard, echo GEPA messages directly
+            # to stdout with a simple prefix for a low-jitter logging experience.
+            gepa_logger = GEPAPanelLogger(
+                view_state,
+                iteration_span_manager=iter_mgr,
+                echo_to_console=not use_live_display,
+            )
 
         # Ensure Iteration:0 exists from the start so eval spans nest under it.
         try:
@@ -768,6 +831,7 @@ def main() -> None:
             qualitative_eval_lm=str(gepa_cfg.get("qualitative_eval_lm", "openai/gpt-4.1-mini")),
             mermaid_base_graph_path=mermaid_graph_path,
             mermaid_candidate_dir=Path(gepa_cfg.get("mermaid_candidate_dir", ".gepa/mermaid_graph_candidates")),
+            instructions_candidate_dir=Path(gepa_cfg.get("instructions_candidate_dir", ".gepa/instruction_candidates")),
             view_state=view_state,
             progress_logger=gepa_logger if isinstance(gepa_logger, GEPAFileLogger) else None,
             use_logfire=True,

@@ -306,11 +306,10 @@ class BaseAgent(ABC):
         self._mcp_initialized = True
 
     def _mcp_tool_to_openai_format(self, tool_obj: Any) -> dict[str, Any]:
-        """Convert a single MCP tool descriptor to OpenAI/litellm `tools` format."""
+        """Convert a single MCP tool descriptor to OpenAI/litellm `tools` format (without descriptions)."""
         _HIDDEN_PARAMS = {"session_id", "ctx"}
 
         name = getattr(tool_obj, "name", "") or ""
-        description = getattr(tool_obj, "description", None) or ""
         input_schema = getattr(tool_obj, "inputSchema", None) or {
             "type": "object",
             "properties": {},
@@ -331,7 +330,6 @@ class BaseAgent(ABC):
             "type": "function",
             "function": {
                 "name": name,
-                "description": description,
                 "parameters": input_schema,
             },
         }
