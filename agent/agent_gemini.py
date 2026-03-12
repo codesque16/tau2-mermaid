@@ -76,11 +76,13 @@ class GeminiAgent(BaseAgent):
                 role = m["role"]  # "user" or "model" only
                 parts = [types.Part(text=m["content"])]
                 contents.append(types.Content(role=role, parts=parts))
-            gen_config = types.GenerateContentConfig(
-                system_instruction=self.config.system_prompt,
-                temperature=self.config.temperature,
-                max_output_tokens=self.config.max_tokens,
-            )
+            gen_config_kw: dict = {
+                "system_instruction": self.config.system_prompt,
+                "temperature": self.config.temperature,
+            }
+            if self.config.max_tokens is not None:
+                gen_config_kw["max_output_tokens"] = self.config.max_tokens
+            gen_config = types.GenerateContentConfig(**gen_config_kw)
             response = client.models.generate_content(
                 model=self.model,
                 contents=contents,

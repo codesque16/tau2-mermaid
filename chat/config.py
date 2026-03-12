@@ -8,7 +8,10 @@ import yaml
 class AgentConfig:
     system_prompt: str
     temperature: float = 0.7
-    max_tokens: int = 1024
+    max_tokens: int | None = None  # None = unbounded / use provider default
+    mcps: list[dict] | None = None
+    mermaid: list[dict] | None = None  # Mermaid MCP(s): [{ graph, type, url, tools }]
+    reasoning_effort: str | None = None  # None = no thinking; "low", "medium", "high" for Gemini etc.
 
 
 @dataclass
@@ -20,6 +23,8 @@ class SimulationConfig:
     user: AgentConfig
     assistant_model: str
     user_model: str
+    # Optional mode for higher-level orchestration, e.g. "conversation" vs "solo"
+    mode: str | None = None
     initial_message: str | None = None
     assistant_agent_type: str | None = None
     user_agent_type: str | None = None
@@ -43,7 +48,10 @@ def _agent_config_from_block(block: dict | None) -> AgentConfig:
     return AgentConfig(
         system_prompt=block.get("system_prompt", ""),
         temperature=block.get("temperature", 0.7),
-        max_tokens=block.get("max_tokens", 1024),
+        max_tokens=block.get("max_tokens"),  # omit or null = unbounded
+        mcps=block.get("mcps") or None,
+        mermaid=block.get("mermaid") or None,
+        reasoning_effort=block.get("reasoning_effort"),
     )
 
 
@@ -77,4 +85,5 @@ def load_simulation_config(path: Path) -> SimulationConfig:
         user_agent_name=(user.get("agent_name") or "").strip() or None,
         mcp_server_url=data.get("mcp_server_url") or None,
         graph_id=data.get("graph_id") or None,
+        mode=(data.get("mode") or None),
     )

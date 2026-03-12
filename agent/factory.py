@@ -8,10 +8,11 @@ from .agent_anthropic import AnthropicAgent
 from .agent_gemini import GeminiAgent
 from .agent_openai import OpenAIAgent
 from .agent_litellm import LiteLLMAgent
+from .agent_openrouter import OpenRouterAgent
 from .agent_human import HumanAgent
 from .agent_mermaid import MermaidAgent
 
-AgentType = Literal["anthropic", "gemini", "openai", "litellm", "human", "mermaid"]
+AgentType = Literal["anthropic", "gemini", "openai", "litellm", "openrouter", "human", "mermaid"]
 
 
 def create_agent(
@@ -32,6 +33,8 @@ def create_agent(
         return OpenAIAgent(name=name, config=config, model=model)
     if agent_type == "litellm":
         return LiteLLMAgent(name=name, config=config, model=model)
+    if agent_type == "openrouter":
+        return OpenRouterAgent(name=name, config=config, model=model)
     if agent_type == "human":
         return HumanAgent(name=name, config=config, model=model)
     if agent_type == "mermaid":
@@ -48,5 +51,5 @@ def create_agent(
             graph_id=kwargs.get("graph_id"),
         )
     raise ValueError(
-        f"Unknown agent type: {agent_type!r}. Use one of: anthropic, gemini, openai, litellm, human, mermaid"
+        f"Unknown agent type: {agent_type!r}. Use one of: anthropic, gemini, openai, litellm, openrouter, human, mermaid"
     )

@@ -1,0 +1,38 @@
+[
+  {
+    "id": 0,
+    "ticket": "Say hello to the user.",
+    "evaluation_criteria": {
+      "golden_mermaid_path": ["START", "READ_TICKET", "MAKE_TODOS", "ROUTE", "DO_GREET", "END_PATH", "UPDATE_TODOS", "PENDING", "DONE"]
+    }
+  },
+  {
+    "id": 1,
+    "ticket": "Confirm you completed the request.",
+    "evaluation_criteria": {
+      "golden_mermaid_path": ["START", "READ_TICKET", "MAKE_TODOS", "ROUTE", "DO_CONFIRM", "END_PATH", "UPDATE_TODOS", "PENDING", "DONE"]
+    }
+  },
+  {
+    "id": 2,
+    "ticket": "Apologize and say you fixed it.",
+    "evaluation_criteria": {
+      "golden_mermaid_path": ["START", "READ_TICKET", "MAKE_TODOS", "ROUTE", "DO_APOLOGY", "END_PATH", "UPDATE_TODOS", "PENDING", "DONE"]
+    }
+  },
+  {
+    "id": 3,
+    "ticket": "Two requests: (1) Apologize. (2) Then say hello.",
+    "evaluation_criteria": {
+      "golden_mermaid_path": ["START", "READ_TICKET", "MAKE_TODOS", "ROUTE", "DO_APOLOGY", "END_PATH", "UPDATE_TODOS", "PENDING", "ROUTE", "DO_GREET", "END_PATH", "UPDATE_TODOS", "PENDING", "DONE"]
+    }
+  },
+  {
+    "id": 4,
+    "ticket": "Two requests: (1) Say hello. (2) Confirm it is done.",
+    "evaluation_criteria": {
+      "golden_mermaid_path": ["START", "READ_TICKET", "MAKE_TODOS", "ROUTE", "DO_GREET", "END_PATH", "UPDATE_TODOS", "PENDING", "ROUTE", "DO_CONFIRM", "END_PATH", "UPDATE_TODOS", "PENDING", "DONE"]
+    }
+  }
+]
+

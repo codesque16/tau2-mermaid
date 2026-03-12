@@ -367,6 +367,10 @@ def _resolve_sop_file(sop_file: str) -> Path | None:
         return p
     if p.is_absolute() and (p / "AGENTS.md").is_file():
         return p / "AGENTS.md"
+    # Relative to cwd (e.g. domains/retail/AGENTS_SOLO.md from project root)
+    cwd_file = Path.cwd() / s
+    if cwd_file.is_file():
+        return cwd_file
     # Relative: try under MERMAID_AGENTS_DIR
     under = MERMAID_AGENTS_DIR / s
     if under.is_file():

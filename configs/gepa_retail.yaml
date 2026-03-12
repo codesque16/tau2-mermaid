@@ -1,0 +1,116 @@
+# GEPA optimization config for retail domain.
+# Same top-level as solo: mode, domain, assistant (simulation settings).
+# Optimization target and GEPA parameters are under "gepa".
+#
+# --- Evaluation metric ---
+# Score per task: when task has golden_mermaid_path (see tasks_solo_comms.json),
+#   score = 0.5 * (1 if DB hash match else 0) + 0.5 * (1 if goto_node sequence matches golden path else 0).
+# So 0.0 (both wrong), 0.5 (one of db/path match), or 1.0 (both match).
+# When a task has no golden_mermaid_path, score = 1 if DB match else 0.
+# Golden mermaid path is the ideal goto_node sequence for that ticket (from AGENTS_SOLO.md flowchart).
+#
+# --- Train vs val set ---
+# Tasks are split into train and val. Train = tasks GEPA uses to optimize the
+# instructions (scores on these drive the search). Val = held-out tasks (GEPA
+# may use them for validation / early stopping). Use train_ratio or
+# train_task_ids/val_task_ids to control the split.
+
+mode: solo
+max_turns: 60
+
+domain:
+  name: retail
+  policy: "domains/retail/policy_solo.md"
+  tasks: "domains/retail/tasks_solo_comms.json"
+  # Optional: restrict to these task IDs for optimization (smaller = faster).
+  task_ids: [0, 1, 2, 3]
+  concurrency: 3
+  instructions: "domains/retail/instructions.md"
+  stop_mode: "first-text"
+  trials: 1
+  seed: 12345
+  db_path: "domains/retail/db.json"
+
+assistant:
+  agent_type: litellm
+  mermaid:
+    graph: "/Users/shiladityabanerjee/Projects/tau2-mermaid/domains/retail/AGENTS_SOLO.md"
+    type: http
+    url: http://localhost:8000/mcp
+    tools:
+      - "goto_node"
+      - "todo_tasks"
+
+  model: openai/gpt-5-nano
+  temperature: 0
+  mcps:
+    - name: retail-tools
+      type: stdio
+      commad: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"
+
+# --- GEPA: what to optimize + parameters (config-driven) ---
+gepa:
+  # What to optimize: only content inside <instructions> is evolved.
+  optimize: "instructions"
+  # Seed artifact: path to initial instructions (null = use domain.instructions).
+  seed_path: null
+  # Optional: write GEPA logs to this file for tmux (other pane: tail -f path).
+  # Or pass --gepa-log-file on the CLI. When set, Rich live display is disabled.
+  # log_file: "/tmp/gepa_retail.log"
+
+  # Train/val split for generalization.
+  train_ratio: 0.7
+  # Optional: explicit task ID lists (override train_ratio if both set).
+  # train_task_ids: [0, 1, 2, 3, 4, 5, 6]
+  # val_task_ids: [7, 8, 9, 10]
+
+  # GEPA engine
+  max_metric_calls: 100
+  reflection_minibatch_size: 3
+  reflection_lm: "openai/gpt-4.1-mini"
+  # Optional: add an LLM-based qualitative diagnosis to GEPA side_info
+  # (helps the reflection LM understand *why* path/db mismatched).
+  qualitative_eval: true
+  qualitative_eval_lm: "openai/gpt-4.1-mini"
+  # Internal: where candidate-specific graph copies are written during evals.
+  mermaid_candidate_dir: ".gepa/mermaid_graph_candidates"
+  # Output: full mermaid graph with the optimized section applied.
+  output_mermaid_graph_path: "domains/retail/AGENTS_SOLO_optimized.md"
+  seed: 42
+  cache_evaluation: true
+  parallel: true
+  max_workers: 3
+
+  # Natural-language goal and context for the reflection LLM.
+  # Reward combines DB outcome and mermaid path: agent must both get the right final
+  # DB state and follow the golden goto_node sequence (see golden_mermaid_path in tasks).
+  objective: >
+    Improve the customer-service agent instructions so that the agent (1) follows
+    the mermaid flow: for each step, first decide which node to go to, then call
+    goto_node for that node only — the exact sequence is compared to the golden
+    path per task; (2) completes retail tickets so the final DB state matches the
+    golden state. Reward = 0.5 * (DB match) + 0.5 * (path match) when golden path is defined.
+  background: >
+    Policy and ticket are fixed per task. Only the instruction block is optimized.
+    Each task may define golden_mermaid_path (ideal goto_node sequence). Evaluation
+    scores both DB hash match and path match. Desired behavior: think about the
+    current and next node, then call goto_node one step at a time.
+
+  # Where to write the optimized instructions (instruction block only).
+  output_instructions_path: "domains/retail/instructions_gepa.md"

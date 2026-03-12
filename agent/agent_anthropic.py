@@ -33,13 +33,15 @@ class AnthropicAgent(BaseAgent):
 
         accumulated_text: list[str] = []
 
-        async with self.client.messages.stream(
-            model=self.model,
-            max_tokens=self.config.max_tokens,
-            temperature=self.config.temperature,
-            system=self.config.system_prompt,
-            messages=self.history,
-        ) as stream:
+        stream_kw: dict = {
+            "model": self.model,
+            "temperature": self.config.temperature,
+            "system": self.config.system_prompt,
+            "messages": self.history,
+        }
+        if self.config.max_tokens is not None:
+            stream_kw["max_tokens"] = self.config.max_tokens
+        async with self.client.messages.stream(**stream_kw) as stream:
             async for event in stream:
                 if event.type == "text":
                     delta = getattr(event, "text", "") or ""

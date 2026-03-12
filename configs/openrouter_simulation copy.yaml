@@ -1,0 +1,37 @@
+mode: solo
+max_turns: 60
+
+domain:
+  name: retail
+  policy: "domains/retail/policy_solo.md"
+  tasks: "domains/retail/tasks_solo_comms.json"
+  concurrency: 3
+  instructions: "domains/retail/instructions.md"
+  stop_mode: "first-text"
+  trials: 1
+  seed: 12345
+
+assistant:
+  agent_type: openrouter
+  model: qwen/qwen3.5-9b
+  temperature: 0
+  mcps:
+    - name: retail-tools
+      type: stdio
+      commad: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"

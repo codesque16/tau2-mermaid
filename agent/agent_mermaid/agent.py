@@ -271,16 +271,18 @@ class MermaidAgent(BaseAgent):
         final_text = ""
 
         for _ in range(max_tool_rounds):
-            response = await litellm.acompletion(
-                model=self.model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",
-                max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature,
-                reasoning_effort=getattr(self.config, "reasoning_effort", "low"),
-                drop_params=True,
-            )
+            tool_kw: dict = {
+                "model": self.model,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": "auto",
+                "temperature": self.config.temperature,
+                "reasoning_effort": getattr(self.config, "reasoning_effort", "low"),
+                "drop_params": True,
+            }
+            if self.config.max_tokens is not None:
+                tool_kw["max_tokens"] = self.config.max_tokens
+            response = await litellm.acompletion(**tool_kw)
 
             choice = response.choices[0] if response.choices else None
             if not choice:

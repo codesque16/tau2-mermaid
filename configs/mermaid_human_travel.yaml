@@ -1,4 +1,4 @@
-model: gemini/gemini-3-flash-preview
+model: openrouter/qwen/qwen3.5-9b
 max_turns: 20
 mcp_server_url: http://localhost:8000
 graph_id: travel_assistant

@@ -31,6 +31,9 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
         system_prompt=loaded.system_prompt,
         max_tokens=loaded.max_tokens,
         temperature=loaded.temperature,
+        mcps=getattr(loaded, "mcps", None),
+        mermaid=getattr(loaded, "mermaid", None),
+        reasoning_effort=getattr(loaded, "reasoning_effort", None),
     )
 
 
@@ -93,6 +96,10 @@ async def run(config_path: Path) -> None:
 
     orchestrator = Orchestrator(assistant, user, bus, config)
     transcript = await orchestrator.run()
+
+    # Close mermaid HTTP connections so shutdown does not hit cancel-scope errors
+    if hasattr(assistant, "aclose_mcp"):
+        await assistant.aclose_mcp()
 
     print(f"\n{'='*60}")
     print(f"Simulation complete. Total messages: {len(transcript)}")

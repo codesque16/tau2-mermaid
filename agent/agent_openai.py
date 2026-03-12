@@ -44,8 +44,8 @@ class OpenAIAgent(BaseAgent):
                 {"role": "system", "content": self.config.system_prompt},
                 *self._messages_for_api(),
             ],
-            max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
+            **({} if self.config.max_tokens is None else {"max_tokens": self.config.max_tokens}),
         )
 
         content = response.choices[0].message.content if response.choices else ""

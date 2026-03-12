@@ -1,0 +1,20 @@
+mode: solo
+max_turns: 20
+
+domain:
+  name: toy_mermaid
+  tasks: "domains/toy_mermaid/tasks_toy.json"
+
+assistant:
+  agent_type: litellm
+  mermaid:
+    graph: "/Users/shiladityabanerjee/Projects/tau2-mermaid/domains/toy_mermaid/AGENTS_TOY_optimized.md"
+    type: http
+    url: http://localhost:8000/mcp
+    tools: ["goto_node"]
+  model: openai/gpt-5-nano
+  temperature: 0
+
+gepa:
+  seed: 42
+
