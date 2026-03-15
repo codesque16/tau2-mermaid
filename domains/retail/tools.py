@@ -521,7 +521,7 @@ def modify_pending_order_payment(
         order = _get_order(order_id)
 
         # Check if the order exists and is pending
-        if not self._is_pending_order(order):
+        if not _is_pending_order(order):
             raise ValueError("Non-pending order cannot be modified")
 
         # Check if the payment method exists

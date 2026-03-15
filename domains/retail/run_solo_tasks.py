@@ -94,6 +94,7 @@ def make_orchestrator_for_solo(
     sim_cfg: SimulationConfig,
     seed: int | None = None,
     mermaid_graph_path: str | None = None,
+    include_policy: bool = True,
 ):
     """Return a callable (ticket: str) -> Orchestrator using the same logic as solo runs.
 
@@ -109,17 +110,28 @@ def make_orchestrator_for_solo(
         if has_mermaid:
             full_system_prompt = f"<ticket>\n{ticket.strip()}\n</ticket>"
         else:
-            full_system_prompt = (
-                "<instructions>\n"
-                f"{instructions_text.strip()}\n"
-                "</instructions>\n\n"
-                "<policy>\n"
-                f"{policy_text.strip()}\n"
-                "</policy>\n\n"
-                "<ticket>\n"
-                f"{ticket.strip()}\n"
-                "</ticket>"
-            )
+            if include_policy:
+                full_system_prompt = (
+                    "<instructions>\n"
+                    f"{instructions_text.strip()}\n"
+                    "</instructions>\n\n"
+                    "<policy>\n"
+                    f"{policy_text.strip()}\n"
+                    "</policy>\n\n"
+                    "<ticket>\n"
+                    f"{ticket.strip()}\n"
+                    "</ticket>"
+                )
+            else:
+                # GEPA path: only instructions + ticket, no embedded policy block.
+                full_system_prompt = (
+                    "<instructions>\n"
+                    f"{instructions_text.strip()}\n"
+                    "</instructions>\n\n"
+                    "<ticket>\n"
+                    f"{ticket.strip()}\n"
+                    "</ticket>"
+                )
 
         assistant_cfg = AgentAgentConfig(
             system_prompt=full_system_prompt,
@@ -187,6 +199,7 @@ async def run_one_solo_task(
     seed: int | None = None,
     mermaid_graph_path: str | None = None,
     quiet: bool = False,
+    include_policy: bool = True,
 ) -> tuple[bool, dict[str, Any]]:
     """Run a single solo task and return (success, eval_result).
 
@@ -209,6 +222,7 @@ async def run_one_solo_task(
         sim_cfg,
         seed=seed,
         mermaid_graph_path=mermaid_graph_path,
+        include_policy=include_policy,
     )
     orchestrator = make_orch(ticket)
     await orchestrator.run_solo(
@@ -277,6 +291,7 @@ async def _run_task(
                 mcp_command=mcp_command,
                 seed=seed,
                 quiet=True,
+                include_policy=True,
             )
 
         with logfire.span("evaluation"):

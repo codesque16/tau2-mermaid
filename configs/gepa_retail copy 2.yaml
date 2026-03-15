@@ -27,7 +27,7 @@ domain:
   # which are train vs. val in the gepa.* section below.
   task_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   concurrency: 3
-  instructions: "domains/retail/instructions_seed.md"
+  instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
   trials: 1
   seed: 12345
@@ -35,6 +35,14 @@ domain:
 
 assistant:
   agent_type: litellm
+  mermaid:
+    graph: "/Users/shiladityabanerjee/Projects/tau2-mermaid/domains/retail/AGENTS_SOLO.md"
+    type: http
+    url: http://localhost:8000/mcp
+    tools:
+      - "goto_node"
+      - "todo_tasks"
+
   model: openai/gpt-5-nano
   temperature: 0
   mcps:
@@ -79,11 +87,11 @@ gepa:
   # GEPA engine
   max_metric_calls: 100
   reflection_minibatch_size: 3
-  reflection_lm: "gemini/gemini-3-flash-preview"
+  reflection_lm: "openai/gpt-4.1-mini"
   # Optional: add an LLM-based qualitative diagnosis to GEPA side_info
   # (helps the reflection LM understand *why* path/db mismatched).
   qualitative_eval: true
-  qualitative_eval_lm: "gemini/gemini-3-flash-preview"
+  qualitative_eval_lm: "openai/gpt-4.1-mini"
   # Internal: where candidate-specific graph copies are written during evals.
   mermaid_candidate_dir: ".gepa/mermaid_graph_candidates"
   # Output: full mermaid graph with the optimized section applied.
@@ -93,17 +101,20 @@ gepa:
   parallel: true
   max_workers: 3
 
+  # Natural-language goal and context for the reflection LLM.
+  # Reward combines DB outcome and mermaid path: agent must both get the right final
+  # DB state and follow the golden goto_node sequence (see golden_mermaid_path in tasks).
   objective: >
-    Improve the customer-service agent instructions so that the agent consistently
-    completes retail tickets in a way that makes the final database state match
-    the golden state for each task. Reward = 1.0 if the DB hash matches the golden
-    hash, otherwise 0.0.
+    Improve the customer-service agent instructions so that the agent (1) follows
+    the mermaid flow: for each step, first decide which node to go to, then call
+    goto_node for that node only — the exact sequence is compared to the golden
+    path per task; (2) completes retail tickets so the final DB state matches the
+    golden state. Reward = 0.5 * (DB match) + 0.5 * (path match) when golden path is defined.
   background: >
     Policy and ticket are fixed per task. Only the instruction block is optimized.
-    Evaluation now depends solely on database correctness: we replay the agent's
-    tool calls and compare the resulting DB hash to the golden hash. The qualitative
-    evaluator sees the full policy and trace and explains why the DB outcome was
-    right or wrong, but this does not change the scalar reward.
+    Each task may define golden_mermaid_path (ideal goto_node sequence). Evaluation
+    scores both DB hash match and path match. Desired behavior: think about the
+    current and next node, then call goto_node one step at a time.
 
   # Where to write the optimized instructions (instruction block only).
   output_instructions_path: "domains/retail/instructions_gepa.md"
