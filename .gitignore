@@ -57,6 +57,7 @@ Thumbs.db
 ehthumbs.db
 
 # Logs & temp
+.gepa/
 *.log
 *.tmp
 *.temp
