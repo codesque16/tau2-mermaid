@@ -84,6 +84,10 @@ gepa:
   # (helps the reflection LM understand *why* path/db mismatched).
   qualitative_eval: true
   qualitative_eval_lm: "gemini/gemini-3-flash-preview"
+  # When to run qualitative evaluator:
+  # - "failed": only when db_match is false (cheaper)
+  # - "all": run on both pass and fail (more complete, higher cost)
+  qualitative_eval_scope: "failed"
   # Internal: where candidate-specific graph copies are written during evals.
   mermaid_candidate_dir: ".gepa/mermaid_graph_candidates"
   # Output: full mermaid graph with the optimized section applied.

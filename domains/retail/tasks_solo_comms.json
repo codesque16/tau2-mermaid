@@ -5363,7 +5363,34 @@
         },
         "initial_state": null,
         "evaluation_criteria": {
-            "actions": [],
+            "actions": [
+                {
+                    "action_id": "57_0",
+                    "name": "find_user_id_by_name_zip",
+                    "arguments": {
+                        "first_name": "Ivan",
+                        "last_name": "Hernandez",
+                        "zip": "92133"
+                    },
+                    "info": null
+                },
+                {
+                    "action_id": "57_1",
+                    "name": "get_user_details",
+                    "arguments": {
+                        "user_id": "ivan_hernandez_6923"
+                    },
+                    "info": null
+                },
+                {
+                    "action_id": "57_2",
+                    "name": "get_order_details",
+                    "arguments": {
+                        "order_id": "#W4284542"
+                    },
+                    "info": null
+                }
+            ],
             "communicate_info": [],
             "nl_assertions": null
         },
