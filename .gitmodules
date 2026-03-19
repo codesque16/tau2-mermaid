@@ -3,4 +3,4 @@
 	url = https://github.com/codesque16/tau2-bench.git
 [submodule "gepa"]
 	path = gepa
-	url = git@github.com:codesque16/tau2-gepa.git
+	url = https://github.com/codesque16/tau2-gepa.git
