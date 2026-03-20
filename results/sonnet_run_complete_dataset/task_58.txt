@@ -1,0 +1,7 @@
+Both exchanges have been successfully processed on order **#W5838674**. Here's a summary of what was done:
+
+1. **Espresso Machine** – Exchanged from 15 bar → **9 bar** (keeping 1.5L capacity and capsule type). Price: $2,866.37 → $2,908.42 (+$41.05)
+
+2. **Laptop** – Exchanged to the cheapest available i7+ model: **i7, 15-inch, 32GB RAM, 1TB SSD, space grey**. Price: $2,291.87 → $2,292.37 (+$0.50)
+
+**Total price difference: +$42.55**, charged to your **gift card** (gift_card_9368765). A return email has been sent for the original items, and the order status is now **"exchange requested"**.

@@ -1,0 +1,18 @@
+Perfect! I've successfully processed your request. Here's what was completed:
+
+**Return Processed:**
+- **Order #W5490111** - Status changed to "return requested"
+- **Items returned:**
+  - Water Bottle ($54.85)
+  - Action Camera ($481.50)
+  - Backpack ($218.04)
+  - **Total return: $754.39**
+
+**Items Kept:**
+- Mechanical Keyboard from Order #W5490111 ($268.77)
+- Gaming Mouse from Order #W7387996 ($158.89)
+
+**Refund Details:**
+Your refund of $754.39 will be processed to your Visa credit card ending in 7285. Since the original payment on this order was made with your credit card, the refund will be returned to that same method. Please allow 5-7 business days for the refund to appear in your account.
+
+You'll receive a follow-up email with instructions on how to return the items.

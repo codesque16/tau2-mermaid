@@ -1,0 +1,20 @@
+All three returns have been processed successfully. Here's a summary of everything:
+
+---
+
+**✅ Returns Processed (refund to PayPal):**
+| Item | Order | Refund |
+|------|-------|--------|
+| Skateboard | #W3792453 | $200.80 |
+| Garden Hose | #W7181492 | $96.35 |
+| Backpack | #W7181492 | $193.38 |
+| Mechanical Keyboard | #W5565470 | $231.37 |
+| Pet Bed | #W5565470 | $196.53 |
+
+**⏭️ Hose cancellation (Order #W2575533) — Skipped:** The garden hose in the pending order is part of a 5-item order. Since cancelling only the hose would require cancelling the entire order, it was skipped per your instructions.
+
+**❌ Order cancellations — Not possible:** The orders containing the skateboard (#W3792453), backpack (#W7181492), and keyboard (#W5565470) are all **delivered** orders and cannot be cancelled. They have now been moved to "return requested" status via the returns above.
+
+---
+
+**💰 Total Refund Amount: $918.43** (to your PayPal account, expected within 5–7 business days)

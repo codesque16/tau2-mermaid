@@ -1,0 +1,19 @@
+Perfect! I've successfully processed the return for Fatima Wilson. Here's what was done:
+
+**Return Processed:**
+- **Order ID:** #W5272531
+- **Items Returned:**
+  - Electric Toothbrush (blue, AA batteries) - $188.67
+  - Electric Kettle (1.5L, white) - $149.45
+  - Electric Toothbrush (black, rechargeable) - $192.15
+  - Hiking Boots (size 10, leather) - $251.38
+
+- **Item Kept (NOT Returned):**
+  - Espresso Machine (15 bar, capsule type) - $2,866.37
+
+**Refund Details:**
+- Total return value: $781.65
+- Refund method: Visa ending in 8991
+- Refund timeline: 5-7 business days to process
+
+The order status has been updated to "return requested." Fatima will receive a follow-up email with instructions on how and where to return the items.

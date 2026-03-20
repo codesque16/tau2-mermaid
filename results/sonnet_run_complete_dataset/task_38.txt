@@ -1,0 +1,6 @@
+Here's a summary of what happened with order **#W9348897** (total: $1,166.98):
+
+1. **Split payment**: Not possible — you only have one payment method on file.
+2. **Most expensive item — Action Camera at $481.50**: Individual item cancellation is not supported on multi-item orders, so this option wasn't available.
+3. **Switch all items to cheapest available options**: Even switching every item to its cheapest available variant would bring the total to only ~$1,130.85 — still well above $950.
+4. **Order cancelled**: Since none of the above options could bring the cost within budget, I've cancelled the entire order. A full refund of **$1,166.98** will be returned to your Visa card ending in 6593 within **5–7 business days**.

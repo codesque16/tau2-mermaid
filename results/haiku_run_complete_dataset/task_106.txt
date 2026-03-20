@@ -1,0 +1,11 @@
+**Exchange Completed Successfully**
+
+I've successfully processed the T-Shirt exchange for Sofia Thomas. Here are the details:
+
+**Exchange Details:**
+- **Order:** #W3388163 (Status: Exchange Requested)
+- **Original T-Shirt:** Red, Size XXL, Cotton, Crew Neck - $46.85
+- **New T-Shirt:** Black, Size XL, Cotton, Crew Neck - $51.05
+- **Price Difference:** $4.20 (charged to PayPal account)
+
+The customer's order status is now "exchange requested" and she will receive a follow-up email with instructions on how and where to return the original T-Shirt. A new T-Shirt in the requested specifications (one size smaller, black, cotton) will be sent once the return is processed.

@@ -1,0 +1,9 @@
+Based on the order details retrieved, the most recently placed order is **#W6729841** (it has the highest order ID number, indicating it was placed most recently, and its status is still "pending").
+
+Here's a summary of what I found, NoNo:
+
+Your most recent order is **#W6729841**, and you paid **$829.43** for it. It includes:
+- A Bluetooth Speaker (black, 10-hour battery, water resistant) — $293.46
+- An Air Purifier (medium room, HEPA filter, quiet operation) — $535.97
+
+The payment was charged to your Mastercard ending in **1065**. The order is currently **pending**.

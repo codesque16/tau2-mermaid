@@ -1,0 +1,13 @@
+Perfect! I've successfully completed both of your requests:
+
+## Order #W3189752 - Cancelled ✓
+The pending order containing 5 items (Electric Kettle, Bluetooth Speaker, Water Bottle, Office Chair, and Makeup Kit) has been cancelled with reason "no longer needed."
+- **Refund**: $1,252.16 has been refunded to your PayPal account (will be processed within 5-7 business days)
+
+## Order #W5166363 - Laptop Modified ✓
+Your laptop order has been successfully updated:
+- **Previous laptop**: i5 processor, 17-inch, 1TB SSD, space grey ($2,749.56)
+- **New laptop**: i9 processor, 17-inch, 256GB SSD, silver ($2,530.72) ✓ Matches your preferences!
+- **Price adjustment**: $218.84 refund issued to your credit card ending in 2697
+
+Both modifications are complete and your orders are now updated in the system.

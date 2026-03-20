@@ -1,0 +1,12 @@
+All four changes have been completed successfully. Here's a summary of everything done:
+
+**1. Jigsaw Puzzle Change (Order #W4082615):**
+- Changed from: 1000-piece Art, Intermediate ($54.11)
+- Changed to: 500-piece Art, Beginner ($46.13) — the available puzzle with easiest difficulty and fewest pieces
+- Refund of **$7.98** issued to your PayPal account
+
+**2. Address Corrections:**
+The stored address had "443 Maple Drive" instead of "445 Maple Drive." This was corrected in all three places:
+- ✅ Order #W4082615 shipping address → **445 Maple Drive, Suite 394, Fort Worth, TX 76165**
+- ✅ Order #W9583042 shipping address → **445 Maple Drive, Suite 394, Fort Worth, TX 76165**
+- ✅ Your default user address → **445 Maple Drive, Suite 394, Fort Worth, TX 76165**

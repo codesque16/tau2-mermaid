@@ -1,0 +1,8 @@
+Here's a summary of what happened:
+
+**Partial cancellation — not possible.** Order **#W1845024** is currently in **pending** status, which means items haven't been delivered yet. Returning individual items (partial cancellation) is not supported for pending orders — it would require cancelling the entire order.
+
+Since that wasn't possible, I applied your **fallback instruction**: your default address has been updated to the Seattle address from your order:
+> **517 Lakeview Drive, Suite 183, Seattle, WA 98195**
+
+**Regarding the refund amount question:** Since the partial return/cancellation could not be processed, there is **no refund at this time**. The three home office items (Mechanical Keyboard $235.13 + Headphones $346.97 + Office Chair $511.24 = **$1,093.34**) would have been the refund total had a partial cancellation been possible. Your order remains intact as placed.

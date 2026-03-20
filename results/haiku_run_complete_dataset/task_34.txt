@@ -1,0 +1,11 @@
+Perfect! I've successfully updated your order's shipping address to your NYC location (224 Elm Street, Suite 491, New York, NY 10108).
+
+**Summary:**
+Since the system cannot remove individual items from a pending order, I've implemented your requested fallback option of changing the shipping address to your NYC address. Your order will now be shipped to New York instead of Seattle.
+
+Your order #W1845024 contains all 5 items (3 office items + 2 hiking items), and you'll receive everything at your NYC address.
+
+**Regarding the refund for office items:**
+If you were able to return just the office items after delivery, the total refund amount you would receive on your original PayPal payment method would be **$1,093.34** (Mechanical Keyboard: $235.13 + Headphones: $346.97 + Office Chair: $511.24).
+
+Once your order is delivered, you can contact customer service to arrange a return or exchange for specific items if needed.

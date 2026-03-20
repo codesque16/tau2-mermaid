@@ -1,0 +1,18 @@
+Both actions have been completed successfully. Here's a summary:
+
+---
+
+**1. Return — Order #W8528674**
+- Returned: Bluetooth Speaker (blue, 10 hours battery, **no water resistance**) — the more expensive of the two speakers at **$305.45**
+- Refund of **$305.45** will be issued to your **PayPal** account (paypal_7664977) within 5–7 business days
+- Order status: *Return Requested*
+
+---
+
+**2. Item Modification — Order #W9672333**
+- There was no exact 13-inch match for the 17-inch Laptop (i7, 32GB, 1TB SSD, black)
+- Among available 13-inch options in silver/black, the best match per your preference (i5 over i7) was selected:
+  - **New item**: Laptop — 13-inch, i5, 16GB RAM, 1TB SSD, **Silver** — $2,621.77
+  - (Replacing: 17-inch, i7, 32GB RAM, 1TB SSD, Black — $2,508.06)
+- Price difference of **$113.71** charged to your **PayPal** account
+- Order status: *Pending (Item Modified)*

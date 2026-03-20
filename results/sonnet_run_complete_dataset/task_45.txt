@@ -1,0 +1,7 @@
+Your exchange has been successfully processed! Here's a summary:
+
+- **Exchanged**: Robotic Vacuum Cleaner (bagged, pet hair removal) → **Canister Vacuum Cleaner (bagless, pet hair removal)**
+- **Order #W9502127** is now in "exchange requested" status
+- **Price difference**: The new canister vacuum ($642.72) is $9.89 cheaper than your robotic one ($652.61), so you'll receive a **$9.89 refund**
+
+Regarding the gift card preference — unfortunately, your account doesn't have a gift card on file, so the **$9.89 refund will be returned to your PayPal account (paypal_2433177)** instead. You'll receive a return email with instructions for sending back the robotic vacuum.

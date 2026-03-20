@@ -1,0 +1,7 @@
+Here's a summary of what was done and why:
+
+1. **Change luggage set to a coat** — ❌ Not possible. Policy only allows changing an item to a different variant of the **same product type**. A coat is a different product type from a luggage set.
+
+2. **Return the luggage set** — ❌ Not possible. Returns are only available for **delivered** orders; order #W3361211 was in **pending** status.
+
+3. **Cancel the entire order** — ✅ Done. Order **#W3361211** has been successfully cancelled. A full refund of **$1,464.00** will be returned to your Visa card ending in **4451** within 5–7 business days.

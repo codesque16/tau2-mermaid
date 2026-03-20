@@ -1,0 +1,9 @@
+Perfect! I've successfully completed all your requests:
+
+✓ **Cancelled Order #W5199551** - Refund: $3,131.10
+✓ **Cancelled Order #W8665881** - Refund: $4,777.75  
+✓ **Return Initiated for Smart Watch from Order #W9389413** - Refund: $367.38
+
+**Total Refund Amount: $8,276.23**
+
+All refunds will be credited to your PayPal account (paypal_5364164). The cancellation refunds from your pending orders will be processed within 5-7 business days. For the Smart Watch return, you'll receive a follow-up email with return shipping instructions, and the refund will be processed once we receive the item back.

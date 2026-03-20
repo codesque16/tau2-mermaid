@@ -1,0 +1,16 @@
+Both exchanges have been successfully processed! Here's a summary:
+
+---
+
+**Exchange Summary for Lei Wilson**
+
+Both 15-inch laptops have been exchanged to: **i7 processor, 8GB RAM, 1TB SSD (black)** at $2,459.74 each.
+
+| Order | Original Laptop | Original Price | New Price | Difference |
+|-------|----------------|---------------|-----------|------------|
+| #W2905754 | i5, 16GB, 512GB SSD | $2,291.87 | $2,459.74 | **+$167.87** (charge) |
+| #W4073673 | i5, 32GB, 256GB SSD | $2,520.52 | $2,459.74 | **−$60.78** (refund) |
+
+**Net Total to Pay Today: $107.09** charged to your Mastercard ending in 1531.
+
+You will receive a return email with instructions for sending back the original laptops. No new order needs to be placed.

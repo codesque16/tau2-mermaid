@@ -1,0 +1,29 @@
+Here's a summary of what was processed for your account, Mei Davis:
+
+---
+
+**✅ Return – Water Bottle:**
+Successfully processed! You will receive a refund of **$54.04** to your Mastercard ending in 1037 within 5–7 business days. You'll receive a return email with instructions.
+
+---
+
+**❌ Exchange – Pet Bed & Office Chair:**
+Unfortunately, the exchange could **not** be processed. The water bottle, pet bed, and office chair were all in the same order (#W2890441). Processing the water bottle return first changed the order status to **"return requested,"** which made it ineligible for an exchange. The system allows only one action per delivered order.
+
+---
+
+**💰 Savings Analysis (if exchanges had been possible):**
+
+| Item | Your Price | Cheapest Available | Potential Savings |
+|---|---|---|---|
+| Pet Bed (lg, memory foam, grey) | $195.11 | $180.93 (beige) | **$14.18** |
+| Office Chair (leather, blue, high-back) | $499.28 | $471.82 (standard back) | **$27.46** |
+| **Total** | | | **$41.64** |
+
+- **Exchanging the pet bed alone** would have saved you: **$14.18**
+- **Exchanging the office chair alone** would have saved you: **$27.46**
+- **Both together** would have saved you: **$41.64**
+
+Per your preference, if only one exchange had been eligible, the **office chair** exchange would have saved you the most ($27.46).
+
+If you'd like to pursue the pet bed or office chair exchange, please contact customer support for further assistance, as a human agent would need to handle it at this stage.

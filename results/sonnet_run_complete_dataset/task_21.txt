@@ -1,0 +1,8 @@
+Both changes to your pending order **#W9911714** have been successfully made:
+
+1. **Running Shoes**: Changed from yellow/synthetic (item 9791469541, $147.05) → **black/synthetic size 9** (item 4107812777, $155.33)
+2. **Mechanical Keyboard**: Note — "1656367028" was the product ID, not an item ID. The actual item in your order was item 1340995114. This was changed to **item 1421289881** (linear switch, no backlight, 80% size, $268.77)
+
+A price difference of **$41.92** was charged to your gift card.
+
+**Your current gift card balance is $44.08.**

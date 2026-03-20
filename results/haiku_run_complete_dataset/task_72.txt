@@ -1,0 +1,15 @@
+Perfect! I've successfully completed all the modifications to order #W5270061. Here's what was done:
+
+**Backpack Modification (First):**
+- Changed from: Navy, Small, Nylon
+- Changed to: **Grey, Medium, Polyester** ✓
+
+**Address Modification (Second):**
+- Changed from: 584 Sunset Drive, Suite 270, Washington, DC 20353 (son's address)
+- Changed to: **159 Hickory Lane, Suite 995, Charlotte, NC 28243** (default address) ✓
+
+**Payment:**
+- The backpack upgrade cost $10.84 more ($212.79 vs. $201.95), which has been charged to PayPal as requested ✓
+- Order summary: Original balance of $626.94 remains on the gift card, with the $10.84 price difference charged to PayPal
+
+The order status is now "pending (item modified)" and all changes have been applied. The customer will receive the backpack in the correct specifications (grey, medium, polyester) shipped to their Charlotte address.

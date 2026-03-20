@@ -1,0 +1,13 @@
+Both tasks have been completed successfully. Here's a summary:
+
+### 1. ✅ Cancelled Order #W3189752 (5-item pending order)
+- **Reason**: No longer needed
+- **Items cancelled**: Electric Kettle, Bluetooth Speaker, Water Bottle, Office Chair, Makeup Kit
+- **Refund**: $1,252.16 back to PayPal (5–7 business days)
+
+### 2. ✅ Modified Laptop Order #W5166363
+- **From**: 17-inch, i5, 8GB RAM, 1TB SSD, Space Grey — $2,749.56
+- **To**: 17-inch, **i9**, 8GB RAM, **256GB SSD**, **Silver** — $2,530.72
+- **Refund**: $218.84 back to Visa ending in 2697 (5–7 business days)
+
+Both preferred options (256GB SSD and silver color) were available for the i9 laptop. All done!

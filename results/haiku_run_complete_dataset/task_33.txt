@@ -1,0 +1,5 @@
+Done! I've successfully updated your default address to the Seattle address (517 Lakeview Drive, Suite 183, Seattle, WA 98195).
+
+Since partial item cancellation isn't available in our system, your order #W1845024 will remain complete with all items. You'll be keeping both your office items (Mechanical Keyboard, Headphones, and Office Chair) and your hiking items (Cycling Helmet and Hiking Boots).
+
+For reference, if you had been able to return only the office items, the total refund amount on your original PayPal payment method would have been **$1,093.34**.

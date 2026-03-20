@@ -1,0 +1,16 @@
+All three requests have been successfully completed:
+
+**Order #W5056519 - Address Modified:**
+- Address changed from Phoenix, AZ to San Diego, CA to match order #W8277957
+- New address: 380 Maple Drive, Suite 960, San Diego, CA 92101
+
+**Order #W5056519 - Item Exchanged:**
+- Makeup Kit variant changed from light/professional/Brand B to dark/professional/Brand A
+- Item ID updated to 1573035764
+- Additional charge of $10.36 has been added to your credit card to cover the price difference
+- Order status: pending (item modified)
+
+**Order #W5995614 - Cancelled:**
+- Order successfully cancelled (reason: ordered by mistake)
+- Refund of $1,074.31 issued to your credit card
+- Refunds to credit cards typically process within 5-7 business days

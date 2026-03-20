@@ -1,0 +1,14 @@
+Perfect! I've successfully completed all the requested modifications for Yusuf Hernandez:
+
+**Pending Orders Updated (3 orders):**
+- Order #W2166301 ✓
+- Order #W2466703 ✓
+- Order #W6832752 ✓
+
+**User Default Address Updated ✓**
+
+All addresses have been changed to the Washington DC location:
+- **565 Maple Drive, Suite 501**
+- **Washington, DC 20307**
+
+The user's default address and all 3 pending orders are now set to ship to the Washington DC address. The 2 non-pending orders (#W7739115 - delivered, #W1994898 - processed) were not modified as they are no longer eligible for address changes.

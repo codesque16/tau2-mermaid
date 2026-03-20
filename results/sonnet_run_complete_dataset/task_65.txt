@@ -1,0 +1,8 @@
+I was unable to process the exchange request for James Kovacs for the following reasons:
+
+1. **Order #W5362037** containing the Bookshelf is in **"processed"** status — exchanges require **"delivered"** status.
+2. **Different product types**: Exchanging a Bookshelf for a Camera is not permitted under policy — exchanges are limited to different variants of the same product type.
+
+Because this request cannot be fulfilled within my available actions, I have transferred the case to a human agent who may be able to assist further.
+
+YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.

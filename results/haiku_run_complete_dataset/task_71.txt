@@ -1,0 +1,25 @@
+✓ **Request completed successfully!**
+
+**Customer Authentication:**
+- Confirmed: Ivan Khan, zip code 28243 (User ID: ivan_khan_7475)
+
+**Order Modified:**
+- Order ID: #W5270061
+
+**Changes Applied:**
+
+1. **Shipping Address Updated:**
+   - From: 584 Sunset Drive, Suite 270, Washington, DC 20353
+   - To: 159 Hickory Lane, Suite 995, Charlotte, NC 28243 (default address)
+
+2. **Backpack Modified:**
+   - From: Navy, Small, Nylon (Laptop compartment) - $201.95
+   - To: Grey, Medium, Polyester (Laptop compartment) - $212.79
+   - Price difference: +$10.84 (charged to PayPal)
+
+3. **Desk Lamp:**
+   - Kept as-is per customer preference (Silver, Low brightness, Battery-powered)
+
+**Order Status:** Pending (item modified)
+
+The order now reflects all requested changes and will be shipped to the Charlotte address with the updated backpack specifications. The PayPal payment method has been applied for the backpack upgrade charge.

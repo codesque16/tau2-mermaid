@@ -1,0 +1,15 @@
+The exchange has been successfully processed. Here's a summary of what was done:
+
+---
+
+**Order #W7181492 — Actions Taken:**
+
+**✅ Exchange Completed:**
+- **Hiking Boots** (Size 12, leather, waterproof: **no**) → exchanged for **Hiking Boots** (Size 12, leather, waterproof: **yes**)
+- Price difference: **$23.99 refund** to your PayPal account (paypal_3024827)
+- You'll receive a return email with instructions on how to send back the original boots.
+
+**❌ Return Not Processed (Hose & Backpack):**
+- Unfortunately, a delivered order can only have **one action** (return OR exchange). Since the customer prefers the exchange, the return of the Garden Hose and Backpack could not be processed for this order.
+
+The order status is now **"exchange requested."**

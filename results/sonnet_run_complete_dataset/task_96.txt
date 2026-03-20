@@ -1,0 +1,5 @@
+Both modifications to order **#W6750959** have been completed successfully:
+
+1. **Shipping Address Updated**: The order's shipping address has been changed from the Los Angeles address to the NYC address — **476 Maple Drive, Suite 432, New York, NY 10093** (taken from your other order #W3407479).
+
+2. **Bluetooth Speaker Exchanged**: The blue Bluetooth Speaker ($302.67) has been swapped out for the cheapest available green variant — **green, 20 hours battery life, no water resistance** ($298.91). A refund of **$3.76** has been issued to your PayPal account (paypal_8080730) for the price difference.

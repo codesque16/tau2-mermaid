@@ -1,0 +1,9 @@
+**Exchange Successfully Completed!**
+
+Order #W6908222 has been updated:
+- **Status:** Exchange requested
+- **Item being returned:** Wireless Earbuds (Blue, 8 hours battery, IPX4)
+- **New item:** Wireless Earbuds (Black, 4 hours battery, not water resistant)
+- **Additional charge:** $16.85 will be charged to the PayPal account
+
+Liam Moore will receive a follow-up email with instructions on how and where to return the current earbuds. Once the return is processed, the new earbuds will be shipped.

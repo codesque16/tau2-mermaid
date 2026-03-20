@@ -1,0 +1,10 @@
+Perfect! I've successfully processed the exchange for Ivan Johnson. Here's what was done:
+
+**Exchange Completed:**
+- **Order ID:** #W1671835
+- **Original Item:** Perfume (woody scent, men's, 30ml) - $322.52
+- **New Item:** Perfume (woody scent, men's, 100ml) - $312.04
+- **Status:** Exchange requested
+- **Refund:** $10.48 will be issued to the PayPal account (since the larger size is actually cheaper)
+
+The customer will receive a follow-up email with instructions on how to return the current 30ml perfume bottle. The maximum available size (100ml) in the same woody scent for men has been arranged as the replacement.

@@ -1,0 +1,8 @@
+The return has been successfully processed. Here's a summary of what was done:
+
+- **Returned**: Tablet (8-inch, 128GB, gold) from order **#W9571698**
+- **Refund amount**: $989.70
+- **Refund method**: Gift card (gift_card_7250692)
+- **Order status**: Now "return requested"
+
+You will receive a follow-up email with instructions on how and where to return the tablet. The $989.70 refund will be credited to your gift card once the return is processed.

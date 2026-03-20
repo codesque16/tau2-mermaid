@@ -1,0 +1,12 @@
+Excellent! Your helmet exchange has been successfully processed.
+
+**Exchange Summary:**
+- **Current helmet returned:** Size S, Red, Low ventilation
+- **New helmet being sent:** Size M, Blue, High ventilation
+- **Order Status:** Exchange requested
+
+**Amount you need to pay today: $22.55**
+
+This is the price difference between your new helmet ($219.88) and the original helmet ($197.33). The charge will be applied to your Visa ending in 7312.
+
+You'll receive a follow-up email with return instructions for your current helmet. Once received and processed, your new medium-size blue helmet with high ventilation will be shipped to your address at 652 Laurel Lane, Suite 398, Seattle, WA 98193.

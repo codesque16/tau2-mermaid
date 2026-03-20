@@ -1,0 +1,21 @@
+Perfect! I've completed all the requested actions. Here's a summary:
+
+## Actions Completed:
+
+✅ **Order #W8367380 (Fleece Jacket Order) - CANCELLED**
+- Reason: Ordered by mistake
+- Refund of $1,003.22 has been processed to your credit card ending in 6081
+
+✅ **Order #W1242543 (Skateboard Order) - CANCELLED**
+- Reason: The maple material, 34-inch skateboard with graphic design is currently unavailable
+- Refund of $184.13 has been processed to your credit card ending in 6081
+
+## Total Price for All Grills in Previous Orders:
+
+You purchased **2 grills** in order #W8668939:
+- Grill 1 (Electric, Medium, Rotisserie): **$985.66**
+- Grill 2 (Electric, Portable): **$953.39**
+
+**Total grill purchases: $1,939.05**
+
+Both refunds will be reflected in your credit card account within a few business days.

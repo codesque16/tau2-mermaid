@@ -1,0 +1,10 @@
+**Order Cancellation Complete**
+
+Your order #W9348897 has been successfully cancelled. Your refund of $1,166.98 will be processed back to your Visa card ending in 6593 within 5-7 business days.
+
+**Summary of what was reviewed:**
+- **Split payment not possible:** You only have one payment method on file (the Visa card).
+- **Individual item cancellation not possible:** While the most expensive item in your order is the **Action Camera at $481.50**, individual items cannot be removed from a multi-item order.
+- **Switching to cheapest options not feasible:** Even switching all items to their lowest-priced available variants would result in a total of $1,130.85, still exceeding your $950 budget.
+
+Since none of the alternatives were viable, your entire order has been cancelled as requested.

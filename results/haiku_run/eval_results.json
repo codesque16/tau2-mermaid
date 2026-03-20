@@ -1,0 +1,127 @@
+[
+  {
+    "task_id": "0",
+    "golden_hash": "a109be174767fde0ebb50fe3be37cdb2f1ce017fefd7bd29ea3e4d38bd3ac25a",
+    "predicted_hash": "a109be174767fde0ebb50fe3be37cdb2f1ce017fefd7bd29ea3e4d38bd3ac25a",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 6,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "CHK_EXCH",
+      "IS_DELIVERED_E",
+      "COLLECT_EXCH",
+      "DO_EXCH",
+      "END_EXCH",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- find_user_id_by_name_zip({\"first_name\": \"Yusuf\", \"last_name\": \"Rossi\", \"zip\": \"19122\"})\n- get_order_details({\"order_id\": \"#W2378156\"})\n- get_product_details({\"product_id\": \"1656367028\"})\n- get_product_details({\"product_id\": \"4896585277\"})\n- get_user_details({\"user_id\": \"yusuf_rossi_9620\"})\n- exchange_delivered_order_items({\"item_ids\": [\"1151293680\", \"4983901480\"], \"new_item_ids\": [\"7706410293\", \"7747408585\"], \"order_id\": \"#W2378156\", \"payment_method_id\": \"credit_card_9513926\"})\n\nFinal assistant message preview:\nPerfect! I've successfully processed the exchange for order #W2378156. Here's what was completed:\n\n**Exchange Summary:**\n\n1. **Mechanical Keyboard Exchange:**\n   - From: Linear switches, RGB backlight, full size\n   - To: Clicky switches, no backlight, full size\n   - (Note: The ideal clicky + RGB + full size combination was unavailable, so I selected clicky switches with no backlight in full size as per your preference to avoid white backlight)\n\n2. **Smart Thermostat Exchange:**\n   - From: Apple HomeKit, black\n   - To: Google Assistant compatible, black\n\n**Financial Details:**\n- Keyboard price difference: -$3.17\n- Thermostat price difference: -$13.46\n- **Total refund amount: $16.63** to your MasterCard (last four: 2478)\n\nThe order status has been updated to \"exchange requested.\" You will receive a follow-up email with instructions on how and where to return the original items. The new items will be sent once the returns are processed.",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "2",
+    "golden_hash": "9b66e83dbc00ef3e826a50a5a8b645ae06ba53cca06354b7d003a84a8af1d05a",
+    "predicted_hash": "9b66e83dbc00ef3e826a50a5a8b645ae06ba53cca06354b7d003a84a8af1d05a",
+    "db_match": true,
+    "golden_actions_count": 11,
+    "predicted_actions_count": 10,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "INFO",
+      "END_INFO",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "ROUTE",
+      "CHK_RETURN",
+      "IS_DELIVERED_R",
+      "COLLECT_RETURN",
+      "DO_RETURN",
+      "END_RETURN",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- find_user_id_by_name_zip({\"first_name\": \"Yusuf\", \"last_name\": \"Rossi\", \"zip\": \"19122\"})\n- list_all_product_types({})\n- get_user_details({\"user_id\": \"yusuf_rossi_9620\"})\n- get_product_details({\"product_id\": \"9523456873\"})\n- get_order_details({\"order_id\": \"#W6247578\"})\n- get_order_details({\"order_id\": \"#W9711842\"})\n- get_order_details({\"order_id\": \"#W4776164\"})\n- get_order_details({\"order_id\": \"#W6679257\"})\n- get_order_details({\"order_id\": \"#W2378156\"})\n- return_delivered_order_items({\"item_ids\": [\"4602305039\", \"4202497723\", \"9408160950\"], \"order_id\": \"#W2378156\", \"payment_method_id\": \"credit_card_9513926\"})\n\nFinal assistant message preview:\nPerfect! I've completed all your requests. Here's what I've done:\n\n**Return Processed:**\nI've successfully initiated a return for order #W2378156 for the following items:\n- Vacuum Cleaner (robotic, cordless) - $561.05\n- Headphones (wireless, over-ear, blue) - $342.81\n- Smart Watch (gold, leather band) - $381.26\n- **Total refund amount: $1,285.12**\n\nThe refund will be credited back to your Mastercard ending in 2478. You'll receive a follow-up email with instructions on how and where to return these items.\n\n**T-Shirt Options Available:**\nThere are **12 T-shirt options** available in our online store, featuring various combinations of:\n- Colors: Black, Red, Blue, Purple\n- Sizes: S, M, L, XL, XXL\n- Materials: Cotton and Polyester\n- Styles: Crew neck and V-neck\n\nThese options are available at prices ranging from $46.66 to $54.84.",
+    "communicate_match": false,
+    "communicate_checks": [
+      {
+        "info": "10",
+        "met": false
+      }
+    ],
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "5",
+    "golden_hash": "9f1e45fc84a6995edead46216e4f7b07c27c4511524aedb38dc898ab9c52e866",
+    "predicted_hash": "9f1e45fc84a6995edead46216e4f7b07c27c4511524aedb38dc898ab9c52e866",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 5,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "CHK_RETURN",
+      "IS_DELIVERED_R",
+      "COLLECT_RETURN",
+      "DO_RETURN",
+      "END_RETURN",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- get_user_details({\"user_id\": \"mei_kovacs_8020\"})\n- get_order_details({\"order_id\": \"#W6390527\"})\n- get_order_details({\"order_id\": \"#W7800651\"})\n- get_order_details({\"order_id\": \"#W8065207\"})\n- return_delivered_order_items({\"item_ids\": [\"8538875209\"], \"order_id\": \"#W6390527\", \"payment_method_id\": \"paypal_7644869\"})\n\nFinal assistant message preview:\nPerfect! I've successfully processed the return for you. Here's what I did:\n\n**Return Completed:**\n- **Order ID:** #W6390527\n- **Item Returned:** Water Bottle (500ml glass, black) - $45.13\n- **Items Kept:** Desk Lamp and Hiking Boots remain in your order\n- **Refund Method:** PayPal (paypal_7644869)\n- **Order Status:** Return requested\n\nYou will receive a follow-up email with instructions on how and where to return the water bottle. The refund will be processed to your PayPal account.",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "12",
+    "golden_hash": "b25c9cb211f5efcaee5dd646054a73c4a9f43f4f5acc32c10713cd9f9ac20e9c",
+    "predicted_hash": "b25c9cb211f5efcaee5dd646054a73c4a9f43f4f5acc32c10713cd9f9ac20e9c",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 6,
+    "golden_mermaid_path": null,
+    "predicted_goto_sequence": [],
+    "path_match": true,
+    "path_mismatch": null,
+    "trace_preview": "Tool calls (ordered):\n- find_user_id_by_email({\"email\": \"mia.garcia2723@example.com\"})\n- get_user_details({\"user_id\": \"mia_garcia_4516\"})\n- get_order_details({\"order_id\": \"#W5490111\"})\n- get_order_details({\"order_id\": \"#W7387996\"})\n- return_delivered_order_items({\"item_ids\": [\"4579334072\", \"6117189161\", \"4947717507\"], \"order_id\": \"#W5490111\", \"payment_method_id\": \"paypal_9497703\"})\n- transfer_to_human_agents({\"summary\": \"User requires refund to PayPal, but order #W5490111 was paid with credit card and user has explicitly refused credit card refund, creating a constraint conflict that cannot be resolved within policy.\"})\n\nFinal assistant message preview:\n**Summary of Findings:**\n\nI've reviewed your account and orders:\n\n- **Order #W5490111** (Delivered): Contains Mechanical Keyboard (keeping), Water Bottle, Action Camera, and Backpack (to return)\n- **Order #W7387996** (Delivered): Contains Gaming Mouse (keeping)\n\n**Issue:** Order #W5490111 was originally paid with a credit card (Visa ending in 7285). To process a return, the refund must go to the original payment method. However, you've specified that PayPal is mandatory and you will not accept a credit card refund. Since the system requires refunds to go to the original payment method and you cannot accept that method, I'm unable to complete this return within standard policies.\n\nYour PayPal account on file is confirmed as active, but it cannot be applied to the credit card order per system constraints.\n\nYOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  }
+]

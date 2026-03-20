@@ -1,0 +1,20 @@
+**Cancellation Complete**
+
+I have successfully cancelled both pending orders containing the items James Kim no longer needs:
+
+**Order #W3289292** - CANCELLED
+- Hiking Boots ($251.82)
+- Wristwatch ($1,985.30)
+- Mechanical Keyboard ($231.58)
+- **Refund: $2,468.70** to PayPal
+
+**Order #W9722559** - CANCELLED
+- Portable Charger ($106.44)
+- Luggage Set ($532.58)
+- Fleece Jacket ($149.48)
+- Running Shoes ($155.33)
+- **Refund: $943.83** to PayPal
+
+**Total Refund: $3,412.53** has been processed back to the PayPal account.
+
+Since the requested items were distributed across two separate orders and partial cancellation of individual items is not available, both orders were cancelled as per the customer's fallback instruction.

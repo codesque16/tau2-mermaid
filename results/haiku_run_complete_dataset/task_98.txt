@@ -1,0 +1,19 @@
+All requests have been successfully completed for Sofia Li:
+
+**Order #W3916020 - Bicycle and Jigsaw Puzzle Exchanges:**
+- ✓ Bicycle exchanged: Upgraded from medium frame green road bike to **large frame red mountain bike** 
+- ✓ Jigsaw Puzzle exchanged: Upgraded from 500-piece art (intermediate) to **1500-piece animals theme (intermediate difficulty)**
+- Status: Exchange requested
+- Net credit: $20.55 (you're receiving money back)
+
+**Order #W4689314 - Camera Exchange:**
+- ✓ Digital Camera exchanged: Resolution reduced from 24MP to **20MP** (keeping 3x zoom and SD card storage as requested)
+- Status: Exchange requested  
+- Net credit: $71.59 (you're receiving money back)
+
+**Order #W8855135 - Skateboard Cancellation:**
+- ✓ Order cancelled (includes skateboard and all other items in that order)
+- Status: Cancelled
+- Full refund: $1,058.79 issued to your Visa card (ending in 6791)
+
+All exchanges have been processed using your Visa card (ending in 6791) for payment/refund adjustments. You will receive follow-up emails with return instructions for the exchange items.

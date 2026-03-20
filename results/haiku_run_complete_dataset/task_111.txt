@@ -1,0 +1,14 @@
+All modifications have been completed successfully! Here's a summary:
+
+**Order #W3730488 (Laptop & Espresso Machine):**
+- ✓ Address updated to NYC: 555 Highland Drive, Suite 872, New York, NY 10116
+- ✓ Laptop modified: Changed from i9/512GB SSD/black to **i5/256GB SSD/space grey**
+  - Refund of $181.37 applied to gift card
+
+**Order #W9810810 (Watch, Kettle & Bookshelf):**
+- ✓ Wristwatch modified: Changed from white dial to **black dial** (leather strap kept as requested)
+  - Refund of $77.15 applied to gift card
+
+**Total refunds to gift card:** $258.52
+
+Both orders remain in pending status and are ready for processing. The refunds will be reflected in the customer's gift card balance.

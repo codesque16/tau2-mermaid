@@ -1,0 +1,13 @@
+**Exchange Processed Successfully!**
+
+I've completed the T-shirt exchange for order #W7209932:
+
+**Exchange Details:**
+- **From:** T-Shirt (blue, S, polyester, v-neck) - $54.84
+- **To:** T-Shirt (red, XXL, cotton, crew neck) - $46.85
+- **Price Difference:** -$7.99 (credit applied to gift card)
+- **Payment Method:** Gift card (gift_card_2611937)
+
+**Order Status:** Changed to "exchange requested"
+
+Amelia will receive a follow-up email with instructions on how and where to return the original blue T-shirt. The red XXL crew neck cotton T-shirt will be sent as part of the exchange process.

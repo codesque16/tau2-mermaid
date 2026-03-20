@@ -1,0 +1,16 @@
+Both orders have been successfully cancelled. Here's a summary:
+
+**Order #W3289292 — Cancelled ✅**
+- Hiking Boots ($251.82)
+- Wristwatch ($1,985.30)
+- Mechanical Keyboard ($231.58)
+- **Refund: $2,468.70 to PayPal**
+
+**Order #W9722559 — Cancelled ✅** *(entire order cancelled since partial cancellation is not possible — the Luggage Set was also cancelled)*
+- Portable Charger ($106.44)
+- Fleece Jacket ($149.48)
+- Running Shoes ($155.33)
+- Luggage Set ($532.58)
+- **Refund: $943.83 to PayPal**
+
+Both refunds will be processed to your PayPal account within 5–7 business days.

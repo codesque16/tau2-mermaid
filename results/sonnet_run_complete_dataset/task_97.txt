@@ -1,0 +1,5 @@
+Both requests have been successfully completed for order **#W6750959**:
+
+1. **Bluetooth Speaker exchanged** (item modified): Changed from the blue (20 hrs, water resistant) model at $302.67 to the **cheapest available green** variant — green, 20 hours, no water resistance — at $298.91. A refund of **$3.76** has been issued to your PayPal account.
+
+2. **Shipping address updated**: The order's address has been changed from the Los Angeles address to the NYC address — **476 Maple Drive, Suite 432, New York, NY 10093** — taken from your other order.

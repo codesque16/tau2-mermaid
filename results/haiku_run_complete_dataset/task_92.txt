@@ -1,0 +1,18 @@
+Perfect! I've successfully processed the returns for Mei Ahmed. Here's a summary:
+
+**Return Details:**
+
+**Order #W7553978** - Status changed to "return requested"
+- 2 Skateboards (28-inch and 34-inch plastic decks): $186.06 + $202.13
+- Smart Watch (black, metal band, AMOLED display): $339.85
+- **Subtotal: $728.04**
+
+**Order #W3239882** - Status changed to "return requested"  
+- E-Reader (8-inch, Wi-Fi, 8GB): $252.06
+- **Subtotal: $252.06**
+
+**Total Refund: $980.10**
+**Refund Method:** MasterCard ending in 9375
+**Timeline:** Credit card refunds typically process within 5-7 business days
+
+A follow-up email with return instructions has been sent to mei.ahmed4901@example.com. The customer can use the tracking information from the original deliveries (tracking IDs: 873459681869 and 618282621876) as reference if needed.

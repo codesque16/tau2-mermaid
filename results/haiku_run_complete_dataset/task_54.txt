@@ -1,0 +1,22 @@
+Perfect! I've successfully processed all the requested changes for Amelia's account. Here's what was completed:
+
+**Completed Actions:**
+
+1. ✅ **Order #W4597054** (Delivered) - RETURNED
+   - Air Purifier, Smart Watch, Coffee Maker, Water Bottle
+   - Refund: **$1,186.47**
+
+2. ✅ **Order #W4836353** (Pending) - CANCELLED
+   - Mechanical Keyboard, Smartphone
+   - Refund: **$1,429.81**
+
+3. ✅ **Order #W7342738** (Pending) - CANCELLED
+   - Electric Toothbrush, Water Bottle, Wireless Earbuds, Dumbbell Set
+   - Refund: **$1,030.40**
+
+4. ✅ **Order #W7773202** - KEPT (Hiking Boots)
+   - No cheaper variant of size 12 leather boots was available, so the order is retained as requested
+
+**Total Refund Amount: $3,646.68**
+
+All refunds will be credited to your gift card (gift_card_3491931). Gift card refunds are processed immediately. For the returned items, you'll receive a follow-up email with return shipping instructions.

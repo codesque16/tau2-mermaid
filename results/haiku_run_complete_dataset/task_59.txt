@@ -1,0 +1,18 @@
+Perfect! I've successfully completed your request. Here's the summary:
+
+## Address Change Confirmed for Order #W2702727
+✓ Your shipping address has been updated to:
+- **1234 Elm St, Springfield, IL, 62701**
+
+**Items in this order:**
+- Bookshelf (Glass, White, 4 ft): $531.22
+- Yoga Mat (6mm, Natural Rubber, Pink): $94.38
+
+**Total Price After Address Change: $625.60**
+
+## Order Status Summary
+Both of your orders are currently in **pending** status:
+- **Order #W2702727** (older order): $625.60 - Address now updated, awaiting processing
+- **Order #W8268610** (newer order): $164.28 - Pending, at original San Jose address
+
+Since neither order has been processed and shipped yet, neither currently has a guaranteed delivery date. Your older order (#W2702727) has been retained with the address change applied as requested. Both orders will receive tracking information once they're processed and dispatched.

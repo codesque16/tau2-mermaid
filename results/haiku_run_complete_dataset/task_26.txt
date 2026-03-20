@@ -1,0 +1,12 @@
+**Request Complete:**
+
+✓ **Tracking Number**: 907614527588 (for the order sent to Texas)
+
+✓ **Return Processed**: I've successfully initiated the return for order #W5565470 sent to Houston, TX. The following items have been marked for return:
+- Electric Kettle ($153.25)
+- Mechanical Keyboard ($231.37)
+- **Total Refund: $384.62** (will be sent to PayPal)
+
+✓ **Pet Bed Kept**: The Pet Bed ($196.53) will remain with the customer as requested.
+
+The order status is now "return requested" and Isabella will receive a follow-up email with return shipping instructions and the prepaid label.

@@ -1,0 +1,26 @@
+Both exchanges have been successfully processed. Here's a summary:
+
+---
+
+### 🛹 Skateboard Exchange (Order #W3792453)
+Your current skateboard (bamboo, 31 inch, plain, $200.80) will be exchanged for the most expensive shorter bamboo option.
+
+All available **bamboo 28-inch** options were:
+| Design | Price |
+|--------|-------|
+| Graphic | $180.10 |
+| Custom | $189.57 |
+| **Plain** *(selected – most expensive)* | **$208.60** |
+
+**Price difference: +$7.80** charged to your PayPal.
+
+---
+
+### 🌿 Garden Hose Exchange (Order #W7181492)
+Your current garden hose (25ft, rubber, green, **$96.35**) will be exchanged for the 50ft, vinyl, black hose (**$95.08**).
+
+**Price difference: -$1.27** refunded to your PayPal.
+
+---
+
+Both orders are now in **"exchange requested"** status. You'll receive a return email with instructions for sending back the original items.

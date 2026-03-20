@@ -1,0 +1,18 @@
+Perfect! I've successfully completed all your requests:
+
+## Summary of Actions Completed:
+
+✅ **Returns Processed:**
+- **Bookshelf & Jigsaw Puzzle** from order #W6239298 have been returned
+- **Backpack** from order #W9218746 (the one received with the vacuum cleaner) has been returned
+- Both orders are now showing "return requested" status. You'll receive follow-up emails with return shipping instructions.
+
+✅ **Pending Order #W4860251 Modified:**
+- Address updated to your default Chicago location: 921 Park Avenue, Suite 892, Chicago, IL 60612
+- Luggage Set color changed from silver to red (2-piece hardshell variant)
+- An additional charge of $17.86 has been applied to your credit card for the color upgrade
+
+✅ **Cancelled Order Tracking Number:**
+The tracking number for your cancelled order (#W1154986) is: **286422338955**
+
+All refunds for the returned items will be processed to your credit card and should appear within 5-7 business days.

@@ -1,0 +1,18 @@
+Perfect! I've successfully processed all the returns. Here's what was completed:
+
+**Returns Processed:**
+1. ✓ Skateboard from Order #W3792453 - Refund: $200.80
+2. ✓ Garden Hose from Order #W7181492 - Refund: $96.35
+3. ✓ Backpack from Order #W7181492 - Refund: $193.38
+4. ✓ Mechanical Keyboard from Order #W5565470 - Refund: $231.37
+5. ✓ Pet Bed from Order #W5565470 - Refund: $196.53
+
+**Items Not Cancelled/Returned (per your instructions):**
+- The garden hose in the pending order #W2575533 was not cancelled because it's part of a multi-item order, and you specified not to proceed if it would require cancelling the entire order
+- The orders containing the skateboard, backpack, and keyboard are delivered orders (which cannot be cancelled), but the items themselves have been returned instead
+
+---
+
+**TOTAL REFUND AMOUNT: $918.43**
+
+This refund will be credited to your PayPal account. You will receive a follow-up email with instructions on how and where to return the items.

@@ -1,0 +1,7 @@
+Your order has been successfully updated! Here's a summary:
+
+**Order #W5061109 — Wireless Earbuds Modified**
+- **From:** White, 8 hours battery, IPX4 water resistance — $256.67
+- **To:** **Blue, 8 hours battery, not water resistant** — $242.92
+
+✅ **Price confirmation:** The new item ($242.92) is **lower** than the original ($256.67), resulting in a **refund of $13.75** to your PayPal account (paypal_3742148).

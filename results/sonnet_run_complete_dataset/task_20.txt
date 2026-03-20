@@ -1,0 +1,14 @@
+Here's a summary of what was done:
+
+**Orders #W4967593 and #W5733668** are both in "processed" status — they cannot be modified, so they were skipped.
+
+**Order #W9911714** (pending) was successfully upgraded. All 4 items were replaced with their most expensive available variants:
+
+| Item | Old Variant | New Variant | Price Change |
+|------|-------------|-------------|-------------|
+| Water Bottle | 1000ml, stainless steel, blue ($54.04) | 750ml, glass, black ($54.85) | +$0.81 |
+| Mechanical Keyboard | tactile, no backlight, full size ($235.13) | linear, RGB, full size ($272.33) | +$37.20 |
+| Running Shoes | size 9, yellow, synthetic, rubber ($147.05) | size 9, black, synthetic, rubber ($155.33) | +$8.28 |
+| Makeup Kit | dark, professional, Brand C ($235.44) | medium, professional, Brand A ($261.11) | +$25.67 |
+
+**Total price difference: $71.96**, charged to your gift card (remaining balance: ~$14.04).

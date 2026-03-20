@@ -1,0 +1,21 @@
+Here's a summary of everything completed:
+
+---
+
+**Status Difference:**
+Both orders (#W2702727 and #W8268610) were in **pending** status with no fulfillment activity, meaning neither had begun processing or shipping. As a result, neither could be guaranteed for delivery within 5 days.
+
+---
+
+**Order #W8268610 — CANCELLED ✅**
+- Item: Desk Lamp (White, High Brightness, USB)
+- **Total Refund: $164.28** — will be returned to your credit card on file within 5–7 business days.
+
+---
+
+**Order #W2702727 — Address Updated ✅**
+- New Shipping Address: 1234 Elm St, Springfield, IL 62701
+- Items:
+  - Bookshelf (Glass, White, 4 ft) — $531.22
+  - Yoga Mat (6mm, Natural Rubber, Pink) — $94.38
+- **Total Order Price: $625.60** (address change does not affect pricing)

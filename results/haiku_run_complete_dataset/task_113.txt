@@ -1,0 +1,18 @@
+I've successfully cancelled all pending orders for Yara Muller. Here's a summary of actions completed:
+
+**Orders Cancelled:**
+1. **Order #W5056519** - Makeup Kit ($243.62)
+   - Status: Cancelled
+   - Refund: $243.62 processed to Visa ending in 6918
+
+2. **Order #W5995614** - Dumbbell Set and Luggage Set ($1,074.31)
+   - Status: Cancelled
+   - Refund: $1,074.31 processed to Visa ending in 6918
+
+**Other Orders on Account (not cancelled):**
+- Order #W9384736: Already delivered (not eligible for cancellation)
+- Order #W8277957: Already cancelled previously
+
+**Total refunded: $1,317.93**
+
+Both refunds have been processed to the credit card on file. The refund may take 5-7 business days to appear in the account.

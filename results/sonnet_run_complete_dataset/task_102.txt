@@ -1,0 +1,19 @@
+All three requests have been successfully completed. Here's a summary:
+
+---
+
+**Order #W4219264 (Pending — Two Watches)**
+
+1. ✅ **Address updated** to the New York address from your other order:
+   - 144 Lakeview Drive, Suite 925, New York, NY 10228
+
+2. ✅ **Silicone watch modified** to metal strap, white dial (item 2407258246, $1,822.82):
+   - Refund of **$121.20** issued to your Mastercard ending in 1065
+
+---
+
+**Order #W3445693 (Delivered — Sneakers order)**
+
+3. ✅ **Air Purifier exchanged** from large/HEPA/smart sensors → **large/HEPA/night mode** ($547.55):
+   - Additional charge of **$24.24** applied to your Mastercard ending in 1065
+   - Exchange return instructions will be sent via email; status is now "exchange requested"

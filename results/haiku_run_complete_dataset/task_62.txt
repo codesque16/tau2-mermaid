@@ -1,0 +1,19 @@
+Based on my investigation, I found the customer's recent pending order #W5061109 which contains a **Bluetooth Speaker**.
+
+**Bluetooth Speaker Details:**
+- **Price:** $302.67
+- **Battery Life:** 20 hours
+- **Color:** Blue
+- **Water Resistance:** Yes
+
+Since the price ($302.67) is greater than $300, I checked for available Bluetooth Speakers under $100. Unfortunately, **there are no Bluetooth Speakers available for under $100**. The cheapest available Bluetooth Speaker variant is priced at $271.89, which still exceeds the $100 threshold.
+
+Per your instructions, I'm **not modifying the order** since the condition (availability of a speaker under $100) is not met. The order remains as is with the current total of **$1,319.43**.
+
+If you'd like to return the speaker and purchase a cheaper one later, I can assist with that once the order is delivered.
+
+**Summary:**
+- Bluetooth Speaker Price: **$302.67**
+- Battery Life: **20 hours**
+- Order Status: **Not modified** (no speakers under $100 available)
+- Current Order Total: **$1,319.43**

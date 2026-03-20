@@ -1,0 +1,14 @@
+Perfect! I've successfully processed the exchange request. Here's what was completed:
+
+**Exchange Summary:**
+
+**Mechanical Keyboard:** Unfortunately, no available keyboard variant meets all three specifications (clicky switches + RGB backlight + full size). The closest match (clicky + RGB + full size, item 9025753381) is currently unavailable. Per your preference to only exchange the thermostat in this case, the keyboard was not exchanged.
+
+**Smart Thermostat:** ✓ **EXCHANGED SUCCESSFULLY**
+- **Original item:** Smart Thermostat with Apple HomeKit (black, $262.47)
+- **New item:** Smart Thermostat with Google Assistant compatibility (black, $249.01)
+- **Price difference:** -$13.46 (refund credit to your MasterCard ending in 2478)
+
+**Order Status:** Changed to "exchange requested"
+
+You will receive a follow-up email with instructions on how to return the thermostat. The refund of $13.46 will be credited to your credit card, which typically takes 5-7 business days to process.

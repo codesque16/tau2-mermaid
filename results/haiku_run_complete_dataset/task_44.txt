@@ -1,0 +1,8 @@
+Perfect! Your order has been successfully modified. Here's the summary:
+
+**Order #W9300146 Updated**
+- **Previous Desk Lamp:** Black, Low brightness, USB - $153.23
+- **New Desk Lamp:** Black, Medium brightness, AC adapter - $135.24
+- **Refund Amount to Gift Card:** **$17.99**
+
+The price difference of $17.99 has been applied as a refund to your gift card (gift_card_7245904), and your order status is now "pending (item modified)". Your new order total is $135.24.

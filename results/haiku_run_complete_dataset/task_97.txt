@@ -1,0 +1,12 @@
+Perfect! Both requests have been completed successfully for order #W6750959:
+
+**✓ Bluetooth Speaker Exchange:**
+- Changed from: Blue Bluetooth Speaker (20 hours battery, water resistant) - $302.67
+- Changed to: Green Bluetooth Speaker (20 hours battery, no water resistance) - $298.91
+- Refund issued: $3.76 to PayPal account
+
+**✓ Address Change:**
+- Updated from: 909 Spruce Street, Suite 599, Los Angeles, CA 91148
+- Updated to: 476 Maple Drive, Suite 432, New York, NY 10093
+
+The order is now in "pending (item modified)" status and will ship to the NYC address with the new green Bluetooth Speaker.

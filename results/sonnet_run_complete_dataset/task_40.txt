@@ -1,0 +1,6 @@
+Here's a summary of everything:
+
+- **Gift card balance**: **$60.00**
+- **Payment method on order #W4923227**: Originally **Mastercard** (ending 4336)
+- **Gift card applicability**: The gift card balance of $60 is insufficient to cover the full order total of $321.18, so it **cannot** be applied to this order.
+- **Action taken**: Per your instructions, the payment method for order #W4923227 has been successfully changed to your **Visa** (ending 8902).

@@ -1,0 +1,9 @@
+The return has been successfully processed. Here's a summary of what was done:
+
+- **User verified**: Mei Kovacs (mei_kovacs_8020)
+- **Order**: #W6390527 (status: *return requested*)
+- **Item returned**: Water Bottle (500ml, glass, black) — $45.13
+- **Refund method**: PayPal (paypal_7644869) — refund will take 5–7 business days
+- **Desk Lamp**: Left unchanged, no action taken
+
+You'll receive a follow-up email with instructions on how and where to return the water bottle.

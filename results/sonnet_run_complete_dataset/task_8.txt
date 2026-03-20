@@ -1,0 +1,8 @@
+The exchange has been successfully processed! Here's a summary:
+
+- **Order**: #W6390527
+- **Exchanged**: Desk Lamp (white, medium brightness, USB) → **Desk Lamp (white, high brightness, USB)**
+- **Price difference**: $26.34 charged to your PayPal account
+- **Status**: Exchange requested
+
+The battery-powered high-brightness option wasn't available, so I selected the next best option per your preference: USB-powered with high brightness. You'll receive a return email with instructions for sending back the original lamp.

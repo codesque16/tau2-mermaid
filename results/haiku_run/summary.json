@@ -1,0 +1,26 @@
+[
+  {
+    "task_id": "0",
+    "session_id": "cdb21987-6c1d-44f8-a902-e191fd5dd5bf",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully processed the exchange for order #W2378156. Here's what was completed:\n\n**Exchange Summary:**\n\n1. **Mechanical Keyboard Exchange:**\n   - From: Linear switches, RGB backlight"
+  },
+  {
+    "task_id": "2",
+    "session_id": "1b65f69c-645b-456e-b416-3f2f34488ee0",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've completed all your requests. Here's what I've done:\n\n**Return Processed:**\nI've successfully initiated a return for order #W2378156 for the following items:\n- Vacuum Cleaner (robotic, co"
+  },
+  {
+    "task_id": "5",
+    "session_id": "dbb6517f-63bd-4aae-a212-11bc1e127e4e",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully processed the return for you. Here's what I did:\n\n**Return Completed:**\n- **Order ID:** #W6390527\n- **Item Returned:** Water Bottle (500ml glass, black) - $45.13\n- **Items K"
+  },
+  {
+    "task_id": "12",
+    "session_id": "8e3a7e33-533e-4594-b084-a0ab69034161",
+    "exit_code": 0,
+    "response_preview": "**Summary of Findings:**\n\nI've reviewed your account and orders:\n\n- **Order #W5490111** (Delivered): Contains Mechanical Keyboard (keeping), Water Bottle, Action Camera, and Backpack (to return)\n- **O"
+  }
+]

@@ -1,0 +1,6 @@
+Here's a summary of what was done:
+
+- **Identified** two tablets in your orders — one at $938.92 and one at $989.70 (the more expensive one: 8-inch, 128GB, gold).
+- **Refund to credit card was not possible** for the more expensive tablet, as order #W9571698 was originally paid with a gift card — only the original payment method or an existing gift card is eligible for refunds.
+- **Applied your fallback**: Processed a return for the more expensive tablet (Tablet, 8-inch, 128GB, gold — $989.70) from order **#W9571698**, with the refund going to your **gift card (gift_card_7250692)**.
+- Order status is now **"return requested"**. You'll receive a follow-up email with instructions on how and where to return the item.

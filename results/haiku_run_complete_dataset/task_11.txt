@@ -1,0 +1,20 @@
+**Return Request Successfully Processed**
+
+I have completed returns for both orders:
+
+**Order #W5490111** - All 4 items returned:
+- Water Bottle ($54.85)
+- Mechanical Keyboard ($268.77)
+- Action Camera ($481.50)
+- Backpack ($218.04)
+- **Total refund: $1,023.16** → Credit card ending in 7285
+- Status: Return requested
+- Tracking: 574297338433
+
+**Order #W7387996** - 1 item returned:
+- Gaming Mouse ($158.89)
+- **Total refund: $158.89** → PayPal
+- Status: Return requested
+- Tracking: 200246490130
+
+**Note:** Your requested arrangement to refund each order to the other order's payment method is not permitted—refunds must go to the original payment method or an existing gift card. As you agreed, all returns have been processed to each order's original payment method. Follow-up emails with return instructions will be sent to your account.

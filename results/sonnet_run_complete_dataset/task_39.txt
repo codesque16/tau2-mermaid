@@ -1,0 +1,9 @@
+Here's a summary of what was done and the information you requested:
+
+1. **Address Updated**: Your default address has been successfully updated from the old Florida address to your new Phoenix address:
+   - **157 Oak Street, Suite 258, Phoenix, AZ 85033**
+   (retrieved from your most recent order)
+
+2. **Cheapest Available T-Shirt**: The cheapest available t-shirt is the **Red, Size L, Cotton, V-Neck** at **$46.66**.
+
+3. **Can it be ordered through the agent?**: Unfortunately, I'm unable to place new orders on your behalf. The agent can only help with canceling/modifying pending orders, returning/exchanging delivered orders, and updating account information. To purchase a t-shirt, you would need to place the order yourself through the store's website or app.

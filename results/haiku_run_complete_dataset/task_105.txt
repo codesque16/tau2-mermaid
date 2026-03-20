@@ -1,0 +1,10 @@
+I authenticated your identity and reviewed your order #W4316152, which contains two Tea Kettles (glass, 2L, induction). However, I encountered an issue that prevents me from completing the exchanges:
+
+**Problem:** The price difference for the requested exchanges would be:
+- Exchange 1 (glass, 2L, induction → ceramic, 2L, gas): +$6.32
+- Exchange 2 (glass, 2L, induction → glass, 1.5L, gas): +$14.78
+- **Total additional charge: $21.10**
+
+Your gift card on file has a balance of only $17, which is insufficient to cover the $21.10 difference. You will need an alternative payment method or additional funds to complete these exchanges.
+
+YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.

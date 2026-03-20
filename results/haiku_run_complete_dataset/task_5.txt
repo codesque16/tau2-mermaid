@@ -1,0 +1,13 @@
+Your return has been successfully processed! Here's what I've done:
+
+**Return Details:**
+- **Order:** #W6390527
+- **Item Returned:** Water Bottle (black, 500ml glass) - $45.13
+- **Refund Amount:** $45.13
+- **Refund Method:** PayPal account
+- **Desk Lamp:** Remains in your order - no action taken
+
+**Next Steps:**
+Your order status is now "return requested." You'll receive a follow-up email with instructions on how and where to return the water bottle. The refund will be processed to your PayPal account once the item is received and inspected.
+
+Your desk lamp and hiking boots will remain with you as part of the original order.

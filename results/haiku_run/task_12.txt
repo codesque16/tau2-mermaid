@@ -1,0 +1,12 @@
+**Summary of Findings:**
+
+I've reviewed your account and orders:
+
+- **Order #W5490111** (Delivered): Contains Mechanical Keyboard (keeping), Water Bottle, Action Camera, and Backpack (to return)
+- **Order #W7387996** (Delivered): Contains Gaming Mouse (keeping)
+
+**Issue:** Order #W5490111 was originally paid with a credit card (Visa ending in 7285). To process a return, the refund must go to the original payment method. However, you've specified that PayPal is mandatory and you will not accept a credit card refund. Since the system requires refunds to go to the original payment method and you cannot accept that method, I'm unable to complete this return within standard policies.
+
+Your PayPal account on file is confirmed as active, but it cannot be applied to the credit card order per system constraints.
+
+YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.

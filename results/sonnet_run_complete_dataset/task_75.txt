@@ -1,0 +1,7 @@
+The exchange has been successfully processed. Here's a summary:
+
+- **Order #W6908222** status is now: **Exchange Requested**
+- **Item exchanged**: Wireless Earbuds (blue, 8 hours, IPX4) → Wireless Earbuds (black, 4 hours, not water resistant)
+- **Price difference**: $16.85 charged to your PayPal account (paypal_4518393)
+
+A return email has been sent with instructions on how to return the original earbuds. No new order is needed.

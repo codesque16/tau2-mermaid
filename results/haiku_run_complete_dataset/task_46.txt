@@ -1,0 +1,22 @@
+Excellent! Your return has been successfully processed. Here's a summary:
+
+**Return Confirmation:**
+- Order ID: #W9502127
+- Status: Return Requested
+
+**Refund Details:**
+- **Total Refund Amount: $1,126.04**
+  - Air Purifier: $473.43
+  - Robotic Vacuum Cleaner: $652.61
+- **Refund Method:** PayPal
+- **Refund Timeline:** 5-7 business days
+
+You'll receive a follow-up email with instructions on how and where to return these items.
+
+**Remaining Items in Your Order:**
+After the return is processed, you'll have the following items remaining:
+1. Canister Vacuum Cleaner: $622.12
+2. Patio Umbrella (7 ft, green): $329.85
+3. Dumbbell Set (5-25 lbs adjustable): $545.68
+
+**Total Amount Paid for Remaining Items: $1,497.65**

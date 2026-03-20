@@ -1,0 +1,9 @@
+Here's a summary of what was done:
+
+**Return processed for Order #W9571698** — Status is now **"return requested"**.
+
+- The more expensive tablet (8-inch, 128GB, gold — $989.70) was in order #W9571698, which was originally paid with a **gift card**.
+- Since a credit card refund was not possible (it wasn't the original payment method), the **fallback** was applied: all items in the order were returned with refund to **gift card (Mastercard ending in 2732... actually gift card ending in ...7692)**.
+- **Items being returned**: Tablet (gold, 128GB), Digital Camera, Coffee Maker, and Pet Bed — totaling **$4,293.43** refunded to your gift card.
+
+You will receive a follow-up email with instructions on how and where to return the items.

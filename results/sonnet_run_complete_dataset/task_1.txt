@@ -1,0 +1,11 @@
+Here's a summary of what was done for order **#W2378156**:
+
+**Mechanical Keyboard – No exchange performed**
+The desired variant (clicky switches, RGB backlight, full size) does exist (item #9025753381), but it is currently **out of stock**. Per your instructions, in this case only the thermostat should be exchanged, so the keyboard was left as-is.
+
+**Smart Thermostat – Exchanged successfully**
+- **From:** Apple HomeKit, black ($262.47)
+- **To:** Google Assistant, black ($249.01)
+- **Refund:** $13.46 back to your credit card on file (credit_card_9513926), which will take 5–7 business days to process.
+
+The order status is now **"exchange requested"** and a return email has been sent for the thermostat.

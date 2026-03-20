@@ -1,0 +1,8 @@
+The return has been successfully processed! Here's a summary:
+
+- **Order**: #W6390527
+- **Item returned**: Water Bottle (500ml, glass, black) — **$45.13**
+- **Refund method**: PayPal (paypal_7644869)
+- **Status**: Return requested
+
+The Desk Lamp and Hiking Boots remain unchanged. You'll receive a follow-up email with instructions on how and where to return the water bottle. The refund of $45.13 will be issued to your PayPal account once the return is processed.

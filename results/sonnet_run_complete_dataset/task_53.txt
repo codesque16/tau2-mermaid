@@ -1,0 +1,8 @@
+The return has been successfully initiated. Here's a summary:
+
+- **Order**: #W3916020
+- **Item returned**: Bicycle (medium, green, road) — $1,917.21
+- **Refund method**: Mastercard ending in **8484**
+- **Status**: Return requested
+
+Sofia will receive a follow-up email at sofia.li7352@example.com with instructions on how and where to return the damaged bicycle. The refund of **$1,917.21** will be credited back to her Mastercard (ending in 8484) within 5–7 business days once the return is processed.

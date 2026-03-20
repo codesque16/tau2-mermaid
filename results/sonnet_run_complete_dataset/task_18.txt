@@ -1,0 +1,10 @@
+Your request has been handled successfully! Here's a summary:
+
+**Exchange Processed for Order #W2890441**
+
+- **Item**: Office Chair (leather, blue, no armrest, high-back) — $499.28
+- **Action**: Exchange requested for the **same item** (since the same product was available)
+- **Price Difference**: None — no additional charge
+- **Payment**: No charge to your Mastercard ending in 1037
+
+You'll receive an email with instructions on how to return the broken chair. No new order needs to be placed — the replacement will be handled as part of this exchange. We're sorry for the inconvenience with the broken pieces!

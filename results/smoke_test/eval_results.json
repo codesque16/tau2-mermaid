@@ -1,0 +1,127 @@
+[
+  {
+    "task_id": "0",
+    "golden_hash": "a109be174767fde0ebb50fe3be37cdb2f1ce017fefd7bd29ea3e4d38bd3ac25a",
+    "predicted_hash": "a109be174767fde0ebb50fe3be37cdb2f1ce017fefd7bd29ea3e4d38bd3ac25a",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 7,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "CHK_EXCH",
+      "IS_DELIVERED_E",
+      "COLLECT_EXCH",
+      "DO_EXCH",
+      "END_EXCH",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- ToolSearch({\"max_results\": 5, \"query\": \"select:mcp__retail-tools__find_user_id_by_name_zip,mcp__retail-tools__get_order_details,mcp__retail-tools__get_product_details\"})\n- find_user_id_by_name_zip({\"first_name\": \"Yusuf\", \"last_name\": \"Rossi\", \"zip\": \"19122\"})\n- get_order_details({\"order_id\": \"#W2378156\"})\n- get_product_details({\"product_id\": \"1656367028\"})\n- get_product_details({\"product_id\": \"4896585277\"})\n- ToolSearch({\"max_results\": 1, \"query\": \"select:mcp__retail-tools__exchange_delivered_order_items\"})\n- exchange_delivered_order_items({\"item_ids\": [\"1151293680\", \"4983901480\"], \"new_item_ids\": [\"7706410293\", \"7747408585\"], \"order_id\": \"#W2378156\", \"payment_method_id\": \"credit_card_9513926\"})\n\nFinal assistant message preview:\nThe exchange has been successfully processed for order **#W2378156**. Here's a summary of what was done:\n\n**Mechanical Keyboard** (linear \u2192 clicky):\n- The clicky + RGB + full size variant was unavailable, so per your preference, the keyboard was exchanged for: **clicky switches, no backlight, full size** (item #7706410293, $269.16)\n\n**Smart Thermostat** (Apple HomeKit \u2192 Google Home):\n- Exchanged for the **Google Assistant-compatible, black** thermostat (item #7747408585, $249.01)\n\n**Price Difference**: A refund of **$16.63** will be credited back to your credit card on file (credit_card_9513926) within 5\u20137 business days.\n\nYou'll receive a return email with instructions for sending back the original items. No new order needs to be placed.",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "2",
+    "golden_hash": "9b66e83dbc00ef3e826a50a5a8b645ae06ba53cca06354b7d003a84a8af1d05a",
+    "predicted_hash": "9b66e83dbc00ef3e826a50a5a8b645ae06ba53cca06354b7d003a84a8af1d05a",
+    "db_match": true,
+    "golden_actions_count": 11,
+    "predicted_actions_count": 12,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "INFO",
+      "END_INFO",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "ROUTE",
+      "CHK_RETURN",
+      "IS_DELIVERED_R",
+      "COLLECT_RETURN",
+      "DO_RETURN",
+      "END_RETURN",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- ToolSearch({\"max_results\": 5, \"query\": \"select:mcp__retail-tools__find_user_id_by_name_zip,mcp__retail-tools__get_user_details,mcp__retail-tools__get_product_details,mcp__retail-tools__get_order_details,mcp__retail-tools__return_delivered_order_items\"})\n- find_user_id_by_name_zip({\"first_name\": \"Yusuf\", \"last_name\": \"Rossi\", \"zip\": \"19122\"})\n- ToolSearch({\"max_results\": 1, \"query\": \"select:mcp__retail-tools__list_all_product_types\"})\n- get_user_details({\"user_id\": \"yusuf_rossi_9620\"})\n- list_all_product_types({})\n- get_product_details({\"product_id\": \"9523456873\"})\n- get_order_details({\"order_id\": \"#W6247578\"})\n- get_order_details({\"order_id\": \"#W9711842\"})\n- get_order_details({\"order_id\": \"#W4776164\"})\n- get_order_details({\"order_id\": \"#W6679257\"})\n- get_order_details({\"order_id\": \"#W2378156\"})\n- return_delivered_order_items({\"item_ids\": [\"4202497723\", \"4602305039\", \"9408160950\"], \"order_id\": \"#W2378156\", \"payment_method_id\": \"credit_card_9513926\"})\n\nFinal assistant message preview:\nHere's a summary of everything completed for you, Yusuf:\n\n---\n\n**T-Shirt Options Count:**\nThere are **12 t-shirt options** (variants) available in the online store, covering combinations of colors (black, red, blue, purple), sizes (S, M, L, XL, XXL), materials (cotton, polyester), and styles (crew neck, v-neck).\n\n---\n\n**Returns Processed:**\nAll three items from order **#W2378156** have been successfully submitted for return:\n- **Headphones** (over-ear, wireless, blue) \u2014 $342.81\n- **Vacuum Cleaner** (robotic, bagged, cordless) \u2014 $561.05\n- **Smart Watch** (gold, leather band, LCD) \u2014 $381.26\n\nThe order status is now **\"return requested\"**. Refunds totaling **$1,285.12** will be credited to your Mastercard ending in **2478** within 5\u20137 business days. You'll receive a follow-up email with instructions on how and where to return the items.",
+    "communicate_match": false,
+    "communicate_checks": [
+      {
+        "info": "10",
+        "met": false
+      }
+    ],
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "5",
+    "golden_hash": "9f1e45fc84a6995edead46216e4f7b07c27c4511524aedb38dc898ab9c52e866",
+    "predicted_hash": "9f1e45fc84a6995edead46216e4f7b07c27c4511524aedb38dc898ab9c52e866",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 7,
+    "golden_mermaid_path": [
+      "START",
+      "AUTH",
+      "MAKE_TODOS",
+      "ROUTE",
+      "CHK_RETURN",
+      "IS_DELIVERED_R",
+      "COLLECT_RETURN",
+      "DO_RETURN",
+      "END_RETURN",
+      "UPDATE_TODOS",
+      "PENDING_TODOS",
+      "DONE"
+    ],
+    "predicted_goto_sequence": [],
+    "path_match": false,
+    "path_mismatch": {
+      "index": 0,
+      "expected_node_id": "START",
+      "actual_node_id": null,
+      "reason": "length_mismatch"
+    },
+    "trace_preview": "Tool calls (ordered):\n- ToolSearch({\"max_results\": 4, \"query\": \"select:mcp__retail-tools__find_user_id_by_name_zip,mcp__retail-tools__get_user_details,mcp__retail-tools__get_order_details,mcp__retail-tools__return_delivered_order_items\"})\n- find_user_id_by_name_zip({\"first_name\": \"mei\", \"last_name\": \"kovacs\", \"zip\": \"28236\"})\n- get_user_details({\"user_id\": \"mei_kovacs_8020\"})\n- get_order_details({\"order_id\": \"#W6390527\"})\n- get_order_details({\"order_id\": \"#W7800651\"})\n- get_order_details({\"order_id\": \"#W8065207\"})\n- return_delivered_order_items({\"item_ids\": [\"8538875209\"], \"order_id\": \"#W6390527\", \"payment_method_id\": \"paypal_7644869\"})\n\nFinal assistant message preview:\nThe return has been successfully processed! Here's a summary:\n\n- **Order**: #W6390527\n- **Item returned**: Water Bottle (500ml, glass, black) \u2014 **$45.13**\n- **Refund method**: PayPal (paypal_7644869)\n- **Status**: Return requested\n\nThe Desk Lamp and Hiking Boots remain unchanged. You'll receive a follow-up email with instructions on how and where to return the water bottle. The refund of $45.13 will be issued to your PayPal account once the return is processed.",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  },
+  {
+    "task_id": "12",
+    "golden_hash": "b25c9cb211f5efcaee5dd646054a73c4a9f43f4f5acc32c10713cd9f9ac20e9c",
+    "predicted_hash": "b25c9cb211f5efcaee5dd646054a73c4a9f43f4f5acc32c10713cd9f9ac20e9c",
+    "db_match": true,
+    "golden_actions_count": 5,
+    "predicted_actions_count": 6,
+    "golden_mermaid_path": null,
+    "predicted_goto_sequence": [],
+    "path_match": true,
+    "path_mismatch": null,
+    "trace_preview": "Tool calls (ordered):\n- ToolSearch({\"max_results\": 6, \"query\": \"select:mcp__retail-tools__find_user_id_by_email,mcp__retail-tools__get_user_details,mcp__retail-tools__get_order_details,mcp__retail-tools__cancel_pending_order,mcp__retail-tools__return_delivered_order_items,mcp__retail-tools__transfer_to_human_agents\"})\n- find_user_id_by_email({\"email\": \"mia.garcia2723@example.com\"})\n- get_user_details({\"user_id\": \"mia_garcia_4516\"})\n- get_order_details({\"order_id\": \"#W5490111\"})\n- get_order_details({\"order_id\": \"#W7387996\"})\n- transfer_to_human_agents({\"summary\": \"User wants to return non-gaming items (Water Bottle, Action Camera, Backpack) from delivered order #W5490111, but requires a PayPal refund. The order was paid via credit card (credit_card_3124723), and PayPal is not an eligible refund method for this order. User will not accept any other payment method and requests human agent assistance.\"})\n\nFinal assistant message preview:\nHere's a summary of what I found and did:\n\n**Identity verified:** Mia Garcia (mia_garcia_4516)\n\n**Orders reviewed:**\n- **#W5490111** (delivered): Contains a Mechanical Keyboard (gaming \u2013 keep), Water Bottle, Action Camera, and Backpack (non-gaming \u2013 requested for return)\n- **#W7387996** (delivered): Contains a Gaming Mouse (gaming \u2013 keep) \u2013 no action needed\n\n**Issue encountered:** The non-gaming items in order #W5490111 (Water Bottle, Action Camera, Backpack) were paid for with your Visa credit card ending in 7285. Per our policy, refunds can only be issued to the original payment method or an existing gift card. Since you require a PayPal refund and PayPal was not the payment method used for that order, I was unable to process the return.\n\nPer your instructions, I have transferred your case to a human agent who may be able to assist further.\n\n**YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.**",
+    "communicate_match": null,
+    "nl_assertions_match": null
+  }
+]

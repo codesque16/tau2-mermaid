@@ -1,0 +1,14 @@
+**Return processed successfully!**
+
+I've completed the return request based on the customer's fallback instructions. Here's what happened:
+
+**Issue with primary request:** The more expensive tablet (gold, 128GB, $989.70) was in order #W9571698, which was originally paid with a gift card (not credit card). Per our return policy, refunds must go to either the original payment method or an existing gift card. A credit card refund was not possible for this order.
+
+**Action taken (fallback):** As instructed, I returned all items from order #W9571698 with refund to the gift card:
+- Digital Camera: $2,850.32
+- Coffee Maker: $260.19
+- Pet Bed: $193.22
+- Tablet (gold, 128GB): $989.70
+- **Total refund: $4,293.43** to gift card #7250692
+
+**Next steps:** The order status is now "return requested." The customer will receive a follow-up email with instructions on how and where to return these items.

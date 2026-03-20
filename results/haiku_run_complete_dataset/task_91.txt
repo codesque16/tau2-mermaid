@@ -1,0 +1,17 @@
+Perfect! I've successfully processed all the customer requests. Here's a summary:
+
+## Return Request (Order #W7553978)
+✓ **Status: Return Requested**
+- 2 Skateboards (28-inch and 34-inch) - $186.06 + $202.13 = **$388.19**
+- 1 Smart Watch (black, metal band, AMOLED) - **$339.85**
+- **Total refund: $728.04** to credit card ending in 9375
+- Customer will receive return shipping instructions via email
+
+## Exchange Request (Order #W3239882)
+✓ **Status: Exchange Requested**
+- E-Reader exchanged for same variant
+  - Item: 8-inch, Wi-Fi, 8GB E-Reader
+  - Price difference: $0 (same item)
+- Customer will receive exchange instructions via email
+
+All requests have been confirmed and processed. The customer will receive email notifications with return shipping labels and exchange instructions.

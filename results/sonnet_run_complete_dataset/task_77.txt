@@ -1,0 +1,8 @@
+The exchange has been successfully processed! Here's a summary of what was done:
+
+- **Order**: #W1671835
+- **Exchange**: Perfume (woody, 30ml, men) → Perfume (woody, **100ml**, men)
+- **Price difference**: You will receive a **$10.48 refund** to your PayPal account (paypal_6918118), as the 100ml ($312.04) is less expensive than the 30ml ($322.52)
+- **Status**: Exchange requested
+
+A return email will be sent with instructions on how to return the original 30ml perfume. No new order needs to be placed.

@@ -1,0 +1,9 @@
+The exchange has been successfully processed! Here's a summary of what was done:
+
+- **User identified**: Sofia Li (sofia_li_9219)
+- **Order**: #W4689314 — status is now **"exchange requested"**
+- **Exchanged**: Digital Camera (24MP, 3x zoom, SD card) → Digital Camera (**30MP, 10x zoom, SD card**)
+  - Note: No exact 24MP + SD card variant existed with higher zoom; the 10x zoom option with SD card has 30MP resolution (an upgrade)
+- **Price difference**: $170.68 charged to your **PayPal account** (paypal_8194385)
+
+You'll receive a return email with instructions for sending back the original camera. No new order needs to be placed.

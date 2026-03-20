@@ -1,0 +1,9 @@
+The exchange has been successfully processed! Here's a summary:
+
+- **Order**: #W6390527
+- **Returning**: Desk Lamp (white, medium brightness, USB) — $137.94
+- **Exchanging for**: Desk Lamp (black, **high brightness**, AC adapter) — $154.17
+- **Price difference**: $16.23 charged to your PayPal account
+- **Status**: Exchange requested
+
+You'll receive a return email with instructions for sending back the original lamp. No new order is needed — the replacement will be sent once the return is processed.

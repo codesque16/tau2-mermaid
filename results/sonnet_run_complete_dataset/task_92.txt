@@ -1,0 +1,13 @@
+All returns have been successfully processed. Here's a summary:
+
+**Returns Requested — Refund to Mastercard ending in 9375:**
+
+| Item | Order | Price |
+|------|-------|-------|
+| Skateboard (28 inch, plastic, plain) | #W7553978 | $186.06 |
+| Skateboard (34 inch, plastic, plain) | #W7553978 | $202.13 |
+| Smart Watch (black, metal band, AMOLED) | #W7553978 | $339.85 |
+| E-Reader (8-inch, Wi-Fi, 8GB) | #W3239882 | $252.06 |
+| **Total Refund** | | **$980.10** |
+
+Both orders (#W7553978 and #W3239882) are now in **"return requested"** status. You will receive follow-up emails with instructions on how and where to return the items. Refunds will be credited to your Mastercard ending in 9375 within 5–7 business days after the returns are processed.

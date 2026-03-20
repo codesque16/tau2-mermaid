@@ -1,0 +1,10 @@
+**Exchange Successfully Completed!**
+
+Order #W4073673 has been processed for exchange:
+
+✓ **Item Being Returned:** Laptop - 15-inch, i5 processor, 32GB RAM, 256GB SSD (space grey)
+✓ **Item Being Received:** Laptop - 15-inch, i7 processor, 8GB RAM, 1TB SSD (black)
+
+**Price Adjustment:** Customer receives a **$60.78 credit** to the MasterCard (ending in 1531)
+
+The order status is now "exchange requested." Lei Wilson will receive a follow-up email with instructions on how and where to return the current laptop. The new laptop will be shipped once the return is processed.

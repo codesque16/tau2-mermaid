@@ -1,0 +1,16 @@
+Perfect! I've successfully processed both requests for the customer:
+
+**1. Speaker Return - Order #W8528674 (Status: RETURN REQUESTED)**
+- Returned: Bluetooth Speaker (Item ID: 6704763132) - $305.45
+- Specifications: Blue, 10-hour battery, **NOT water-resistant** (as requested)
+- Refund: $305.45 will be refunded to the customer's PayPal account
+- The customer will receive a follow-up email with return shipping instructions
+
+**2. Laptop Modification - Order #W9672333 (Status: PENDING - ITEM MODIFIED)**
+- Replaced: 17-inch Laptop (i7, black) → **13-inch Laptop (i5, silver)**
+- New Item: 5052031638
+- Specifications: 13-inch screen, i5 processor, 16GB RAM, 1TB SSD, silver color
+- Price adjustment: +$113.71 (from $2,508.06 to $2,621.77) charged to PayPal
+- Order remains pending for processing
+
+Both requests have been completed as requested. The customer will be notified of the return process and the laptop modification.

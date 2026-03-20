@@ -1,0 +1,12 @@
+**Request completed successfully!**
+
+I've processed all the address changes for Ethan Garcia (User ID: ethan_garcia_1261):
+
+**Changes Made:**
+
+1. **User Default Address** - Changed to 101 Highway, New York, 10001 ✓
+2. **Order Addresses** - Changed pending order #W9911714 to 101 Highway, New York, 10001 ✓
+   - *Note: Orders #W4967593 and #W5733668 have "processed" status and cannot be modified per system policy (address modifications are only available for pending orders)*
+3. **User Default Address Reset** - Changed back to original address: 667 Highland Drive, Suite 865, Denver, CO 80280 ✓
+
+All confirmed changes have been completed. The customer's default address is now restored to the original Denver location, while the pending order address was temporarily updated and left at the new New York address.

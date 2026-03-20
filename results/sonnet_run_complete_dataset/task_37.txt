@@ -1,0 +1,15 @@
+Here's a summary of what was done for your order **#W9348897**:
+
+**Most expensive item**: The Action Camera at **$481.50** (for your information as requested).
+
+**Split payment** was not possible — you only have one payment method on file, and our system does not support splitting payment across multiple cards.
+
+**Cancelling just the Action Camera** was also not possible — individual items cannot be removed from a multi-item order.
+
+**Option 3 succeeded**: All items were switched to their cheapest available variants:
+- **Action Camera**: $481.50 → $466.75 (black, 4K, waterproof) — saves $14.75
+- **Desk Lamp**: $150.01 → $135.24 (black, medium brightness, AC adapter) — saves $14.77
+- **T-Shirt**: $53.27 → $46.66 (red, L, cotton, v-neck) — saves $6.61
+- **Patio Umbrella** and **Backpack**: already at their cheapest available options, no change needed
+
+**New order total: $1,130.85** — well within your $1,150 credit limit. A refund of **$36.13** has been issued back to your Visa card ending in 6593 (allow 5–7 business days).

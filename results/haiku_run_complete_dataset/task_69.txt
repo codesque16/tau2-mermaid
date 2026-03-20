@@ -1,0 +1,10 @@
+**Summary of Actions Taken:**
+
+✓ **Order #W2417020 Cancelled Successfully**
+
+- **Item**: Laptop (Space Grey, 13-inch, i7 processor, 32GB RAM, 256GB SSD)
+- **Refund Amount**: $2,674.40
+- **Refund Method**: Gift Card (gift_card_8541487)
+- **Processing Time**: Immediate (gift card refunds are applied instantly)
+
+The cancellation has been completed as requested. Since the order was in pending status rather than delivered status, the return option was not available per our return policy. However, the order has been cancelled and your full refund of $2,674.40 has been credited back to your gift card immediately.

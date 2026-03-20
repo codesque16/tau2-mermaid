@@ -1,0 +1,9 @@
+Perfect! I've gathered all the information and processed your request. Here's the summary:
+
+**Gift Card Balance:** You have a gift card balance of **$60**.
+
+**Recent Order Payment Method:** Your recent order (#W4923227) was originally charged to your **Mastercard** (ending in 4336).
+
+**Gift Card Application:** Unfortunately, your gift card balance of $60 cannot fully cover the order total of $321.18, so it could not be applied as the sole payment method.
+
+**Payment Method Changed:** I've successfully changed your payment method for the recent order from Mastercard to **Visa** (ending in 8902) as requested. The order is still pending and your Mastercard has been refunded the $321.18, which will be charged to your Visa instead.

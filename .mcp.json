@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "retail-tools": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "domains/retail/tools.py"]
+    }
+  }
+}

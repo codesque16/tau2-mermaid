@@ -1,0 +1,20 @@
+I've processed the return for the water bottle. However, I've encountered a system constraint: for a delivered order, I can complete either a return OR an exchange, but not both. 
+
+Let me analyze which option saves the customer more money:
+
+**Option 1 - Return Water Bottle (COMPLETED):** 
+- Refund: $54.04
+
+**Option 2 - Exchange Pet Bed & Office Chair:**
+- Pet Bed: Exchange to item #6942241102 (large, memory foam, beige) - saves $14.18 ($195.11 → $180.93)
+- Office Chair: Exchange to item #4168944673 (leather, blue, standard backrest) - saves $27.46 ($499.28 → $471.82)
+- Total savings: $41.64
+
+Since the customer prefers whichever option saves the most money when only one is possible, **the water bottle return was the best choice** at $54.04 in savings (compared to $41.64 for the exchange option).
+
+✅ **Water bottle return processed:** You'll receive a refund of $54.04 to your credit card (Mastercard ending in 1037). You'll receive an email with return shipping instructions.
+
+**Summary - Savings for each exchange option:**
+- **Pet Bed exchange:** $14.18 savings
+- **Office Chair exchange:** $27.46 savings
+- **Both exchanges combined:** $41.64 total savings

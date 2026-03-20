@@ -1,0 +1,21 @@
+Perfect! ✅ **Exchange successfully processed for order #W5838674**
+
+**Summary of changes:**
+
+1. **Espresso Machine Exchange:**
+   - From: 15 bar, 1.5L capacity, capsule type ($2,866.37)
+   - To: 9 bar, 1.5L capacity, capsule type ($2,908.42)
+   - Note: The 9 bar variant is the only available option matching your capacity and type requirements. The 8 bar and 7 bar options weren't available for the 1.5L capsule configuration.
+
+2. **Laptop Exchange:**
+   - From: i5 processor, 15-inch, 16GB RAM, 512GB SSD, space grey ($2,291.87)
+   - To: i7 processor, 15-inch, 32GB RAM, 1TB SSD, space grey ($2,292.37) — the cheapest available i7 option
+
+**Payment Details:**
+- Total price difference: **+$42.55**
+- Charged to: Gift card (gift_card_9368765)
+- New gift card balance: $42.45
+
+**Order Status:** Exchange requested
+
+The customer will receive a follow-up email with instructions on how and where to return the original items. No additional action needed from the customer at this time.

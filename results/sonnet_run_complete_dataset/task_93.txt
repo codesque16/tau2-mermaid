@@ -1,0 +1,8 @@
+The exchange has been successfully processed! Here's a summary:
+
+- **Order**: #W4073673
+- **Exchanged**: Laptop 15-inch, i5, 32GB RAM, 256GB SSD (space grey) → Laptop 15-inch, **i7, 8GB RAM, 1TB SSD** (black)
+- **Price difference**: Refund of **$60.78** to your Mastercard ending in 1531 (5–7 business days)
+- **Order status**: Exchange requested
+
+A return email will be sent with instructions for returning the original laptop. No new order needs to be placed.

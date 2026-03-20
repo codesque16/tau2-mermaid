@@ -1,0 +1,9 @@
+The exchange has been successfully processed! Here's a summary of what was done:
+
+- **Order**: #W3470184
+- **Exchanged**: Wireless Earbuds (blue, 4 hours, IPX7 — item 2757705742, $258.97)
+- **For**: Wireless Earbuds (blue, 8 hours, IPX4 — item 8555936349, $226.49) — the cheapest available IPX4 earbud, matching the water resistance of the other earbuds in the order
+- **Refund**: $32.48 will be returned to gift card (gift_card_7245904)
+- **Order status**: Exchange requested
+
+A return email has been sent for the IPX7 earbuds. No new order is needed — the replacement will be sent once the return is processed.

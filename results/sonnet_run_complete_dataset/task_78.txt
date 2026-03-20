@@ -1,0 +1,8 @@
+All three actions have been completed successfully. Here's a summary:
+
+**Order #W5056519:**
+1. ✅ **Address updated** to match order #W8277957: 380 Maple Drive, Suite 960, San Diego, CA 92101, USA.
+2. ✅ **Makeup Kit modified** from (light, professional, Brand B) → (dark, professional, Brand A). A price difference of $10.36 was charged to your credit card on file.
+
+**Order #W5995614:**
+3. ✅ **Cancelled** (reason: ordered by mistake). A refund of $1,074.31 will be returned to your credit card within 5–7 business days.

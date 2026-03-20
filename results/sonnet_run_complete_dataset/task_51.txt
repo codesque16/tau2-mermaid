@@ -1,0 +1,8 @@
+The return has been successfully processed. Here's a summary of what was done:
+
+- **Identified the correct order**: The digital camera was found in order **#W4689314** (not #W8855135 as initially guessed — that order contained different items and was still pending).
+- **Item returned**: Digital Camera (24MP, 3x zoom, SD card storage) — $2,895.55
+- **Refund method**: Mastercard ending in **8484** (original payment method)
+- **Order status**: Now set to **"return requested"**
+
+Sofia will receive a follow-up email with instructions on how and where to return the item. The refund of $2,895.55 will be credited to her Mastercard once the return is processed.

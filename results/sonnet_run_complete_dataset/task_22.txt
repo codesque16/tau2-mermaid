@@ -1,0 +1,12 @@
+Here's a summary of everything that was done:
+
+1. **User default address → 101 Highway, New York, NY 10001**: ✅ Updated successfully.
+
+2. **Order address updates to 101 Highway, New York, NY 10001**:
+   - **#W9911714** (pending): ✅ Updated successfully.
+   - **#W4967593** (processed): ❌ Cannot modify — order is already processed.
+   - **#W5733668** (processed): ❌ Cannot modify — order is already processed.
+
+3. **User default address reverted back to original (667 Highland Drive, Suite 865, Denver, CO 80280)**: ✅ Updated successfully.
+
+Only the one pending order (#W9911714) could have its shipping address changed, as the other two orders are already in "processed" status and are no longer eligible for address modifications.

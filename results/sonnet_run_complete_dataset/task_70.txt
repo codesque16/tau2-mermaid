@@ -1,0 +1,9 @@
+The exchange has been successfully processed! Here's a summary of what was done:
+
+- **Order**: #W3947049
+- **Exchanged**: Cycling Helmet (Size S, Red, Low Ventilation) → **Cycling Helmet (Size M, Blue, High Ventilation)**
+- **Original price**: $197.33
+- **New price**: $219.88
+- **Price difference (amount to pay today)**: **$22.55**, charged to your Visa card ending in 7312
+
+You'll receive a return email with instructions on how to send back the original helmet. No new order needs to be placed — the exchange is all set!

@@ -1,0 +1,6 @@
+Both requests have been completed successfully! Here's a summary:
+
+1. **Fleece Jacket Modified** (Order #W2466703): Changed from black/full-zipper to **red/half-zipper** (size L). The new item is priced at $153.18 vs. the original $159.92, so a **refund of $6.74** has been issued to your PayPal account (paypal_7529813).
+
+2. **Default Address Updated**: Your default address has been changed to the Washington DC address from order #W1994898:
+   - 565 Maple Drive, Suite 501, Washington, DC 20307, USA

@@ -1,0 +1,17 @@
+**Exchange Request Completed Successfully**
+
+I've successfully processed Lei Wilson's laptop exchange request. Here's what was done:
+
+**Order Details:**
+- Order ID: #W2905754
+- Status: Exchange requested
+
+**Exchange Summary:**
+- **Current Laptop:** 15-inch, i5 processor, 16GB RAM, 512GB SSD, space grey
+- **New Laptop:** 15-inch, i7 processor, 8GB RAM, 1TB SSD, black
+
+**Payment:**
+- Price difference: $167.87 (to be charged)
+- Payment method: MasterCard ending in 1531
+
+A confirmation email will be sent to lei.wilson1253@example.com with detailed return instructions for the current laptop. Once the return is received and processed, the new laptop will be shipped out.

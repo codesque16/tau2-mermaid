@@ -1,0 +1,16 @@
+All three actions have been completed successfully. Here's a summary:
+
+---
+
+**Actions Taken:**
+
+1. ✅ **Cancelled Order #W5199551** (pending) — Refund: **$3,131.10** to PayPal
+2. ✅ **Cancelled Order #W8665881** (pending) — Refund: **$4,777.75** to PayPal
+3. ✅ **Return requested for Smart Watch** from Order #W9389413 (delivered, item: Gold/Metal/AMOLED) — Refund: **$367.38** to PayPal
+
+---
+
+**Total Refund Amount: $8,276.23**
+
+- The cancellation refunds ($3,131.10 + $4,777.75) will be processed to your PayPal account within **5–7 business days**.
+- The watch return refund ($367.38) will also go to your PayPal account within **5–7 business days** after the return is processed. You'll receive a follow-up email with instructions on how and where to return the watch.

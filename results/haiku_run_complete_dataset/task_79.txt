@@ -1,0 +1,11 @@
+**Request completed successfully!**
+
+Emma's 500ml water bottle in order #W8661412 has been changed to a 1000ml red stainless steel water bottle. This now matches the color of the 1000ml bottle in her other order (#W9284598).
+
+**Modification details:**
+- **Order:** #W8661412
+- **Item changed:** 500ml black stainless steel → 1000ml red stainless steel
+- **Price adjustment:** $3.28 refund applied to credit card ending in 8676
+- **Order status:** Pending (item modified)
+
+Emma will receive her refund and the order will proceed with the new bottle configuration.

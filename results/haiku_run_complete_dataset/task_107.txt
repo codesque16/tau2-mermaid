@@ -1,0 +1,15 @@
+Perfect! I've successfully processed both exchanges for Yara Ito.
+
+**Summary of Actions Completed:**
+
+1. **Hiking Boots Exchange (Order #W1304208)**
+   - Exchanging worn boots (Size 10, synthetic, waterproof) for Size 9 leather waterproof hiking boots
+   - Price adjustment: -$4.77 (customer receives a credit)
+   - Status: Exchange requested
+
+2. **Jigsaw Puzzle Exchange (Order #W8353027)**
+   - Exchanging 1500-piece animals puzzle (intermediate) for 1000-piece fantasy puzzle (intermediate)
+   - Price adjustment: +$3.10 (customer pays additional amount)
+   - Status: Exchange requested
+
+Both exchanges have been processed using the customer's PayPal payment method. Yara will receive follow-up emails with instructions on how and where to return the original items. The net payment adjustment is $3.10 - $4.77 = -$1.67 (a net credit to the customer).

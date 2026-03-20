@@ -1,0 +1,25 @@
+All actions completed successfully! Here's a full summary, Amelia:
+
+---
+
+### Actions Taken
+
+| Order | Status | Action | Refund |
+|-------|--------|--------|--------|
+| #W2586676 | Already cancelled | None needed | — |
+| #W5400801 | Already cancelled | None needed | — |
+| **#W4836353** | Pending | ✅ Cancelled (Mechanical Keyboard + Smartphone) | **$1,429.81** |
+| **#W7342738** | Pending | ✅ Cancelled (Electric Toothbrush, Water Bottle, Wireless Earbuds, Dumbbell Set) | **$1,030.40** |
+| **#W4597054** | Delivered | ✅ Return requested (Air Purifier, Smart Watch, Coffee Maker, Water Bottle) | **$1,186.47** |
+| **#W7773202** | Delivered | 🔒 Kept (Hiking Boots — no cheaper same size/material variant available) | — |
+
+---
+
+### Boots Check
+No available variant with size 12 and leather material was cheaper than your current boots ($236.57). The only other size-12/leather option was $260.56 (and unavailable), so the boots order was kept per your instructions.
+
+---
+
+### 💰 Total Refund: **$3,646.68**
+
+All refunds will be returned to your gift card (`gift_card_3491931`). The cancellations are refunded immediately; the return refund will be processed once the items are received.

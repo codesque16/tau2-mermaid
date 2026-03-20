@@ -1,0 +1,20 @@
+Here's a summary of everything I did for you, Ava:
+
+---
+
+### 1. Fleece Jacket – Order #W8367380 ❌ → Cancelled
+Since it's not possible to remove a single item from a multi-item order, and your fallback was to cancel the whole order, **order #W8367380 has been cancelled** (reason: ordered by mistake). A refund of **$1,003.22** will be returned to your Mastercard ending in 6081 within 5–7 business days.
+
+---
+
+### 2. Skateboard – Order #W1242543 ❌ → Cancelled
+The requested variant (maple, 34 inch, graphic) is **not available** in inventory, so per your fallback instructions, **order #W1242543 has been cancelled** (reason: no longer needed). A refund of **$184.13** will be returned to your Mastercard ending in 6081 within 5–7 business days.
+
+---
+
+### 3. Total Price for All Grills in Previous Orders 🔥
+From order **#W8668939** (delivered):
+- Electric Grill (medium, rotisserie): **$985.66**
+- Electric Grill (portable, no features): **$953.39**
+
+**Total spent on grills: $1,939.05**

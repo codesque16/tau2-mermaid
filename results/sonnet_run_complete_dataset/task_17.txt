@@ -1,0 +1,7 @@
+The delivery address for order **#W8665881** has been successfully updated. Here's a summary of the change:
+
+- **Address Line 1**: 123 Elm Street
+- **Address Line 2**: Suite 641 *(changed from Suite 640)*
+- **City/State/Zip**: Austin, TX 78712, USA
+
+Everything else on the order remains unchanged. Let me know if there's anything else I can help with!
