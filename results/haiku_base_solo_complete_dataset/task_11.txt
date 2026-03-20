@@ -1,0 +1,17 @@
+I've successfully processed the return requests for both orders. Here's a summary:
+
+**Order #W5490111** - Return Processed ✓
+- Items returned: Water Bottle, Mechanical Keyboard, Action Camera, Backpack
+- Refund amount: $1,023.16
+- Refund method: Credit Card (Visa ending in 7285)
+- Status: Return requested
+
+**Order #W7387996** - Return Processed ✓
+- Items returned: Gaming Mouse
+- Refund amount: $158.89
+- Refund method: PayPal
+- Status: Return requested
+
+**Note:** The system requires refunds to be processed through the original payment method used for each order (or a gift card), so I was unable to cross-refund between the two orders as originally requested. However, since you agreed to this fallback option, all items have been returned using the original payment methods.
+
+You will receive follow-up emails with instructions on how and where to return these items. The refunds will be processed accordingly.

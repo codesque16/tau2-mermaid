@@ -1,0 +1,21 @@
+**Exchange Completed Successfully!**
+
+I've processed the camera exchange for Sofia Li (Order #W4689314). Here are the details:
+
+**Current Camera (Being Returned):**
+- Item: Digital Camera
+- Specifications: 24MP, 3x zoom, SD card
+- Original Price: $2,895.55
+
+**New Camera (Being Shipped):**
+- Item: Digital Camera  
+- Specifications: 30MP, 10x zoom, SD card
+- New Price: $3,066.23
+
+**Additional Payment:**
+- Difference: $170.68
+- Payment Method: PayPal (paypal_8194385)
+
+**Order Status:** Exchange Requested
+
+The customer will receive an email with return instructions for the current camera. The new camera with maximum 10x zoom capacity will be shipped to the address on file (786 Elm Street, Suite 546, San Antonio, TX 78260). The PayPal payment of $170.68 has been processed.

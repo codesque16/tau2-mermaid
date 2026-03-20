@@ -1,0 +1,9 @@
+**Exchange Successfully Processed! ✓**
+
+Order #W6390527 has been updated to "exchange requested" status. Here's what happens next:
+
+- **Item exchanged:** White desk lamp (medium brightness, USB) → Black desk lamp (high brightness, AC adapter)
+- **Price difference:** $16.23 charged to your PayPal account (paypal_7644869)
+- **Next steps:** You'll receive an email with instructions on how to return the old lamp and receive your new brighter lamp
+
+You can expect the new high-brightness desk lamp with AC adapter power source to arrive once the return is processed.

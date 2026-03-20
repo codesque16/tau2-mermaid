@@ -1,0 +1,15 @@
+Perfect! I've successfully processed the customer's request. Here's what was completed:
+
+**Return Processed:**
+
+1. **Order #W5490111** - Mechanical Keyboard ($268.77)
+   - Status: Return requested
+   - Refund method: Credit card (Visa ending in 7285)
+
+2. **Order #W7387996** - Gaming Mouse ($158.89)
+   - Status: Return requested
+   - Refund method: PayPal account
+
+**Total refund amount: $427.66**
+
+The customer will receive follow-up emails with instructions on how to return the gaming items. Refunds will be processed to the original payment methods as requested.

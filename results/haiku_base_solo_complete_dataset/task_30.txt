@@ -1,0 +1,21 @@
+Perfect! I've successfully processed all of your requests:
+
+## Summary of Actions Completed:
+
+1. **Tablet Return** - Order #W2692684
+   - Status: Return requested
+   - Refund: $951.21 to your gift card
+
+2. **Charger Cancellation** - Order #W9373487
+   - Status: Cancelled
+   - Refund: $109.27 to your gift card
+
+3. **Sneaker Return** - Order #W7449508
+   - Status: Return requested
+   - Refund: $186.45 to your gift card
+
+You will receive follow-up emails with instructions on how to return the tablet and sneaker. The total refunded amount ($1,247.13) will be added to your gift card balance.
+
+---
+
+**Your Tablet Order Tracking Number: 746342064230**

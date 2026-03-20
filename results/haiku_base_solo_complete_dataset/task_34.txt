@@ -1,0 +1,15 @@
+Perfect! I've successfully updated your order address.
+
+**Summary:**
+
+Unfortunately, **partial returns are not available for pending orders** - I can only cancel an entire order, modify items to different options, or change the shipping address. Since partial cancellation of just the office items isn't possible, I've proceeded with your alternative request.
+
+✅ **Order #W1845024 Shipping Address Updated:**
+- Changed from: Seattle, WA
+- Changed to: **224 Elm Street, Suite 491, New York, NY 10108** (NYC)
+
+Your order with all 5 items (3 office items + 2 hiking items) will now ship to your NYC address.
+
+**Refund Amount:** **$0** - Since we couldn't process a partial return on this pending order, there is no refund. Your original payment of **$1,527.24** via PayPal remains charged for the complete order.
+
+If you'd like to explore other options (such as canceling the entire order or modifying specific items to different options of the same product types), please let me know.

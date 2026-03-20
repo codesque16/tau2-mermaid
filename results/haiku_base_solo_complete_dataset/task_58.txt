@@ -1,0 +1,17 @@
+Perfect! I've successfully processed the exchange for order #W5838674. Here's what was completed:
+
+**Exchange Summary:**
+
+✓ **Espresso Machine** - Successfully exchanged to:
+  - New variant: 9 bar pressure, 1.5L capacity, capsule type
+  - Price adjustment: +$42.05
+
+✓ **Laptop** - Successfully exchanged to:
+  - New variant: i7 processor, 15-inch screen, 8GB RAM, 1TB SSD, black
+  - Price adjustment: +$168.87
+
+**Price Difference:** +$209.92 (charged to credit card ending in 4127)
+
+**Order Status:** Changed to "exchange requested"
+
+The customer will receive a follow-up email with instructions on how to return the original items. The new items will be sent as part of the exchange process at no additional shipping cost. The exchange has been recorded in the system.

@@ -1,0 +1,12 @@
+**Return Request Completed Successfully!**
+
+**Order Details:**
+- Order ID: #W9571698
+- Item Returned: Tablet (8-inch, 128GB, Gold)
+- Return Amount: $989.70
+- Refund Method: Gift Card (gift_card_7250692)
+
+**What happens next:**
+The order status has been changed to "return requested." You will receive an email with instructions on how and where to return the tablet. The refund of $989.70 will be added to your gift card balance.
+
+You can keep the other tablet (8-inch, 64GB, Silver) from order #W3069600.

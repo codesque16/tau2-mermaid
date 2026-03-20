@@ -1,0 +1,13 @@
+Perfect! I've successfully processed the return for your order #W1679211. Here's what was returned:
+
+**Items Being Returned:**
+- E-Reader: $244.02
+- Jigsaw Puzzle: $52.03
+- T-Shirt: $50.88
+
+**Item Kept:**
+- Tablet: $941.03 (not being returned)
+
+**Total Refund Amount: $346.93**
+
+The refund will be processed to your PayPal account. You'll receive a follow-up email with instructions on how to return the items. The order status has been updated to "return requested."

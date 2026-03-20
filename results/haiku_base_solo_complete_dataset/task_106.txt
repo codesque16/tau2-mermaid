@@ -1,0 +1,9 @@
+Exchange completed successfully! Here's a summary of what was done:
+
+**Exchange Details:**
+- **Order ID:** #W3388163
+- **Item Exchanged:** T-Shirt in red, size XXL (cotton, crew neck)
+- **New Item:** T-Shirt in black, size XL (cotton, crew neck) 
+- **Price Difference:** $4.20 (charged to PayPal account)
+
+The order status has been changed to "exchange requested," and Sofia Thomas will receive an email with instructions on how to return the original red XXL T-Shirt. The new black XL T-Shirt will be sent as part of the exchange process.

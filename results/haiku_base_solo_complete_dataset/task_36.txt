@@ -1,0 +1,23 @@
+Excellent! I've successfully resolved your payment issue. Here's what was accomplished:
+
+## Summary of Actions:
+
+✅ **Payment Issue Resolved** - Your order has been modified to fit your available credit.
+
+**The Most Expensive Item in Your Order: Action Camera at $481.50**
+
+Since split payment wasn't available (your account has only one payment method), I switched your items to more affordable variants while maintaining the same product types:
+
+| Item | Original | New Option | Savings |
+|------|----------|-----------|---------|
+| Action Camera | $481.50 | 4K Black (waterproof) $466.75 | -$14.75 |
+| Desk Lamp | $150.01 | Black medium AC adapter $135.24 | -$14.77 |
+| T-Shirt | $53.27 | Red L cotton v-neck $46.66 | -$6.61 |
+| Patio Umbrella | $288.82 | (Unchanged) | — |
+| Backpack | $193.38 | (Unchanged) | — |
+
+**Original Total:** $1,166.98
+**New Total:** $1,130.85
+**Refund to Your Card:** $36.13
+
+Your order is now within your available card balance of $1,131. The order status is "pending (item modified)" and ready to proceed. You'll receive a confirmation email with your updated order details and the refund will be credited back to your Visa ending in 6593.

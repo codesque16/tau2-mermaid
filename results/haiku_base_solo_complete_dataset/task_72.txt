@@ -1,0 +1,19 @@
+Perfect! I've successfully completed all the requested modifications to order #W5270061. Here's what was done:
+
+**Modifications Applied:**
+
+1. **Item Modification (First):** Changed the backpack from navy/small/nylon to **grey/medium/polyester** (matching your preference)
+   - Original price: $201.95 → New price: $212.79
+   - Price difference: +$10.84
+
+2. **Address Modification (Second):** Updated shipping address from Washington DC to your default address in Charlotte, NC
+   - New address: 159 Hickory Lane, Suite 995, Charlotte, NC 28243
+
+**Order Summary - #W5270061:**
+- **Backpack:** Grey, Medium, Polyester ✓ (MODIFIED)
+- **Indoor Security Camera:** 4K, 130° field of view, Wi-Fi
+- **Desk Lamp:** Silver, Low brightness, Battery
+- **Payment Method:** PayPal ✓ (MODIFIED)
+- **Order Status:** Pending (item modified)
+
+The original gift card payment of $626.94 has been refunded, and the full amount has been charged to your PayPal account with the price difference for the upgraded backpack included.

@@ -1,0 +1,19 @@
+Perfect! Both requests have been successfully completed:
+
+## Summary of Actions Completed:
+
+### 1. ✅ Speaker Return (Order #W8528674)
+- **Item returned**: Bluetooth Speaker (item 6704763132)
+- **Details**: Blue, 10 hours battery, non-water-resistant (the more expensive one at $305.45)
+- **Status**: Order changed to "return requested"
+- **Refund method**: PayPal
+- The customer will receive an email with return instructions
+
+### 2. ✅ Laptop Modification (Order #W9672333)
+- **Previous item**: 17-inch Laptop, i7 processor, black, 32GB RAM, 1TB SSD ($2,508.06)
+- **New item**: 13-inch Laptop, i5 processor, silver, 16GB RAM, 1TB SSD ($2,621.77)
+- **Price difference**: +$113.71 (charged to PayPal)
+- **Status**: Order changed to "pending (item modified)"
+- **Selection rationale**: The new laptop matches the customer's preferences - i5 processor (preferred over i7) and silver color (one of the approved colors)
+
+The customer's PayPal account will be charged an additional $113.71 for the price difference, and the order remains in pending status with all modifications finalized.

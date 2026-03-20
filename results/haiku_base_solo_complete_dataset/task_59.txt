@@ -1,0 +1,15 @@
+Perfect! I've successfully completed all the requested modifications for your account.
+
+**Summary:**
+
+**Order #W8268610 - CANCELLED**
+- Reason: No longer needed
+- **Total Refund Amount: $164.28** (will be refunded to your credit card within 5-7 business days)
+
+**Order #W2702727 - ADDRESS MODIFIED**
+- New shipping address: 1234 Elm St, Springfield, IL 62701
+- Items: Bookshelf (Glass, White, 4 ft) and Yoga Mat (6mm, Natural Rubber, Pink)
+- **Total Price: $625.60** (unchanged - address modification does not affect pricing)
+- Status: Pending
+
+Your remaining order (#W2702727) is now set to be shipped to your new Springfield, IL address.

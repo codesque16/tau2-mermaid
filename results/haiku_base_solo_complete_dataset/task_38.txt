@@ -1,0 +1,13 @@
+**Order Cancellation Complete**
+
+Your order #W9348897 has been successfully cancelled. A refund of **$1,166.98** has been processed to your Visa credit card ending in 6593. The refund will be credited back to your available balance within 5-7 business days.
+
+**Most Expensive Item:**
+The most expensive item in your order was the **Action Camera at $481.50** (4K resolution, waterproof, silver color).
+
+**Summary of Analysis:**
+- Payment splitting was not possible as only one payment method is registered to your account
+- Switching all items to their cheapest available options would have saved only $36.13, bringing the total to $1,130.85 — still exceeding your $950 available credit by $180.85
+- Given that no viable payment solution was available within your budget constraints, the order has been cancelled as requested
+
+You're welcome to place a new order at your convenience with items that fit within your available credit.

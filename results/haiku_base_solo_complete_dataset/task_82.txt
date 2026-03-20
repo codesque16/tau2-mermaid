@@ -1,0 +1,19 @@
+**Return Request Processed Successfully**
+
+I've processed the return for order #W9571698, which contained the more expensive tablet. Here's what was completed:
+
+**Items Returned:**
+- Tablet (8-inch, 128GB, gold) - $989.70
+- Digital Camera (20MP, 3x zoom) - $2,850.32
+- Coffee Maker (black, 4 cup espresso) - $260.19
+- Pet Bed (large, memory foam, brown) - $193.22
+
+**Refund Details:**
+- Total Refund Amount: $4,293.43
+- Refund Method: Gift card (gift_card_7250692)
+- Order Status: Return requested
+
+**Why These Items?**
+The more expensive tablet ($989.70) was in order #W9571698 and was originally paid with a gift card. Per the return policy, refunds for this order can only go to the original payment method (gift card) or an existing gift card, not a credit card. Therefore, I processed your fallback request to return all items on that order.
+
+The customer will receive a follow-up email with instructions on how to return these items. The refund will be credited to the gift card once the items are received and processed.

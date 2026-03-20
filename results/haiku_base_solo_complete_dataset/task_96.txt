@@ -1,0 +1,16 @@
+**REQUEST COMPLETED SUCCESSFULLY**
+
+I've successfully processed both of Yusuf Li's requests for order #W6750959:
+
+**1. Address Modification ✓**
+- Changed shipping address from Los Angeles, CA to New York, NY
+- New address: 476 Maple Drive, Suite 432, New York, NY 10093
+
+**2. Bluetooth Speaker Exchange ✓**
+- Exchanged blue Bluetooth Speaker (20 hours, water resistant) to green Bluetooth Speaker (20 hours, no water resistance)
+- Price difference: $298.91 (new) vs $302.67 (old)
+- Refund of $3.76 issued to PayPal account (paypal_8080730)
+
+**Order Status:** The order status is now "pending (item modified)"
+
+Both modifications have been applied to order #W6750959, which remains in pending status and is ready for processing with the updated address and product configuration.

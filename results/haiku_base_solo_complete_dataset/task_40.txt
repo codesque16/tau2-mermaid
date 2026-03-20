@@ -1,0 +1,9 @@
+I've successfully processed your request. Here's the information you asked for:
+
+**Gift Card Balance:** $60
+
+**Payment Method Used for Recent Order:** MasterCard ending in 4336
+
+**Gift Card Application:** Unfortunately, your gift card balance of $60 is not enough to cover your order total of $321.18. However, I've successfully changed your payment method to Visa (ending in 8902) as you requested. 
+
+Your order #W4923227 is now set to be charged to your Visa card. The original charge to your MasterCard has been refunded.

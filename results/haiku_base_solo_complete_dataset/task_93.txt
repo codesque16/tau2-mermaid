@@ -1,0 +1,19 @@
+Perfect! The exchange has been successfully completed.
+
+**Exchange Summary:**
+- **Order ID:** #W4073673
+- **Customer:** Lei Wilson
+- **Status:** Exchange Requested
+
+**Items Exchanged:**
+- **Old Laptop:** 15-inch, i5 processor, 32GB RAM, 256GB SSD, space grey - $2,520.52
+- **New Laptop:** 15-inch, i7 processor, 8GB RAM, 1TB SSD, black - $2,459.74
+
+**Price Difference:** -$60.78 (customer will receive a refund)
+
+**Refund Details:**
+- The refund will be processed to the customer's MasterCard ending in 1531
+- The refund will be applied within 5-7 business days
+
+**Next Steps:**
+The customer will receive a follow-up email with instructions on how and where to return the old laptop. No new order is needed - the new laptop will be sent as part of this exchange request.

@@ -1,0 +1,19 @@
+Perfect! I've successfully processed all your requests. Here's a summary of what was completed:
+
+**Returns Processed:**
+✅ **Order #W6239298** (delivered): Returned Bookshelf and Jigsaw Puzzle - Status changed to "return requested"
+✅ **Order #W8660475** (delivered): Returned Bookshelf - Status changed to "return requested"  
+✅ **Order #W9218746** (delivered): Returned Backpack (received with vacuum cleaner) - Status changed to "return requested"
+
+You'll receive follow-up emails with instructions on how and where to return these items. Your refunds will be processed to your credit card.
+
+**Pending Order Modified:**
+✅ **Order #W4860251**: 
+- Item changed to red 2-piece hardshell Luggage Set (changed from silver)
+- Additional charge of $17.86 applied to your credit card for the price difference
+- Shipping address updated to your default Chicago address: 921 Park Avenue, Suite 892, Chicago, IL 60612
+
+---
+
+**Cancelled Order Tracking Number:**
+The tracking number for your cancelled order (#W1154986) is: **286422338955**

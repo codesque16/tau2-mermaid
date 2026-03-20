@@ -1,0 +1,13 @@
+**Cancellation Completed Successfully**
+
+Order **#W2417020** has been cancelled.
+
+**Details:**
+- **Item**: 13-inch i7 Laptop (32GB RAM, 256GB SSD, space grey)
+- **Original Price**: $2,674.40
+- **Cancellation Reason**: No longer needed
+- **Refund Amount**: $2,674.40
+- **Refund Method**: Gift card (immediate processing)
+- **New Order Status**: Cancelled
+
+The full refund of $2,674.40 has been processed immediately to the original payment method (gift card #8541487). The customer will see this credit reflected in their gift card balance right away.

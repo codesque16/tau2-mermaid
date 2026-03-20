@@ -1,0 +1,11 @@
+Excellent! Your exchanges have been processed successfully. Here's the summary:
+
+**Skateboard Exchange (Order #W3792453):**
+- **Price of new skateboard:** $208.60 (bamboo, 28 inch, plain design)
+- **Price difference:** $7.80 additional charge to your PayPal account
+
+**Garden Hose Exchange (Order #W7181492):**
+- **Price of new garden hose:** $95.08 (50ft, vinyl, black - matching your pending order)
+- **Price difference:** $1.27 refund to your PayPal account
+
+Both orders now have status "exchange requested." You'll receive follow-up emails with instructions on how to return your original skateboard and garden hose. Thank you for your business!

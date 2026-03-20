@@ -1,0 +1,16 @@
+Perfect! I've successfully processed the return for Fatima Wilson. Here's what was completed:
+
+**Return Summary:**
+- **Order ID:** #W5272531
+- **Status:** Return requested
+- **Items being returned (4 items):**
+  - Electric Toothbrush (blue) - $188.67
+  - Electric Kettle - $149.45
+  - Electric Toothbrush (black) - $192.15
+  - Hiking Boots (size 10) - $251.38
+  
+- **Refund Amount:** $781.65
+- **Refund Method:** Visa card ending in 8991
+- **Item Being Kept:** Espresso Machine ($2,866.37) - the coffee machine
+
+The order status has been changed to "return requested," and Fatima will receive a follow-up email with instructions on how and where to return the items. The refund will be processed to her original payment method.

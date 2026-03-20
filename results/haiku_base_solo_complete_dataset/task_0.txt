@@ -1,0 +1,22 @@
+Excellent! The exchange has been successfully processed for order #W2378156.
+
+**Exchange Summary:**
+
+✓ **Mechanical Keyboard Exchange:**
+- From: Linear switches, RGB backlight, full size ($272.33)
+- To: Clicky switches, no backlight, full size ($269.16)
+
+✓ **Smart Thermostat Exchange:**
+- From: Apple HomeKit compatibility, black ($262.47)
+- To: Google Assistant compatibility, black ($249.01)
+
+**Financial Details:**
+- Total price difference: -$16.63 (Customer receives a refund of $16.63)
+- Refund will be credited to the MasterCard ending in 2478 used for the original order
+
+**Next Steps:**
+- Order status has been updated to "exchange requested"
+- Yusuf will receive a follow-up email with instructions on how to return the original keyboard and thermostat
+- The new items will be shipped once the returns are received and processed
+
+The exchange has been completed successfully!

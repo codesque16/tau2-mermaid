@@ -1,0 +1,14 @@
+**Exchange Successfully Completed!**
+
+I've processed the laptop exchange for Lei Wilson (Order #W2905754):
+
+**Exchanged Laptop:**
+- From: 15-inch, i5 processor, 16GB RAM, 512GB SSD (Space Grey)
+- To: 15-inch, i7 processor, 8GB RAM, 1TB SSD (Black)
+
+**Payment Details:**
+- Exchange price difference: $167.87
+- Charged to: Mastercard ending in 1531
+- Status: Exchange requested
+
+Lei Wilson will receive a follow-up email with instructions on how to return the original laptop. Once the return is received and processed, the new laptop will be shipped.

@@ -1,0 +1,17 @@
+Based on my investigation, here's what I found:
+
+**Order Status:** Order #W4284542 is still **pending** (not yet shipped), with no fulfillment information available yet.
+
+**Your Request Analysis:**
+Since the order hasn't shipped yet, I checked if we could cancel just the Air Purifier ($547.55). Unfortunately, our system doesn't support partial order cancellations - we can only cancel the entire order.
+
+Following your conditional instructions:
+1. ✓ Order is not shipped yet
+2. ✓ Partial cancellation is not possible
+3. ✗ **Gift card refund is not possible**
+
+**Why cancellation cannot proceed:** You have a gift card on file with a balance of $85, but the full order total is $2,020.61. The gift card doesn't have sufficient balance to cover the refund as required. Your original payment was made with a credit card, and refunds to credit cards take 5-7 business days.
+
+**Result:** Per your instructions, since the gift card refund option is not viable, **the order is NOT being cancelled**. Your order will continue processing and ship as is.
+
+If you'd like to proceed differently (for example, accepting a credit card refund instead), please let me know and I can assist with that.

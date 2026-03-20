@@ -1,0 +1,16 @@
+I found Sofia Li's account (User ID: sofia_li_9219) and retrieved the order details for #W8855135. However, I cannot process the return request because:
+
+1. **Order Status Issue**: Order #W8855135 is currently in "pending" status, not "delivered." Returns can only be processed on delivered orders.
+
+2. **Product Mismatch**: The order does not contain a digital camera. The items in this order are:
+   - Air Purifier ($504.19)
+   - Hiking Boots ($258.09)
+   - Skateboard ($202.13)
+   - Yoga Mat ($94.38)
+
+Since you mentioned you were "not certain" about the order number, it appears this may not be the correct order. 
+
+**Next Steps:**
+- Please verify the correct order number for the digital camera return
+- If the correct order has been delivered, I can process the return to the original payment method (credit card)
+- If this pending order (#W8855135) needs to be cancelled instead, I can help with that using the cancellation reason "no longer needed" or "ordered by mistake"

@@ -1,0 +1,15 @@
+Perfect! All requests have been successfully completed:
+
+**Order #W4219264 (Two Watches Order):**
+- ✅ **Address updated** to New York address (144 Lakeview Drive, Suite 925, New York, NY 10228)
+- ✅ **Watch modified**: Silicone blue watch changed to metal white watch
+  - Refund of $121.20 processed to credit card
+  - Order status: "pending (item modified)"
+
+**Order #W3445693 (Air Purifier with Sneakers):**
+- ✅ **Air purifier exchanged**: Large HEPA with smart sensors → Large HEPA with night mode
+  - Additional charge of $24.24 (for upgraded features) applied to credit card
+  - Order status: "exchange requested"
+  - Customer will receive an email with return instructions for the old air purifier
+
+All modifications have been confirmed and processed. The customer's credit card has been charged $24.24 for the air purifier upgrade and refunded $121.20 for the watch change.

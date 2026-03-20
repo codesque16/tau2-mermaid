@@ -1,0 +1,22 @@
+Perfect! I've successfully processed both exchanges for Yara Ito:
+
+## Exchange Summary
+
+**1. Hiking Boots Exchange (Order #W1304208)**
+- ✅ Exchanged: Size 10 synthetic waterproof hiking boots (worn pair)
+- For: Size 9 leather waterproof hiking boots (Item 8106223139)
+- Status: Exchange requested
+- Price adjustment: **-$4.77** (refund to PayPal account)
+
+**2. Jigsaw Puzzle Exchange (Order #W8353027)**
+- ✅ Exchanged: 1500-piece animals theme (intermediate difficulty) puzzle
+- For: 1000-piece fantasy theme (intermediate difficulty) puzzle (fancier theme, 500 pieces less as requested)
+- Status: Exchange requested
+- Price adjustment: **+$3.10** (additional charge to PayPal account)
+
+**Net Payment:**
+- Hiking boots refund: -$4.77
+- Jigsaw puzzle charge: +$3.10
+- **Net refund to customer: $1.67**
+
+Both orders are now marked as "exchange requested" and Yara Ito will receive follow-up emails with instructions on how to return the original items. The replacement items will be shipped once the original items are received.

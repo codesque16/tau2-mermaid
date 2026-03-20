@@ -1,0 +1,17 @@
+**Order Cancellation Complete**
+
+I've successfully cancelled order #W8835847 as requested. Here's what happened:
+
+**Issue:** The 4 ft glass white bookshelf you wanted is unfortunately not available in inventory. The only variant available in 4 ft is wood or metal bookshelves with different colors.
+
+**Action Taken:** 
+- Cancelled the entire order with reason: "ordered by mistake"
+- Order status: Changed to **cancelled**
+- Refund: **$689.97** has been refunded to your gift card (gift_card_2652153)
+
+**Items that were in the cancelled order:**
+- T-Shirt (red, XXL, cotton, crew neck) - $46.85
+- Gaming Mouse (white, laser sensor, wireless) - $138.47
+- Bookshelf (5 ft, glass, white) - $504.65
+
+If you'd like to place a new order with a different bookshelf option, please let me know and I can help you find available alternatives.

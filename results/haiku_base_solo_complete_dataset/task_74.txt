@@ -1,0 +1,13 @@
+Done! I've successfully completed both requests:
+
+**1. Cancelled Order #W3189752**
+- Status: Cancelled (5 items removed)
+- Refund: $1,252.16 issued to the original PayPal account
+
+**2. Modified Order #W5166363 - Laptop Exchange**
+- Original laptop: 17-inch i5, 1TB SSD, space grey ($2,749.56)
+- New laptop: 17-inch i9, 256GB SSD, silver ($2,530.72) ✓
+- Price difference: $218.84 refund issued to credit card ending in 2697
+- Order status: Pending (item modified)
+
+The i9 laptop with your preferred specifications (256GB SSD, silver color) has been confirmed and is ready for shipment. Your refund has been processed to your credit card.

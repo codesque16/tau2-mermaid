@@ -1,0 +1,15 @@
+Perfect! I've successfully completed all the modifications for Noah Ito's orders:
+
+## Order #W4219264 - Watch Order
+✅ **Address Updated**: Changed from Seattle, WA to New York, NY (144 Lakeview Drive, Suite 925, New York, NY 10228)
+
+✅ **Watch Modification**: Silicone blue dial wristwatch changed to metal white dial wristwatch
+- **Refund Applied**: $121.20 credited to credit card (original watch was $1,944.02, new watch is $1,822.82)
+- Order status: pending (item modified)
+
+## Order #W6729841 - Air Purifier & Speaker Order  
+✅ **Air Purifier Upgraded**: Changed from medium room size with quiet operation to **large room size with night mode**, maintaining the HEPA filter
+- **Additional Charge**: $11.58 to credit card (original purifier was $535.97, new purifier is $547.55)
+- Order status: pending (item modified)
+
+All changes have been processed and the orders are ready for fulfillment. The customer will receive their updated orders at the New York address and with the preferred configurations.

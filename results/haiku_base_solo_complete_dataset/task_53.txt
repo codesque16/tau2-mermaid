@@ -1,0 +1,15 @@
+Your return request has been successfully processed! Here's what I've done:
+
+**Order Details:**
+- Order ID: #W3916020
+- Item Returned: Bicycle (Green Road Bike, Medium Frame) - $1917.21
+- Order Status: Return Requested
+
+**Refund Information:**
+- Refund Amount: $1917.21
+- Refund Method: Original Credit Card (Visa ending in 6791)
+- Processing Time: 5-7 business days
+
+You will receive a follow-up email with instructions on how and where to return the damaged bicycle. Please follow those instructions to complete the return process and receive your refund.
+
+Is there anything else I can help you with?

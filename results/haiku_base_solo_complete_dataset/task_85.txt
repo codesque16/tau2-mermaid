@@ -1,0 +1,16 @@
+Your order has been successfully updated! Here's what I did:
+
+**Order #W2466703 - Item Modification Complete**
+
+✓ **Fleece Jacket Changed:**
+- **From:** Black, Size L, Full Zipper ($159.92)
+- **To:** Red, Size L, Half Zipper ($153.18)
+
+✓ **Refund Issued:**
+- Price difference refund: $6.74
+- Refunded to: PayPal account
+- Status: Pending refund (will process to your PayPal within 5-7 business days)
+
+✓ **Order Status:** Pending (Item Modified)
+
+Your order is ready to be processed with the updated Fleece Jacket specifications.

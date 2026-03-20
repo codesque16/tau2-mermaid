@@ -1,0 +1,15 @@
+Perfect! I've successfully completed all the requested modifications:
+
+**Pending Orders Updated:**
+- Order #W2166301 ✓
+- Order #W2466703 ✓
+- Order #W6832752 ✓
+
+**User Default Address Updated:** ✓
+
+**New Address for All:**
+565 Maple Drive, Suite 501
+Washington, DC 20307
+USA
+
+All three pending orders and the customer's default user address have been changed to the Washington DC address. The customer's other orders (#W7739115 and #W1994898) were not modified since one is already delivered and the other is processed—only pending orders can be modified.

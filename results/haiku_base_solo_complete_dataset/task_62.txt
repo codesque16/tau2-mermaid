@@ -1,0 +1,14 @@
+Based on my investigation, I have important information about your recent order (#W5061109):
+
+**Bluetooth Speaker Details:**
+- **Price:** $302.67 (which is greater than $300)
+- **Battery Life:** 20 hours
+
+**Availability Check:**
+I checked all available Bluetooth Speaker variants in our inventory. Unfortunately, **there are no Bluetooth Speakers available under $100**. The most affordable options range from $271.89 to over $300.
+
+**Status:**
+Since there are no Bluetooth Speakers under $100 available in our system, I cannot modify your order according to your preference. Per your request, I'm only modifying the order if a speaker under $100 is available, which is not the case.
+
+**Your Current Order:**
+Your order #W5061109 remains unchanged with a total of **$1,319.43**. If you'd like to proceed with a return of the Bluetooth Speaker after you receive it, you can contact us with that request at that time.

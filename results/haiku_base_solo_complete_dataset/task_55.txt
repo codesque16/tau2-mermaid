@@ -1,0 +1,34 @@
+**Request Completed Successfully**
+
+I've processed all of Amelia's orders. Here's a summary:
+
+**Pending Orders Cancelled (2 orders):**
+1. **Order #W4836353** - Cancelled
+   - Mechanical Keyboard ($268.77)
+   - Smartphone ($1,161.04)
+   - Refund: $1,429.81
+
+2. **Order #W7342738** - Cancelled
+   - Electric Toothbrush ($211.11)
+   - Water Bottle ($49.30)
+   - Wireless Earbuds ($258.36)
+   - Dumbbell Set ($511.63)
+   - Refund: $1,030.40
+
+**Delivered Orders - Items Returned (2 orders):**
+1. **Order #W4597054** - All 4 items marked for return
+   - Air Purifier ($543.68)
+   - Smart Watch ($336.71)
+   - Coffee Maker ($258.32)
+   - Water Bottle ($47.76)
+   - Refund pending: $1,186.47
+
+2. **Order #W7773202** - 1 item marked for return
+   - Hiking Boots ($236.57)
+   - Refund pending: $236.57
+
+**Already Cancelled Orders (no action needed):**
+- Order #W2586676
+- Order #W5400801
+
+**Total Refunds:** $3,883.25 will be processed to the gift card (gift_card_3491931). Cancellation refunds are immediate; return refunds will be processed once items are received. Return instructions have been sent to the customer's email.

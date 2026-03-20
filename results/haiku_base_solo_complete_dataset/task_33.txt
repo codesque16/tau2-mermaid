@@ -1,0 +1,13 @@
+**Summary:**
+
+I've successfully updated your default address to the Seattle address (517 Lakeview Drive, Suite 183, Seattle, WA 98195).
+
+Regarding your order request:
+- **Partial returns are not possible** on pending orders. Since order #W1845024 is still in "pending" status, you cannot return just the office items while keeping the hiking items.
+- You can only cancel the entire order at once or wait until the order is delivered to process returns.
+
+Since partial cancellation isn't available, as per your alternative preference, I've updated your default user address to the Seattle address shown in your order.
+
+**Total refund amount for office items: $0** (No refund issued, as the order is being kept intact with all items)
+
+If you'd like to proceed with returning the office items in the future, you'll need to wait until order #W1845024 is delivered, at which point you can request a return for just those three items ($1,093.34 total) with the refund going to your PayPal account.

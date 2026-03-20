@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tau2 Trace Viewer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0e1117;
+    --surface: #161b27;
+    --surface2: #1e2536;
+    --border: #2a3347;
+    --text: #cdd6f4;
+    --muted: #6c7a96;
+    --ticket-bg: #1a2744;
+    --ticket-border: #3b5bdb;
+    --think-bg: #181d2c;
+    --think-text: #7c87a6;
+    --tool-call-bg: #111e17;
+    --tool-call-border: #2d6a4f;
+    --tool-call-name: #52b788;
+    --tool-result-bg: #17132a;
+    --tool-result-border: #7950f2;
+    --tool-result-label: #9775fa;
+    --assistant-border: #4dabf7;
+    --final-bg: #0d2015;
+    --final-border: #40c057;
+    --final-text: #b2f2bb;
+    --accent: #4dabf7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* ── Header ── */
+  #header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  #header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  #session-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .badge-pass { background: #1a3d22; color: #40c057; border: 1px solid #40c057; }
+  .badge-fail { background: #3d1a1a; color: #fa5252; border: 1px solid #fa5252; }
+  .badge-agent { background: var(--surface2); color: var(--accent); border: 1px solid var(--border); }
+  #reload-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #reload-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ── Drop zone ── */
+  #drop-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border: 2px dashed var(--border);
+    margin: 40px 60px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  #drop-zone:hover, #drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(77,171,247,0.03);
+  }
+  .drop-icon { font-size: 44px; opacity: 0.35; }
+  .drop-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 2;
+  }
+  .drop-label span { color: var(--accent); }
+  #file-input { display: none; }
+
+  /* ── Conversation ── */
+  #conversation {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0 60px;
+    display: none;
+  }
+  #conversation.visible { display: block; }
+
+  .turn {
+    max-width: 860px;
+    margin: 0 auto 4px;
+    padding: 0 24px;
+  }
+
+  /* Ticket */
+  .ticket-block {
+    background: var(--ticket-bg);
+    border: 1px solid var(--ticket-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .block-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ticket-block .block-label { color: #748ffc; }
+  .ticket-text { white-space: pre-wrap; font-size: 13px; color: #a5b4fc; line-height: 1.7; }
+
+  /* Thinking */
+  .think-block {
+    background: var(--think-bg);
+    border-left: 3px solid #2e3c5e;
+    border-radius: 0 6px 6px 0;
+    margin: 3px 0;
+    overflow: hidden;
+  }
+  .collapsible-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .collapsible-header:hover { opacity: 0.85; }
+  .chevron {
+    font-size: 9px;
+    color: var(--muted);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .chevron.open { transform: rotate(90deg); }
+  .think-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .think-wordcount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #3d4c6e;
+    margin-left: auto;
+  }
+  .collapsible-body {
+    padding: 0 12px 10px 24px;
+    display: none;
+  }
+  .collapsible-body.open { display: block; }
+  .think-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--think-text);
+    white-space: pre-wrap;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  /* Tool call */
+  .tool-call-block {
+    background: var(--tool-call-bg);
+    border: 1px solid var(--tool-call-border);
+    border-radius: 6px;
+    margin: 3px 0;
+    overflow: hidden;
+  }
+  .tool-call-block .collapsible-header:hover { background: rgba(82,183,136,0.04); }
+  .tool-icon { font-size: 12px; color: var(--tool-call-name); }
+  .tool-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tool-call-name);
+  }
+  .tool-args-inline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 400px;
+  }
+  .tool-id-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #2d4a3e;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Tool result */
+  .tool-result-block {
+    background: var(--tool-result-bg);
+    border: 1px solid var(--tool-result-border);
+    border-radius: 6px;
+    margin: 3px 0;
+    overflow: hidden;
+  }
+  .tool-result-block .collapsible-header:hover { background: rgba(121,80,242,0.05); }
+  .result-icon { font-size: 12px; color: var(--tool-result-label); }
+  .result-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tool-result-label);
+  }
+  .result-preview {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 440px;
+  }
+
+  /* Code blocks inside expandable sections */
+  .code-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.65;
+    padding: 4px 0;
+  }
+  .tool-call-block .code-block { color: #94e2d5; }
+  .tool-result-block .code-block { color: #cba6f7; }
+
+  /* Assistant text */
+  .assistant-text {
+    border-left: 3px solid var(--assistant-border);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 3px 0;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    background: rgba(77,171,247,0.03);
+  }
+
+  /* Final reply */
+  .final-reply {
+    background: var(--final-bg);
+    border: 1px solid var(--final-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 10px 0 0;
+  }
+  .final-reply .block-label { color: #40c057; }
+  .final-text {
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    color: var(--final-text);
+  }
+
+  /* Scrollbar */
+  #conversation::-webkit-scrollbar { width: 5px; }
+  #conversation::-webkit-scrollbar-track { background: transparent; }
+  #conversation::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>◈ TAU2 TRACE VIEWER</h1>
+    <div id="session-meta"></div>
+    <div id="header-actions">
+      <div id="result-badge"></div>
+      <button id="reload-btn" style="display:none" onclick="resetViewer()">← Open another</button>
+    </div>
+  </div>
+
+  <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="drop-icon">⬡</div>
+    <div class="drop-label">
+      <div><span>Drop a task_N.jsonl file</span> here, or click to browse</div>
+      <div style="font-size:11px;margin-top:4px;opacity:0.6;">Claude Code trace format · retail domain</div>
+    </div>
+    <input type="file" id="file-input" accept=".jsonl,.json">
+  </div>
+
+  <div id="conversation"></div>
+</div>
+
+<script>
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const conv = document.getElementById('conversation');
+const sessionMeta = document.getElementById('session-meta');
+const resultBadge = document.getElementById('result-badge');
+const reloadBtn = document.getElementById('reload-btn');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+function resetViewer() {
+  conv.classList.remove('visible');
+  conv.innerHTML = '';
+  dropZone.style.display = '';
+  sessionMeta.textContent = '';
+  resultBadge.innerHTML = '';
+  reloadBtn.style.display = 'none';
+  fileInput.value = '';
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => renderTrace(e.target.result, file.name);
+  reader.readAsText(file);
+}
+
+// Load from URL param: ?file=results/haiku_run_complete_dataset/task_0.jsonl
+function loadFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const filePath = params.get('file');
+  if (!filePath) return;
+  const fetchUrl = filePath.startsWith('/') ? filePath : '/' + filePath;
+  fetch(fetchUrl)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(text => renderTrace(text, filePath.split('/').pop()))
+    .catch(err => {
+      sessionMeta.textContent = `Could not load ${filePath}: ${err.message}`;
+    });
+}
+window.addEventListener('DOMContentLoaded', loadFromUrl);
+
+function renderTrace(text, filename) {
+  const lines = text.trim().split('\n').filter(Boolean);
+  const events = [];
+  for (const line of lines) {
+    try { events.push(JSON.parse(line)); } catch {}
+  }
+
+  // Extract top-level metadata
+  let agentName = '', model = '', sessionId = '';
+  for (const e of events) {
+    if (e.agentSetting && !agentName) agentName = e.agentSetting;
+    if (e.message?.model && !model) model = e.message.model;
+    if (e.sessionId && !sessionId) sessionId = e.sessionId;
+  }
+
+  const metaParts = [];
+  if (agentName) metaParts.push(`@${agentName}`);
+  if (model) metaParts.push(model.replace('claude-', '').replace('-20251001', ''));
+  if (sessionId) metaParts.push(sessionId.slice(0, 8) + '…');
+  metaParts.push(filename);
+  sessionMeta.textContent = metaParts.join('  ·  ');
+  reloadBtn.style.display = '';
+
+  // Merge events with the same message.id (streaming chunks arrive as separate lines)
+  const msgMap = new Map();   // messageId → merged message object
+  const msgOrder = [];        // preserve insertion order
+
+  for (const e of events) {
+    if (!e.message) continue;
+    const msgId = e.message.id || e.uuid;
+    if (!msgMap.has(msgId)) {
+      msgMap.set(msgId, {
+        type: e.type,
+        role: e.message.role,
+        content: [],
+        toolUseResult: null,
+        structuredContent: null,
+        stopReason: null,
+        _seen: new Set(),
+      });
+      msgOrder.push(msgId);
+    }
+    const m = msgMap.get(msgId);
+    for (const block of (e.message.content || [])) {
+      // Deduplicate blocks that arrive across multiple streaming lines
+      const key = block.type + '|' + (block.id || block.tool_use_id || '') + '|' + (block.thinking || block.text || JSON.stringify(block.input || '')).slice(0, 40);
+      if (!m._seen.has(key)) {
+        m._seen.add(key);
+        m.content.push(block);
+      }
+    }
+    if (e.toolUseResult && !m.toolUseResult) m.toolUseResult = e.toolUseResult;
+    if (e.mcpMeta?.structuredContent && !m.structuredContent) m.structuredContent = e.mcpMeta.structuredContent;
+    if (e.message.stop_reason) m.stopReason = e.message.stop_reason;
+    // Handle plain-string user content (initial ticket)
+    if (typeof e.message.content === 'string' && !m.plainText) m.plainText = e.message.content;
+  }
+
+  // Walk messages in order and build HTML
+  const html = [];
+  let isFirst = true;
+  let finalBlock = null;
+
+  for (const msgId of msgOrder) {
+    const m = msgMap.get(msgId);
+
+    if (m.role === 'user') {
+      // Initial ticket (plain string content)
+      const ticketText = m.plainText || (typeof m.content === 'string' ? m.content : null)
+        || (m.content.length === 1 && typeof m.content[0] === 'string' ? m.content[0] : null)
+        || (m.content.length === 1 && m.content[0].type === 'text' ? m.content[0].text : null);
+
+      if (isFirst && ticketText) {
+        html.push(`<div class="turn"><div class="ticket-block"><div class="block-label">🎫 Ticket</div><div class="ticket-text">${esc(ticketText)}</div></div></div>`);
+        isFirst = false;
+        continue;
+      }
+      isFirst = false;
+
+      // Tool results
+      for (const b of m.content) {
+        if (b.type !== 'tool_result') continue;
+        const raw = b.content || m.toolUseResult || '';
+        const data = m.structuredContent || tryParseJson(raw);
+        const preview = jsonPreview(data || raw);
+        const formatted = formatJson(data || raw);
+        const rid = uid();
+        html.push(`
+<div class="turn"><div class="tool-result-block">
+  <div class="collapsible-header" onclick="toggle('${rid}', this)">
+    <span class="chevron">▶</span>
+    <span class="result-icon">◀</span>
+    <span class="result-label">Tool Result</span>
+    <span class="result-preview">${esc(preview)}</span>
+  </div>
+  <div class="collapsible-body" id="${rid}"><div class="code-block">${esc(formatted)}</div></div>
+</div></div>`);
+      }
+      continue;
+    }
+
+    if (m.role === 'assistant') {
+      const isEndTurn = m.stopReason === 'end_turn';
+      const turnHtml = [];
+
+      for (const b of m.content) {
+        if (b.type === 'thinking' && b.thinking?.trim()) {
+          const words = b.thinking.split(/\s+/).length;
+          const tid = uid();
+          turnHtml.push(`
+<div class="think-block">
+  <div class="collapsible-header" onclick="toggle('${tid}', this)">
+    <span class="chevron">▶</span>
+    <span class="think-label">Thinking</span>
+    <span class="think-wordcount">${words} words</span>
+  </div>
+  <div class="collapsible-body" id="${tid}"><div class="think-text">${esc(b.thinking)}</div></div>
+</div>`);
+
+        } else if (b.type === 'text' && b.text?.trim()) {
+          if (isEndTurn) {
+            finalBlock = b.text;
+          } else {
+            turnHtml.push(`<div class="assistant-text">${esc(b.text)}</div>`);
+          }
+
+        } else if (b.type === 'tool_use') {
+          const cleanName = b.name.replace('mcp__retail-tools__', '');
+          const argsStr = formatJson(b.input || {});
+          const inlinePreview = Object.entries(b.input || {}).slice(0, 2)
+            .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+            .join('  ');
+          const tcid = uid();
+          turnHtml.push(`
+<div class="tool-call-block">
+  <div class="collapsible-header" onclick="toggle('${tcid}', this)">
+    <span class="chevron">▶</span>
+    <span class="tool-icon">⚙</span>
+    <span class="tool-name">${esc(cleanName)}</span>
+    <span class="tool-args-inline">${esc(inlinePreview)}</span>
+    <span class="tool-id-badge">${(b.id || '').slice(-8)}</span>
+  </div>
+  <div class="collapsible-body" id="${tcid}"><div class="code-block">${esc(argsStr)}</div></div>
+</div>`);
+        }
+      }
+
+      if (turnHtml.length) html.push(`<div class="turn">${turnHtml.join('')}</div>`);
+    }
+  }
+
+  // Final reply pinned at the bottom
+  if (finalBlock) {
+    html.push(`<div class="turn"><div class="final-reply"><div class="block-label">✓ Final Reply</div><div class="final-text">${esc(finalBlock)}</div></div></div>`);
+  }
+
+  conv.innerHTML = html.join('') + '<div style="height:48px"></div>';
+  dropZone.style.display = 'none';
+  conv.classList.add('visible');
+  conv.scrollTop = 0;
+}
+
+// ── Helpers ──────────────────────────────────────────────
+
+function toggle(id, headerEl) {
+  const body = document.getElementById(id);
+  if (!body) return;
+  const chevron = headerEl.querySelector('.chevron');
+  body.classList.toggle('open');
+  if (chevron) chevron.classList.toggle('open');
+}
+
+let _uid = 0;
+function uid() { return 'x' + (++_uid); }
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function tryParseJson(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+function formatJson(val) {
+  if (typeof val === 'string') {
+    const parsed = tryParseJson(val);
+    return parsed !== null ? JSON.stringify(parsed, null, 2) : val;
+  }
+  return JSON.stringify(val, null, 2);
+}
+
+function jsonPreview(val) {
+  const obj = typeof val === 'string' ? (tryParseJson(val) || val) : val;
+  if (typeof obj !== 'object' || obj === null) return String(obj || '').slice(0, 100);
+  return Object.entries(obj).slice(0, 3)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 35)}`)
+    .join('  ');
+}
+</script>
+</body>
+</html>

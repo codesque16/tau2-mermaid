@@ -1,0 +1,16 @@
+Perfect! I've successfully completed both of Mei Patel's requests:
+
+## Summary of Changes:
+
+### 1. Jigsaw Puzzle Modification (Order #W4082615)
+✓ **Changed from:** 1000-piece intermediate art puzzle ($54.11)
+✓ **Changed to:** 500-piece beginner art puzzle ($46.13) - the easiest with the fewest pieces
+✓ **Refund:** $7.98 credited to PayPal account
+✓ **Order Status:** Updated to "pending (item modified)"
+
+### 2. Address Corrections
+✓ **User Profile Address:** Updated from 443 → **445 Maple Drive, Suite 394, Fort Worth, TX 76165**
+✓ **Order #W4082615 Address:** Updated to 445 Maple Drive, Suite 394, Fort Worth, TX 76165
+✓ **Order #W9583042 Address:** Updated to 445 Maple Drive, Suite 394, Fort Worth, TX 76165
+
+All pending orders now have the correct address, and Mei will receive a refund for the price difference on her modified order via PayPal.

@@ -1,0 +1,31 @@
+Perfect! I've successfully processed all the requests for Sofia Li. Here's a summary of what was completed:
+
+## Exchanges Completed:
+
+**Order #W3916020** (Fort Worth address) - Status: Exchange Requested
+- ✅ **Bicycle exchanged**: Medium green road bike → Large red mountain bike
+  - Original: $1,917.21
+  - New item price: $1,902.67
+  - **Refund: $14.96** to Visa card
+
+- ✅ **Jigsaw Puzzle exchanged**: 500-piece art (intermediate) → 1500-piece art (intermediate)
+  - Original: $52.01
+  - New item price: $51.59
+  - (Included in same exchange as bicycle)
+
+**Order #W4689314** (San Antonio address) - Status: Exchange Requested
+- ✅ **Camera exchanged**: 24MP resolution → 20MP resolution (same 3x zoom and SD card storage)
+  - Original: $2,895.55
+  - New item price: $2,823.96
+  - **Refund: $71.59** to Visa card
+
+## Cancellation Completed:
+
+**Order #W8855135** (San Antonio address) - Status: Cancelled
+- ✅ **Full order cancelled** for reason: "no longer needed"
+  - Items cancelled: Air Purifier, Hiking Boots, Skateboard, and Yoga Mat
+  - **Full refund: $1,058.79** to Visa card (processed immediately)
+
+**Total refunds to Visa card (credit_card_3951670):** $1,144.94
+
+Sofia will receive follow-up emails with return shipping information for the two exchange requests. The refunds have been processed to her preferred Visa payment method.

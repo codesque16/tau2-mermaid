@@ -1,0 +1,16 @@
+**✓ Return Request Successfully Processed!**
+
+**Summary:**
+- **Order ID:** #W5565470
+- **Tracking Number:** 907614527588
+- **Status:** Return Requested
+
+**Items Being Returned:**
+1. Electric Kettle - $153.25
+2. Mechanical Keyboard - $231.37
+- **Refund Total:** $384.62
+
+**Item Being Kept:**
+- Pet Bed (medium, fleece, grey) - $196.53
+
+The refund of $384.62 will be issued to your PayPal account. You will receive a follow-up email with instructions on how and where to return the Electric Kettle and Mechanical Keyboard. The Pet Bed will remain with you.

@@ -1,0 +1,14 @@
+Perfect! I've successfully completed all the requested modifications for Sophia Martin:
+
+**Summary of Changes:**
+
+1. **Order Address Updated**: Order #W1603792 has been updated from the old address (760 Elm Avenue, Suite 564) to the new address (592 Elm Avenue, Suite 978, Houston, TX 77242).
+
+2. **User Default Address Updated**: Sophia Martin's default profile address has been updated to the new address (592 Elm Avenue, Suite 978, Houston, TX 77242).
+
+3. **Tablet Exchanged**: The tablet in order #W1603792 has been successfully exchanged:
+   - Old tablet: 7-inch, 32GB, Gold - $1,018.68
+   - New tablet: 10-inch, 64GB, Silver - $903.95
+   - **Savings: $114.73** (refunded to Mastercard ending in 3292)
+
+The order status is now "pending (item modified)" and will be processed with all the correct information. The customer will receive the order at their new address.

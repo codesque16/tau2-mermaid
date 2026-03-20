@@ -1,0 +1,13 @@
+Perfect! I've successfully processed all of Fatima Johnson's requests. Here's a summary:
+
+**Cancellations Completed:**
+- ✓ Order #W5199551 cancelled (Refund: $3,131.10)
+- ✓ Order #W8665881 cancelled (Refund: $4,777.75)
+
+**Return Initiated:**
+- ✓ Smart Watch from Order #W9389413 marked for return (Refund: $367.38)
+- An email has been sent with instructions on how to return the watch
+
+**TOTAL REFUND AMOUNT: $8,276.23**
+
+All refunds will be processed to the PayPal account (paypal_5364164) used for the original purchases. The refunds for the cancelled orders will be credited immediately, and the watch return refund will be processed once the item is received.

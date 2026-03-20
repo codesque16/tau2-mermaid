@@ -1,0 +1,12 @@
+Perfect! I've successfully completed both requests for order #W6750959:
+
+**✓ Bluetooth Speaker Exchange (Completed First)**
+- **Exchanged**: Blue Bluetooth Speaker (20 hours battery, water resistant) → Green Bluetooth Speaker (20 hours battery, no water resistance)
+- **New Item ID**: 9440686670
+- **Price Adjustment**: $3.76 refund to your PayPal account (green model is $3.76 cheaper)
+
+**✓ Shipping Address Changed (Completed)**
+- **From**: 909 Spruce Street, Suite 599, Los Angeles, CA 91148
+- **To**: 476 Maple Drive, Suite 432, New York, NY 10093
+
+The order status is now "pending (item modified)" and your PayPal payment method shows the $3.76 refund has been processed. Your order will be updated with the new green Bluetooth Speaker and will ship to your NYC address.

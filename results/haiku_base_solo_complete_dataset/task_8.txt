@@ -1,0 +1,15 @@
+**Exchange Successfully Completed!**
+
+✓ **Order ID**: #W6390527
+✓ **Status**: Exchange Requested
+
+**Exchange Details:**
+- **Original Item**: Desk Lamp (white, medium brightness, USB) - $137.94
+- **New Item**: Desk Lamp (white, **high brightness**, USB) - $164.28
+- **Additional Charge**: $26.34 (charged to your PayPal account)
+
+**What's Next:**
+You'll receive an email with instructions on how to return the medium brightness lamp. Once we receive it, your new brighter desk lamp will be shipped to you at:
+317 Elm Street, Suite 461, Charlotte, NC 28236
+
+The entire exchange process should be completed within 5-7 business days after we receive the returned item.

@@ -1,0 +1,10 @@
+Perfect! I've successfully processed the exchange for Ivan Johnson's perfume order. Here's what was completed:
+
+**Exchange Details:**
+- **Order ID:** #W1671835
+- **Original Item:** Perfume (30ml, woody scent, men) - $322.52
+- **New Item:** Perfume (100ml, woody scent, men) - $312.04
+- **Price Difference:** Customer will receive a **$10.48 refund** to their PayPal account
+- **Order Status:** Exchange requested
+
+The customer is now set to receive the maximum available size (100ml) of the perfume in the same scent family and gender preference they originally ordered. They will receive an email with instructions on how to return the 30ml bottle, and the refund of $10.48 will be processed to their PayPal account.

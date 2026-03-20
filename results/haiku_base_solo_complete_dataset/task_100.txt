@@ -1,0 +1,17 @@
+Perfect! I've successfully processed all of the customer's requests:
+
+## Summary of Actions Completed:
+
+**Order #W3295833 (Pending Order - Modified):**
+- ✅ **Skateboard**: Changed from bamboo 31" graphic to bamboo 34" custom design
+- ✅ **Luggage Set**: Changed from 2-piece black softshell to 2-piece red softshell
+- ✅ Price difference of **$68.92** charged to credit card ending in 3194
+- Order status updated to "pending (item modified)"
+
+**Order #W8488728 (Delivered Order - Return):**
+- ✅ **Hiking Boots**: Return request processed
+- ✅ Refund of **$245.99** will be credited to PayPal account
+- Order status updated to "return requested"
+- Customer will receive an email with return shipping instructions
+
+All modifications and returns have been confirmed and processed. The customer can expect to receive follow-up emails with shipment and return details.

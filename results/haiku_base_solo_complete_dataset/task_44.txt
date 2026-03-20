@@ -1,0 +1,13 @@
+**Order modification completed successfully!**
+
+Your Desk Lamp in order #W9300146 has been changed to the cheapest available option:
+
+**New Desk Lamp Details:**
+- Color: Black
+- Brightness: Medium
+- Power Source: AC adapter
+- New Price: $135.24
+
+**Refund Amount: $17.99**
+
+This refund has been credited back to your gift card (gift_card_7245904) immediately. Your order status is now "pending (item modified)" and is ready for processing and shipment.

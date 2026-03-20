@@ -1,0 +1,25 @@
+Perfect! I've successfully completed your requests:
+
+## Order Cancellations
+
+**Order #W8367380** (containing the fleece jacket and other items):
+- **Status**: Cancelled (reason: ordered by mistake)
+- **Refund**: $1,003.22 issued to your Mastercard ending in 6081
+
+**Order #W1242543** (containing the skateboard):
+- **Status**: Cancelled (reason: ordered by mistake)
+- **Refund**: $184.13 issued to your Mastercard ending in 6081
+
+*Note: The skateboard you requested (maple material, 34 inch, graphic) was unavailable, so the order was cancelled as requested.*
+
+## Grill Purchase History
+
+You have purchased **2 grills** in your previous orders:
+
+1. **Grill 1** (Order #W8668939): $985.66
+   - Type: Electric | Size: Medium | Features: Rotisserie
+
+2. **Grill 2** (Order #W8668939): $953.39
+   - Type: Electric | Size: Portable | Features: None
+
+**Total price for all grills purchased: $1,939.05**

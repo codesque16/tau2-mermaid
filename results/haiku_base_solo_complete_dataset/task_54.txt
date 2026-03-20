@@ -1,0 +1,15 @@
+Perfect! I've successfully processed your request. Here's what was completed:
+
+**Orders Cancelled (Pending):**
+- Order #W4836353: $1,429.81 refunded
+- Order #W7342738: $1,030.40 refunded
+
+**Orders Returned (Delivered):**
+- Order #W4597054: $1,186.47 refunded (Air Purifier, Smart Watch, Coffee Maker, Water Bottle)
+
+**Order Kept:**
+- Order #W7773202: Hiking Boots (size 12, leather) - No cheaper alternatives with the same size and material were available, so this order was kept as per your instructions.
+
+**TOTAL REFUND AMOUNT: $3,646.68**
+
+All refunds have been credited to your gift card (gift_card_3491931). You'll receive return shipping instructions via email for the items you're returning.

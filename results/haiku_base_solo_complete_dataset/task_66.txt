@@ -1,0 +1,15 @@
+**Order Cancellation Completed**
+
+I've successfully cancelled order **#W3361211** for customer Aarav Lee.
+
+**Summary:**
+- **Order ID:** #W3361211
+- **Status:** Cancelled
+- **Reason:** Ordered by mistake (product change request not possible)
+- **Refund Amount:** $1,464.00
+- **Refund Method:** Credit Card (Visa ending in 4451) - will be processed immediately
+
+**Why the cancellation:**
+The customer requested to change the luggage set to a coat. However, the system only allows modifying items within the same product type (e.g., changing color or size options), not changing to a completely different product. Since the luggage set order was still pending (not yet delivered), returning individual items was also not an option. Therefore, following the customer's instruction that "if there are issues, cancel the entire order," I proceeded with the full cancellation.
+
+The customer can now place a new order for a coat if desired.

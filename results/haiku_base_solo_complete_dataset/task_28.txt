@@ -1,0 +1,16 @@
+Perfect! I've successfully processed the returns for the delivered orders. Here's what was completed:
+
+**Returns Processed:**
+1. ✅ Order #W3792453: **Skateboard** returned - $200.80
+2. ✅ Order #W7181492: **Garden Hose** + **Backpack** returned - $96.35 + $193.38 = $289.73
+3. ✅ Order #W5565470: **Mechanical Keyboard** + **Pet Bed** returned - $231.37 + $196.53 = $427.90
+
+**Note about pending order #W2575533:** This order is still pending and contains the garden hose you just ordered along with 4 other items (Vacuum Cleaner, Portable Charger, E-Reader, Office Chair). Since removing just the garden hose from this multi-item pending order would require cancelling the entire order, and your instruction was not to proceed if the whole order would be cancelled, I did not modify this order.
+
+**Regarding order cancellations:** The other three orders (#W3792453, #W7181492, #W5565470) are already delivered, and according to the system policy, only pending orders can be cancelled. However, you're already returning items from these orders, which will process the refunds.
+
+---
+
+## **TOTAL REFUND AMOUNT: $918.43**
+
+This amount will be refunded to your PayPal account (paypal_3024827). You'll receive follow-up emails with instructions on how to return these items. Refunds typically process within 5-7 business days.

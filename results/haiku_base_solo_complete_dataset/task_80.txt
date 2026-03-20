@@ -1,0 +1,11 @@
+The exchange has been successfully completed for order #W7209932. Here's what was processed:
+
+**Exchange Details:**
+- **Item Exchanged:** T-Shirt (blue, S, polyester, v-neck) - Original price: $54.84
+- **New Item:** T-Shirt (red, XXL, cotton, crew neck) - New price: $46.85
+- **Price Difference:** $7.99 refund credited to gift card
+- **Payment Method:** Gift card (gift_card_2611937)
+
+**Order Status:** Exchange requested
+
+Amelia Gonzalez will receive an email with instructions on how to return the original T-shirt. The $7.99 refund has been applied to her gift card account.

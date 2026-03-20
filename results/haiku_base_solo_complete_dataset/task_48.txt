@@ -1,0 +1,25 @@
+Perfect! I've successfully processed the air purifier return and can now provide you with complete information:
+
+## Air Purifier Return - COMPLETED ✓
+
+**Order #W9502127** - Return successfully processed
+- **Item returned:** Air Purifier (item ID: 9534205511)
+- **Refund amount:** $473.43
+- **Refund method:** PayPal (paypal_2433177 - original payment method)
+- **Order status:** Return Requested
+- **Next steps:** Customer will receive a follow-up email with instructions on how and where to return the item
+
+---
+
+## Vacuum Cleaner Return - CANNOT PROCESS
+
+The customer has two vacuum cleaners in the same order #W9502127:
+1. Canister Vacuum Cleaner - $622.12
+2. Robotic Vacuum Cleaner - $652.61
+
+**Status:** Unfortunately, these **cannot be returned** because:
+- A return has already been initiated on this order (for the air purifier)
+- Per our policy, only **one return action is allowed per delivered order**
+- Since that action has already been used, no additional returns can be processed for other items in this same order
+
+The vacuum cleaners would need to be addressed through a different order or the customer would need to contact a human agent if they wish to discuss alternative options.
