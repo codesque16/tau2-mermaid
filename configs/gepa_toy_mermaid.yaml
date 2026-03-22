@@ -17,7 +17,7 @@ assistant:
   temperature: 0
 
 gepa:
-  seed: 42
+  evaluation_seed: 42
   max_metric_calls: 20
   parallel: true
   max_workers: 3

@@ -70,11 +70,8 @@ gepa:
   valset_task_ids: null
 
   evaluation_seed: 7789797979
-
-  # Master RNG / engine seed (train-val split, etc.). When ``llm_seed_chain: true``, this is also the
-  # master for per-iteration LLM seeds: baseline valset eval uses this value; each GEPA iteration start
-  # sets next_seed = (seed + Random(prev_llm_seed).randint(1, 1e9)) % (2^31-1) for simulator + judge LLM.
-  seed: 42
+  # When ``llm_seed_chain: true``, ``evaluation_seed`` is the master for chained per-iteration
+  # simulator LLM seeds; each ``on_iteration_start`` (iteration >= 1) advances the chain.
   llm_seed_chain: true
 
   reflection_llm_backend: genai

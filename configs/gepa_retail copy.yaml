@@ -88,10 +88,7 @@ gepa:
   mermaid_candidate_dir: ".gepa/mermaid_graph_candidates"
   # Output: full mermaid graph with the optimized section applied.
   output_mermaid_graph_path: "domains/retail/AGENTS_SOLO_optimized.md"
-  # Master RNG / engine seed (train-val split, etc.). When ``llm_seed_chain: true``, this is also the
-  # master for per-iteration LLM seeds: baseline valset eval uses this value; each GEPA iteration start
-  # sets next_seed = (seed + Random(prev_llm_seed).randint(1, 1e9)) % (2^31-1) for simulator + judge LLM.
-  seed: 42
+  evaluation_seed: 42
   llm_seed_chain: true
   cache_evaluation: true
   parallel: true

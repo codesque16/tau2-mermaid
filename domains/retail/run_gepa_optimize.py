@@ -41,55 +41,12 @@ from typing import Any, Dict, List
 import logfire
 from dotenv import load_dotenv
 
-# --- Chained LLM seed (optional ``gepa.llm_seed_chain``) ----------------------------
+from domains.retail.llm_seed_chain import (
+    LLMSeedChain,
+    LLMSeedChainCallback,
+    retail_llm_seed_master_from_gepa_cfg,
+)
 
-_MAX_LLM_SEED = 2**31 - 1
-
-
-class LLMSeedChain:
-    """Thread-safe per-iteration LLM ``seed`` for retail simulation evals inside GEPA.
-
-    - **Before** the first ``on_iteration_start``: ``read()`` returns the **master**
-      (``gepa.seed``), used for the initial seed-candidate valset evaluation.
-    - **Each** ``on_iteration_start`` with ``iteration >= 1`` (GEPA's 1-based counter):
-      ``generated = Random(current).randint(1, 10**9)``,
-      ``current = (master + generated) % (2**31 - 1)`` (non-zero).
-
-    All simulator and qualitative-eval LLM calls in that iteration should use
-    ``read()`` so the API sees an explicit integer seed.
-    """
-
-    def __init__(self, master: int) -> None:
-        m = int(master) % _MAX_LLM_SEED
-        self._master = m if m != 0 else 1
-        self._current = self._master
-        self._lock = threading.Lock()
-
-    def read(self) -> int:
-        with self._lock:
-            return self._current
-
-    def advance_on_iteration_start(self, iteration: int) -> None:
-        """Advance after baseline; GEPA passes ``iteration`` = 1 for the first opt loop."""
-        if iteration < 1:
-            return
-        with self._lock:
-            prev = self._current
-            gen = random.Random(prev).randint(1, 10**9)
-            nxt = (self._master + gen) % _MAX_LLM_SEED
-            self._current = nxt if nxt != 0 else 1
-
-
-class _LLMSeedChainCallback:
-    def __init__(self, chain: LLMSeedChain) -> None:
-        self._chain = chain
-
-    def on_iteration_start(self, event: Dict[str, Any]) -> None:
-        try:
-            it = int(event.get("iteration", 0))
-        except (TypeError, ValueError):
-            return
-        self._chain.advance_on_iteration_start(it)
 from rich.console import Console, Group
 from rich.layout import Layout
 from rich.live import Live
@@ -841,7 +798,8 @@ def main() -> None:
         allowed_ids = {str(i) for i in task_ids_cfg} | {int(i) for i in task_ids_cfg}
         solo_tasks = [t for t in solo_tasks if t.get("id") in allowed_ids]
 
-    rng = random.Random(gepa_cfg.get("seed", 42))
+    _gepa_master = retail_llm_seed_master_from_gepa_cfg(gepa_cfg)
+    rng = random.Random(_gepa_master)
     train_tasks, val_tasks = _split_train_val(
         solo_tasks,
         train_ratio=float(gepa_cfg.get("train_ratio", 0.7)),
@@ -873,7 +831,7 @@ def main() -> None:
         "gepa_optimization",
         _span_name="GEPA retail instructions optimization",
         max_metric_calls=max_metric_calls,
-        seed=gepa_cfg.get("seed", 42),
+        seed=_gepa_master,
         objective=objective[:200],
         num_train=len(train_tasks),
         num_val=len(val_tasks),
@@ -906,8 +864,8 @@ def main() -> None:
         llm_seed_chain: LLMSeedChain | None = None
         gepa_callbacks_list: list[Any] | None = None
         if bool(gepa_cfg.get("llm_seed_chain", False)):
-            llm_seed_chain = LLMSeedChain(int(gepa_cfg.get("seed", 42)))
-            gepa_callbacks_list = [_LLMSeedChainCallback(llm_seed_chain)]
+            llm_seed_chain = LLMSeedChain(_gepa_master)
+            gepa_callbacks_list = [LLMSeedChainCallback(llm_seed_chain)]
             try:
                 top_span.set_attribute("llm_seed_chain", True)
             except Exception:
@@ -919,7 +877,7 @@ def main() -> None:
             db_path=db_path,
             mcp_command=mcp_command,
             stop_mode=stop_mode,
-            seed=None if llm_seed_chain is not None else gepa_cfg.get("seed"),
+            seed=None if llm_seed_chain is not None else _gepa_master,
             llm_seed_chain=llm_seed_chain,
             qualitative_eval=bool(gepa_cfg.get("qualitative_eval", False)),
             qualitative_eval_lm=str(gepa_cfg.get("qualitative_eval_lm", "openai/gpt-4.1-mini")),
@@ -934,7 +892,7 @@ def main() -> None:
         config = GEPAConfig(
             engine=EngineConfig(
                 max_metric_calls=max_metric_calls,
-                seed=gepa_cfg.get("seed", 42),
+                seed=_gepa_master,
                 cache_evaluation=gepa_cfg.get("cache_evaluation", True),
                 parallel=gepa_cfg.get("parallel", False),
                 max_workers=gepa_cfg.get("max_workers", 1),
