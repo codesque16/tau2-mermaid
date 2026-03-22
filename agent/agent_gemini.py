@@ -16,6 +16,14 @@ GEMINI_ROLE_MODEL = "model"
 GEMINI_ROLE_FUNCTION = "function"  # tool / function_call results (not OpenAI's "tool" role)
 
 
+def _gemini_api_seed_i32(raw: int) -> int:
+    """``GenerateContentConfig.seed`` must be signed INT32; large YAML ints (e.g. ``evaluation_seed``) must fold."""
+    x = int(raw) % (2**32)
+    if x >= 2**31:
+        x -= 2**32
+    return x
+
+
 def _content_to_text(content: Any) -> str:
     """Extract visible assistant text; skip thought parts (``part.thought`` is true)."""
     if content is None:
@@ -372,7 +380,7 @@ class GeminiAgent(BaseAgent):
                     gen_config_kw["max_output_tokens"] = self.config.max_tokens
                 _llm_seed = getattr(self.config, "seed", None)
                 if _llm_seed is not None:
-                    gen_config_kw["seed"] = int(_llm_seed)
+                    gen_config_kw["seed"] = _gemini_api_seed_i32(_llm_seed)
                 if gemini_tools:
                     gen_config_kw["tools"] = gemini_tools
                     # We manage tool execution ourselves; this prevents the SDK from trying to "help".
