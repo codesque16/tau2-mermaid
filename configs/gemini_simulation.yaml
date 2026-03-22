@@ -3,19 +3,27 @@ max_turns: 60
 
 domain:
   name: retail
-  policy: "domains/retail/policy_solo.md"
+  policy: 
+    - "domains/retail/policy_base_solo.md"
+    - "domains/retail/policy_base_solo_gepa.md"
+    - "domains/retail/policy_mermaid_gepa.md"
   tasks: "domains/retail/tasks_solo_comms.json"
+  # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
+  evaluate_communication: true
   concurrency: 3
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
-  task_ids: [0,1,2,3,4]
-  trials: 1
-  seed: 12345
+  task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
+  trials: 4
+  seed: 34223423423
 
 assistant:
   agent_type: gemini
-  model: gemini-3.1-flash-lite-preview
+  model: 
+    - gemini-3.1-flash-lite-preview
+    - gemini-3-flash-preview
   temperature: 0
+  reasoning_effort: ["low", "medium", "high"]
   mcps:
     - name: retail-tools
       type: stdio

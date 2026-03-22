@@ -253,3 +253,75 @@ async def evaluate_task_db(
         "trace_preview": trace_preview,
     }
 
+
+def evaluate_communication_from_history(
+    *,
+    task: dict[str, Any],
+    assistant_history: List[dict[str, Any]],
+) -> Dict[str, Any]:
+    """Check that assistant text turns contain each string in evaluation_criteria.communicate_info.
+
+    Mirrors tau2 ``CommunicateEvaluator`` (case-insensitive substring match, commas stripped
+    from assistant text). Empty ``communicate_info`` yields ``communicate_match: True``.
+    """
+    eval_crit = task.get("evaluation_criteria") or {}
+    communicate_info_raw = eval_crit.get("communicate_info")
+    if not communicate_info_raw:
+        return {
+            "communicate_match": True,
+            "communicate_checks": [],
+            "communicate_eval_skipped": True,
+        }
+
+    communicate_info: List[str] = [
+        str(s) for s in communicate_info_raw if isinstance(s, str) and s.strip()
+    ]
+    if not communicate_info:
+        return {
+            "communicate_match": True,
+            "communicate_checks": [],
+            "communicate_eval_skipped": True,
+        }
+
+    checks: List[Dict[str, Any]] = []
+    all_met = True
+    for info_str in communicate_info:
+        found = False
+        matched_content = ""
+        for m in assistant_history:
+            if m.get("role") != "assistant":
+                continue
+            content = m.get("content")
+            if not isinstance(content, str) or not content.strip():
+                continue
+            normalized = content.lower().replace(",", "")
+            if info_str.lower() in normalized:
+                found = True
+                matched_content = content
+                break
+        if found:
+            checks.append(
+                {
+                    "info": info_str,
+                    "met": True,
+                    "justification": (
+                        f"Information '{info_str}' communicated in the message:\n '{matched_content}'"
+                    ),
+                }
+            )
+        else:
+            all_met = False
+            checks.append(
+                {
+                    "info": info_str,
+                    "met": False,
+                    "justification": f"Information '{info_str}' not communicated.",
+                }
+            )
+
+    return {
+        "communicate_match": all_met,
+        "communicate_checks": checks,
+        "communicate_eval_skipped": False,
+    }
+

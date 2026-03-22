@@ -55,7 +55,7 @@ def _mcp_tools_to_openai_format(tools_response: Any) -> list[dict[str, Any]]:
     out = []
     for tool in getattr(tools_response, "tools", []) or []:
         name = getattr(tool, "name", "") or ""
-        description = getattr(tool, "description", None) or ""
+        # description = getattr(tool, "description", None) or ""
         input_schema = getattr(tool, "inputSchema", None) or {"type": "object", "properties": {}}
         if isinstance(input_schema, dict):
             props = input_schema.get("properties") or {}
@@ -69,7 +69,7 @@ def _mcp_tools_to_openai_format(tools_response: Any) -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": name,
-                "description": description,
+                "description": "",
                 "parameters": input_schema,
             },
         })

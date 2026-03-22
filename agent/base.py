@@ -1,6 +1,7 @@
 """Abstract base agent; all concrete agents implement this interface."""
 
 from abc import ABC, abstractmethod
+import copy
 import logging
 from typing import Any, Callable, Awaitable, Dict, List, Optional
 
@@ -306,7 +307,10 @@ class BaseAgent(ABC):
         self._mcp_initialized = True
 
     def _mcp_tool_to_openai_format(self, tool_obj: Any) -> dict[str, Any]:
-        """Convert a single MCP tool descriptor to OpenAI/litellm `tools` format (without descriptions)."""
+        """Convert a single MCP tool descriptor to OpenAI/litellm `tools` format.
+
+        Function `description` is always empty; parameter schemas are unchanged.
+        """
         _HIDDEN_PARAMS = {"session_id", "ctx"}
 
         name = getattr(tool_obj, "name", "") or ""
@@ -330,6 +334,8 @@ class BaseAgent(ABC):
             "type": "function",
             "function": {
                 "name": name,
+                # MCP tool `description` is not sent to the LLM (empty string only).
+                "description": "",
                 "parameters": input_schema,
             },
         }
@@ -397,5 +403,43 @@ class BaseAgent(ABC):
         return self._format_mcp_result(result)
 
     def _get_mcp_tools_for_llm(self) -> List[dict[str, Any]]:
-        """Return the OpenAI-format tools list for the current agent."""
-        return list(self._mcp_tools or [])
+        """Return the OpenAI-format tools list for the current agent (names + parameters only).
+
+        Strips function-level descriptions so providers always receive `description: \"\"`.
+        """
+        out: List[dict[str, Any]] = []
+        for t in self._mcp_tools or []:
+            if not isinstance(t, dict):
+                out.append(t)
+                continue
+            tc = copy.deepcopy(t)
+            fn = tc.get("function")
+            if isinstance(fn, dict):
+                fn["description"] = ""
+            out.append(tc)
+        return out
+
+    def log_llm_tools_in_request(
+        self,
+        tools: List[dict[str, Any]],
+        *,
+        provider: str,
+        model: str,
+    ) -> None:
+        """Emit the exact tool definitions sent on the next LLM request (Logfire)."""
+        if not tools:
+            return
+        names = [
+            (t.get("function") or {}).get("name")
+            for t in tools
+            if isinstance(t, dict) and t.get("type") == "function"
+        ]
+        logfire.info(
+            "llm_request_tools",
+            agent_name=self.name,
+            provider=provider,
+            model=model,
+            tool_count=len(tools),
+            tool_names=names,
+            tools_json=json.dumps(tools, default=str, ensure_ascii=False),
+        )

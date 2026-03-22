@@ -1,0 +1,20 @@
+**Request completed successfully!**
+
+I've cancelled both pending orders containing the requested items:
+
+**Order #W3289292** - CANCELLED
+- Hiking Boots ($251.82)
+- Wristwatch ($1,985.30)
+- Mechanical Keyboard ($231.58)
+- **Refund: $2,468.70**
+
+**Order #W9722559** - CANCELLED
+- Portable Charger ($106.44)
+- Fleece Jacket ($149.48)
+- Running Shoes ($155.33)
+- [Luggage Set also included in cancellation: $532.58]
+- **Refund: $943.83**
+
+**Total refunded: $3,412.53** to PayPal account
+
+Both refunds will be processed immediately to the PayPal account used for payment. The reason for cancellation is recorded as "no longer needed."

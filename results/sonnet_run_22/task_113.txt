@@ -1,0 +1,8 @@
+Both pending orders have been successfully cancelled. Here's a summary:
+
+| Order | Items | Refund Amount |
+|-------|-------|---------------|
+| **#W5056519** | Makeup Kit (light, professional, Brand B) | $243.62 |
+| **#W5995614** | Dumbbell Set + Luggage Set | $1,074.31 |
+
+**Total refunded: $1,317.93** — both refunds will be returned to your Visa card ending in **6918** within **5–7 business days**.

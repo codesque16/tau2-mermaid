@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import logfire
+from dotenv import load_dotenv
 from rich.console import Console, Group
 from rich.layout import Layout
 from rich.live import Live
@@ -671,8 +672,14 @@ def _make_evaluator(
 
 
 def main() -> None:
+    load_dotenv()
+    # Google Gen AI OTel integration disabled for now (see agent.gemini_log for I/O).
+    # os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
     logfire.configure(scrubbing=False, console=False)
-    os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
+    # logfire.instrument_google_genai()
+    from agent.logfire_gemini_integration import instrument_logfire_gemini
+
+    instrument_logfire_gemini()
     # Instrument LiteLLM so individual model calls (including agent rollouts)
     # are visible as spans in Logfire, consistent with run_solo_tasks.
     logfire.instrument_litellm()

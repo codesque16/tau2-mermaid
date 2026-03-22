@@ -1,0 +1,11 @@
+Both requests have been completed successfully. Here's a summary:
+
+1. **Fleece Jacket Exchange (Order #W2466703)**:
+   - Changed from: Size L, Black, Full Zipper ($159.92)
+   - Changed to: Size L, Red, Half Zipper ($153.18)
+   - A refund of **$6.74** has been issued to your PayPal account (paypal_7529813) within 5–7 business days.
+   - Order status is now "pending (item modified)."
+
+2. **Default Address Update**:
+   - Your default address has been updated to the Washington DC address from order #W1994898:
+     - **565 Maple Drive, Suite 501, Washington, DC 20307, USA**

@@ -6,6 +6,7 @@ import warnings
 from pathlib import Path
 
 import logfire
+import yaml
 from dotenv import load_dotenv
 
 from agent import create_agent
@@ -38,6 +39,17 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
 
 
 async def run(config_path: Path) -> None:
+    raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    domain = raw.get("domain")
+    if isinstance(domain, dict) and domain.get("tasks"):
+        print(
+            "This YAML is a retail solo batch config (domain.tasks). "
+            "Use run_solo_tasks, not main.py:\n"
+            f"  uv run python -m domains.retail.run_solo_tasks --config {config_path}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     config = load_simulation_config(config_path)
 
     # Assistant agent: resolve type and model; when type is litellm, require assistant_model or model
@@ -116,11 +128,15 @@ def main() -> None:
     # Each call instruments the corresponding SDK so traces show provider, model, tokens, and cost.
     #logfire.instrument_openai()      # OpenAI (gpt-4o, gpt-4o-mini, etc.)
     #logfire.instrument_anthropic()   # Anthropic (Claude)
-    os.environ.setdefault(
-        "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
-    )  # capture prompts/completions for Gemini in Logfire
-    #logfire.instrument_google_genai() # Google Gen AI (Gemini)
-    logfire.instrument_litellm()      # LiteLLM (unified client; can use any of the above via config)
+    # Google Gen AI OTel integration (disabled for now; use agent.gemini_log / manual spans).
+    # os.environ.setdefault(
+    #     "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
+    # )
+    # logfire.instrument_google_genai()
+    from agent.logfire_gemini_integration import instrument_logfire_gemini
+
+    instrument_logfire_gemini()
+    logfire.instrument_litellm()  # LiteLLM when assistant/user use litellm
 
     parser = argparse.ArgumentParser(description="Run a tau2-mermaid simulation.")
     parser.add_argument(

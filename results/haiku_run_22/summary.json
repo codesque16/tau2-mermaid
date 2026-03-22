@@ -1,0 +1,134 @@
+[
+  {
+    "task_id": "2",
+    "session_id": "a9b39570-886a-4ae5-b72e-939fa576472a",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully completed both of your requests:\n\n## T-Shirt Options Available\nThere are **12 t-shirt options** available in our online store. These options include various combinations of:"
+  },
+  {
+    "task_id": "12",
+    "session_id": "35dfe693-9479-48ff-a9a2-0768b3e95b15",
+    "exit_code": 0,
+    "response_preview": "YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."
+  },
+  {
+    "task_id": "17",
+    "session_id": "1263119c-c561-4a59-8973-861c1802b1ef",
+    "exit_code": 0,
+    "response_preview": "\u2713 **Address change completed successfully!**\n\nI've updated the delivery address for order #W8665881. The suite number has been changed from Suite 640 to Suite 641.\n\n**Updated delivery address:**\n123 E"
+  },
+  {
+    "task_id": "23",
+    "session_id": "d2dc210a-17a9-4362-8aa0-a8a3826eea7f",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully fulfilled all three requests for Sofia Hernandez. Here's a summary:\n\n## Request Summary\n\n**1. Helmet Exchange - Order #W3947049**\n- \u2705 Exchanged: Size S, red, low ventilation"
+  },
+  {
+    "task_id": "27",
+    "session_id": "269ba791-ab6d-4e80-ba5a-a706d8912ac2",
+    "exit_code": 0,
+    "response_preview": "I've successfully processed the **return request** for the hose and backpack from order #W7181492:\n- **Garden Hose** ($96.35) - returned\n- **Backpack** ($193.38) - returned\n- **Total return amount**: "
+  },
+  {
+    "task_id": "32",
+    "session_id": "b4d9e496-0706-4c62-83c7-350ec4460fab",
+    "exit_code": 0,
+    "response_preview": "## Summary of Actions Completed:\n\n\u2705 **Portable Charger (Order #W9373487)** - CANCELLED\n   - Refund: $109.27 credited to your gift card\n\n\u2705 **Hiking Boots & Electric Kettle (Order #W5481803)** - CANCELL"
+  },
+  {
+    "task_id": "33",
+    "session_id": "0360ad47-b257-4ff7-920e-cb08098bcdeb",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully updated your default address to the Seattle address (517 Lakeview Drive, Suite 183, Seattle, WA 98195).\n\n**Summary of your situation:**\n\nUnfortunately, your order #W1845024 "
+  },
+  {
+    "task_id": "34",
+    "session_id": "7d8677c0-546b-4612-bf5a-223176bfd095",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully updated your order #W1845024 shipping address to your NYC location (224 Elm Street, Suite 491, New York, NY 10108).\n\n**Regarding your office items return:**\nSince your order"
+  },
+  {
+    "task_id": "42",
+    "session_id": "d4a45009-9b1f-435c-b3cf-a8ba4f43c06c",
+    "exit_code": 0,
+    "response_preview": "Perfect! I have successfully completed all of Mei Patel's requests:\n\n## Summary of Changes:\n\n\u2705 **User Default Address Corrected**\n- Updated from \"443 Maple Drive\" to \"445 Maple Drive, Suite 394, Fort "
+  },
+  {
+    "task_id": "43",
+    "session_id": "d145140c-334c-4020-ad3d-12b18881dd65",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully retrieved all the information and updated your account. Here's what I found:\n\n**Order Details:**\n- **Delivery Address:** 943 Maple Drive, Suite 356, Chicago, IL 60621\n- **Tr"
+  },
+  {
+    "task_id": "45",
+    "session_id": "5818fc00-9d32-4cbf-ad69-f7dffb7b53c5",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully completed your exchange request.\n\n**Exchange Summary:**\n- **Item Exchanged:** Robotic Vacuum (Bagged, Pet Hair Removal) - was $652.61\n- **New Item:** Canister Vacuum (Bagles"
+  },
+  {
+    "task_id": "56",
+    "session_id": "e541eadf-8aff-45ea-92b6-1607bfe33f87",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully completed the modification. Here's what was done:\n\n**Order #W4284542 - Air Purifier Modification Complete**\n\n- **Original Air Purifier**: Large HEPA with night mode - $547.5"
+  },
+  {
+    "task_id": "66",
+    "session_id": "29a53121-26ed-443e-919e-d7f0ec7cbe3e",
+    "exit_code": 0,
+    "response_preview": "**Order Successfully Cancelled**\n\nOrder #W3361211 has been cancelled due to unavailable product options. Here's the summary:\n\n- **Order ID**: #W3361211\n- **New Status**: Cancelled\n- **Refund Amount**:"
+  },
+  {
+    "task_id": "68",
+    "session_id": "a4d2c3df-2d7c-4929-93fc-78fd6cebe39e",
+    "exit_code": 0,
+    "response_preview": "Based on the user's order history, the most recently placed order is **#W6729841**. \n\n**The customer paid $829.43 for this order.**\n\nThis order contains a Bluetooth Speaker and an Air Purifier, and it"
+  },
+  {
+    "task_id": "73",
+    "session_id": "e6089da9-b138-4b6b-96af-dcace6b2e02d",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully processed the return request for Fatima Wilson. Here's what was completed:\n\n**Return Details:**\n- **Order ID:** #W5272531\n- **Status:** Return requested\n\n**Items Being Retur"
+  },
+  {
+    "task_id": "78",
+    "session_id": "c9b2015e-f067-49d2-b2d9-df0ae50977c4",
+    "exit_code": 0,
+    "response_preview": "All requests have been successfully completed for Yara Muller:\n\n**Order #W5056519:**\n- \u2705 **Address updated** to 380 Maple Drive, Suite 960, San Diego, CA 92101, USA (matching order #W8277957)\n- \u2705 **Ma"
+  },
+  {
+    "task_id": "81",
+    "session_id": "355e78ef-e94e-4c61-8938-21989e8e09f4",
+    "exit_code": 0,
+    "response_preview": "**Request completed successfully!**\n\nI've cancelled both pending orders containing the requested items:\n\n**Order #W3289292** - CANCELLED\n- Hiking Boots ($251.82)\n- Wristwatch ($1,985.30)\n- Mechanical "
+  },
+  {
+    "task_id": "86",
+    "session_id": "dd358d2d-2587-4141-9325-24c2af382e34",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully completed both requests for Yusuf Hernandez:\n\n## 1. Fleece Jacket Exchange \u2713\n**Order #W2466703** has been modified:\n- **Original**: Black Fleece Jacket with full zipper (Siz"
+  },
+  {
+    "task_id": "91",
+    "session_id": "0f78dcfa-197e-419b-9856-7d3df0d98ad9",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully processed all of Mei Ahmed's requests. Here's a summary:\n\n## Return Processed - Order #W7553978\n\u2713 **2 Skateboards Returned**\n- 28-inch skateboard: $186.06\n- 34-inch skateboa"
+  },
+  {
+    "task_id": "102",
+    "session_id": "45f9609c-1304-444c-89f8-4ab5a515a1e1",
+    "exit_code": 0,
+    "response_preview": "Perfect! All modifications have been successfully completed:\n\n## Summary of Changes:\n\n**Order #W4219264 (Pending - Two Watches):**\n\u2705 **Address Updated**: Changed shipping address from Seattle, WA to N"
+  },
+  {
+    "task_id": "103",
+    "session_id": "a9a0d18a-3a58-4011-b79c-48b21cdd7ded",
+    "exit_code": 0,
+    "response_preview": "Perfect! I've successfully processed all of your requests. Here's a summary:\n\n**\u2713 Bookshelf & Jigsaw Return (Order #W6239298)**\n- Returned the Bookshelf and Jigsaw Puzzle from your delivered order\n- T"
+  },
+  {
+    "task_id": "113",
+    "session_id": "74297d0e-0057-4954-9e8d-8c532707e7cc",
+    "exit_code": 0,
+    "response_preview": "**Cancellation Complete**\n\nI have successfully cancelled all pending orders for Yara Muller (user ID: yara_muller_8652). Here's the summary:\n\n**Orders Cancelled:**\n1. **Order #W5056519** - Makeup Kit "
+  }
+]

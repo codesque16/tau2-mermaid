@@ -1,0 +1,21 @@
+All four changes have been completed successfully. Here's a summary of everything done for Mei Patel:
+
+---
+
+### ✅ Address Corrections (443 → 445 Maple Drive)
+- **User profile**: Updated to **445 Maple Drive**, Suite 394, Fort Worth, TX 76165
+- **Order #W9583042**: Shipping address updated to **445 Maple Drive** ✓
+- **Order #W4082615**: Shipping address updated to **445 Maple Drive** ✓
+
+---
+
+### ✅ Jigsaw Puzzle Update (Order #W4082615)
+Both orders were still pending (not shipped), so the jigsaw was eligible for modification.
+
+| | Old | New |
+|---|---|---|
+| **Item** | 1000 pieces, art, intermediate | **500 pieces, art, beginner** |
+| **Price** | $54.11 | $46.13 |
+| **Refund** | — | **$7.98 refunded to PayPal** |
+
+The new jigsaw is the easiest available (beginner difficulty, fewest pieces at 500). A refund of **$7.98** has been issued to your PayPal account (within 5–7 business days).

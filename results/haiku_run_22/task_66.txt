@@ -1,0 +1,15 @@
+**Order Successfully Cancelled**
+
+Order #W3361211 has been cancelled due to unavailable product options. Here's the summary:
+
+- **Order ID**: #W3361211
+- **New Status**: Cancelled
+- **Refund Amount**: $1,464.00
+- **Refund Method**: Visa credit card ending in 4451
+- **Processing Time**: 5-7 business days
+
+**Why the order was cancelled:**
+- A "Coat" product is not available in our inventory (the closest match would be a Fleece Jacket, which is a different product type)
+- The order was in pending status, which doesn't allow for item returns (returns are only available for delivered orders)
+
+The customer's other pending order (#W3586556 for a Tablet) remains active and unaffected.

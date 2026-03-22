@@ -1,0 +1,6 @@
+The delivery address for order **#W8665881** has been successfully updated. Here's a summary of the change:
+
+- **Previous address:** 123 Elm Street, **Suite 640**, Austin, TX 78712, USA
+- **New address:** 123 Elm Street, **Suite 641**, Austin, TX 78712, USA
+
+The order remains in pending status and will be delivered to the updated address.

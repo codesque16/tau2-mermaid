@@ -149,6 +149,7 @@ class LiteLLMAgent(BaseAgent):
         # MCP tools path (mermaid load_graph may have set _mermaid_system_prompt; we use it + ticket)
         await self._ensure_mcp_initialized()
         tools = self._get_mcp_tools_for_llm()
+        self.log_llm_tools_in_request(tools, provider="litellm", model=self.model)
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": self.get_effective_system_prompt()},

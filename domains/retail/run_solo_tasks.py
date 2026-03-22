@@ -5,29 +5,72 @@ This script:
   - Loads a tasks JSON file (e.g. tasks_solo_comms.json)
   - For each task, builds a prompt (using the ticket) and runs a solo simulation
     via the shared Orchestrator.run_solo API.
+
+Sweep mode: `domain.policy`, `assistant.model`, `assistant.temperature`, and
+`assistant.reasoning_effort` may each be a scalar or a YAML list. The run expands
+the Cartesian product and executes each combo as a separate top-level Logfire span
+(see `experiment_concurrency` / `--experiment-concurrency` for parallel combos).
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import copy
 import json
 import logging
 import math
 import random
+from itertools import product
 from pathlib import Path
 from typing import Any, Dict, List
 
 import yaml
 import logfire
 import os
+from dotenv import load_dotenv
 
 from agent import create_agent
 from agent.config import AgentConfig as AgentAgentConfig
 from chat.config import AgentConfig as ChatAgentConfig, SimulationConfig
-from domains.retail.evaluate import evaluate_task_db
+from domains.retail.evaluate import evaluate_communication_from_history, evaluate_task_db
 from orchestrator.event_bus import EventBus
 from orchestrator.orchestrator import Orchestrator, SoloStopMode
+
+
+def _make_reference_steps_from_task(task: dict[str, Any]) -> str:
+    """
+    Build an ordered, guidance-only list of tool names for this task.
+
+    Uses `task["evaluation_criteria"]["actions"]` and includes tool names only
+    (no arguments / no tool outputs).
+    """
+
+    evaluation_criteria = task.get("evaluation_criteria") or {}
+    actions = evaluation_criteria.get("actions") or []
+
+    tool_names: list[str] = []
+    for a in actions:
+        requestor = a.get("requestor") or "assistant"
+        if requestor != "assistant":
+            continue
+        name = a.get("name")
+        if name:
+            tool_names.append(str(name))
+
+    # Fallback: if requestor metadata is missing, include anything with a name.
+    if not tool_names:
+        for a in actions:
+            name = a.get("name")
+            if name:
+                tool_names.append(str(name))
+
+    if tool_names:
+        numbered = "\n".join([f"{i + 1}) {name}" for i, name in enumerate(tool_names)])
+    else:
+        numbered = "(no reference tool calls available)"
+
+    return "For similar problems the following flow may be relevant:\n" + numbered
 
 
 def _load_retail_solo_config(path: Path) -> dict[str, Any]:
@@ -80,6 +123,126 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
     )
 
 
+def _format_temp_for_run_id(t: Any) -> str:
+    """Stable temp string for Logfire run_id (e.g. 0 not 0.0)."""
+    if isinstance(t, bool):
+        return str(int(t))
+    if isinstance(t, float) and t.is_integer():
+        return str(int(t))
+    return str(t)
+
+
+def _default_run_id_from_assistant(
+    domain_name: str,
+    policy_basename: str,
+    assistant_model: str,
+    sim_cfg: SimulationConfig,
+) -> str:
+    """Logfire top span: [domain][policy_file][model][temp=…][reasoning="…"]."""
+    base = f"[{domain_name}][{policy_basename}][{assistant_model}]"
+    a = sim_cfg.assistant
+    suffix = f"[temp={_format_temp_for_run_id(a.temperature)}]"
+    reff = getattr(a, "reasoning_effort", None)
+    if reff is not None and str(reff).strip():
+        safe = str(reff).strip().replace('"', "'")
+        suffix += f'[reasoning="{safe}"]'
+    return base + suffix
+
+
+def _sweep_list(value: Any, *, default_when_missing: Any = None) -> List[Any]:
+    """Scalar or YAML list → list of sweep values. `default_when_missing` used when value is None."""
+    if value is None:
+        return [default_when_missing] if default_when_missing is not None else []
+    if isinstance(value, list):
+        return list(value)
+    return [value]
+
+
+def _expand_experiment_raw_configs(raw_cfg: dict[str, Any]) -> List[dict[str, Any]]:
+    """Cartesian product over domain.policy × assistant.model × temperature × reasoning_effort.
+
+    Each list may be a single scalar or a YAML list. Missing assistant fields use sensible singles.
+    """
+    domain_cfg: Dict[str, Any] = dict(raw_cfg.get("domain") or {})
+    assistant_block: Dict[str, Any] = dict(raw_cfg.get("assistant") or {})
+
+    policies = _sweep_list(domain_cfg.get("policy"))
+    if not policies:
+        raise ValueError("domain.policy must be set (string or list of paths).")
+
+    if assistant_block.get("model") is not None:
+        models = _sweep_list(assistant_block.get("model"))
+    elif raw_cfg.get("model") is not None:
+        models = _sweep_list(raw_cfg.get("model"))
+    else:
+        models = [""]
+    if not models:
+        models = [""]
+
+    if "temperature" in assistant_block:
+        temps = _sweep_list(assistant_block.get("temperature"))
+    else:
+        temps = [0.7]
+    if not temps:
+        raise ValueError(
+            "assistant.temperature must be a scalar or a non-empty list when sweeping."
+        )
+
+    if "reasoning_effort" in assistant_block:
+        reasonings = _sweep_list(assistant_block.get("reasoning_effort"))
+    else:
+        reasonings = [None]
+    if not reasonings:
+        reasonings = [None]
+
+    out: List[dict[str, Any]] = []
+    for pol, model, temp, reff in product(policies, models, temps, reasonings):
+        rc = copy.deepcopy(raw_cfg)
+        dom = dict(rc.get("domain") or {})
+        dom["policy"] = pol
+        rc["domain"] = dom
+        asst = dict(rc.get("assistant") or {})
+        asst["model"] = model
+        asst["temperature"] = temp
+        asst["reasoning_effort"] = reff
+        rc["assistant"] = asst
+        out.append(rc)
+    # A shared domain.run_id would collide across combos; only allow it for a single experiment.
+    if len(out) > 1:
+        for rc in out:
+            d = rc.get("domain")
+            if isinstance(d, dict):
+                d.pop("run_id", None)
+    return out
+
+
+def _experiment_config_record(
+    raw_cfg: dict[str, Any], sim_cfg: SimulationConfig, policy_path: str
+) -> dict[str, Any]:
+    """JSON-serializable snapshot for Logfire (one experiment)."""
+    domain_cfg = raw_cfg.get("domain") or {}
+    assistant_block = raw_cfg.get("assistant") or {}
+    return {
+        "domain.name": domain_cfg.get("name"),
+        "domain.policy": str(policy_path),
+        "domain.policy_basename": Path(str(policy_path)).name,
+        "domain.tasks": domain_cfg.get("tasks"),
+        "domain.instructions": domain_cfg.get("instructions"),
+        "domain.stop_mode": domain_cfg.get("stop_mode"),
+        "domain.concurrency": domain_cfg.get("concurrency"),
+        "domain.trials": domain_cfg.get("trials"),
+        "domain.task_ids": domain_cfg.get("task_ids"),
+        "domain.evaluate_communication": domain_cfg.get("evaluate_communication"),
+        "assistant.agent_type": assistant_block.get("agent_type"),
+        "assistant.model": assistant_block.get("model") or raw_cfg.get("model"),
+        "assistant.temperature": assistant_block.get("temperature"),
+        "assistant.reasoning_effort": assistant_block.get("reasoning_effort"),
+        "assistant.max_tokens": assistant_block.get("max_tokens"),
+        "max_turns": raw_cfg.get("max_turns"),
+        "mode": raw_cfg.get("mode"),
+    }
+
+
 def _load_tasks(path: Path) -> List[dict[str, Any]]:
     with path.open("r", encoding="utf-8") as f:
         data = json.load(f)
@@ -95,6 +258,7 @@ def make_orchestrator_for_solo(
     seed: int | None = None,
     mermaid_graph_path: str | None = None,
     include_policy: bool = True,
+    reference_steps: str = "",
 ):
     """Return a callable (ticket: str) -> Orchestrator using the same logic as solo runs.
 
@@ -107,8 +271,13 @@ def make_orchestrator_for_solo(
 
     def _make(ticket: str) -> Orchestrator:
         has_mermaid = bool(getattr(assistant_base_cfg, "mermaid", None))
+        ref_block = (
+            f"\n\n<reference_steps>\n{reference_steps}\n</reference_steps>"
+            if reference_steps.strip()
+            else ""
+        )
         if has_mermaid:
-            full_system_prompt = f"<ticket>\n{ticket.strip()}\n</ticket>"
+            full_system_prompt = f"<ticket>\n{ticket.strip()}\n</ticket>{ref_block}"
         else:
             if include_policy:
                 full_system_prompt = (
@@ -121,6 +290,7 @@ def make_orchestrator_for_solo(
                     "<ticket>\n"
                     f"{ticket.strip()}\n"
                     "</ticket>"
+                    f"{ref_block}"
                 )
             else:
                 # GEPA path: only instructions + ticket, no embedded policy block.
@@ -131,6 +301,7 @@ def make_orchestrator_for_solo(
                     "<ticket>\n"
                     f"{ticket.strip()}\n"
                     "</ticket>"
+                    f"{ref_block}"
                 )
 
         assistant_cfg = AgentAgentConfig(
@@ -196,10 +367,12 @@ async def run_one_solo_task(
     stop_mode: SoloStopMode,
     db_path: Path,
     mcp_command: str,
+    include_reference_steps: bool = False,
     seed: int | None = None,
     mermaid_graph_path: str | None = None,
     quiet: bool = False,
     include_policy: bool = True,
+    evaluate_communication: bool = False,
 ) -> tuple[bool, dict[str, Any]]:
     """Run a single solo task and return (success, eval_result).
 
@@ -207,6 +380,9 @@ async def run_one_solo_task(
     printing task header and result.
     """
     ticket = task.get("ticket") or ""
+    reference_steps = (
+        _make_reference_steps_from_task(task) if include_reference_steps else ""
+    )
     task_id = task.get("id")
 
     if not quiet:
@@ -223,6 +399,7 @@ async def run_one_solo_task(
         seed=seed,
         mermaid_graph_path=mermaid_graph_path,
         include_policy=include_policy,
+        reference_steps=reference_steps,
     )
     orchestrator = make_orch(ticket)
     await orchestrator.run_solo(
@@ -240,12 +417,32 @@ async def run_one_solo_task(
         db_path=db_path,
         mcp_command=mcp_command,
     )
-    success = bool(eval_result.get("db_match", False))
+    db_ok = bool(eval_result.get("db_match", False))
+    if evaluate_communication:
+        comm = evaluate_communication_from_history(task=task, assistant_history=history)
+        eval_result.update(comm)
+        comm_ok = bool(comm.get("communicate_match", True))
+        success = db_ok and comm_ok
+    else:
+        success = db_ok
+
     if not quiet:
         print(
             f"DB match for task {eval_result.get('task_id')}: "
-            f"{'PASS' if success else 'FAIL'}"
+            f"{'PASS' if db_ok else 'FAIL'}"
         )
+        if evaluate_communication:
+            skipped = bool(eval_result.get("communicate_eval_skipped"))
+            if skipped:
+                print(
+                    f"Communication check for task {eval_result.get('task_id')}: "
+                    "PASS (no communicate_info)"
+                )
+            else:
+                print(
+                    f"Communication check for task {eval_result.get('task_id')}: "
+                    f"{'PASS' if eval_result.get('communicate_match') else 'FAIL'}"
+                )
     return success, eval_result
 
 
@@ -259,8 +456,10 @@ async def _run_task(
     db_path: Path,
     mcp_command: str,
     trial_idx: int,
+    include_reference_steps: bool,
     seed: int | None,
     results: List[Dict[str, Any]],
+    evaluate_communication: bool,
 ) -> None:
     task_id = task.get("id")
     ticket = task.get("ticket") or ""
@@ -289,9 +488,11 @@ async def _run_task(
                 stop_mode=stop_mode,
                 db_path=db_path,
                 mcp_command=mcp_command,
+                include_reference_steps=include_reference_steps,
                 seed=seed,
                 quiet=True,
                 include_policy=True,
+                evaluate_communication=evaluate_communication,
             )
 
         with logfire.span("evaluation"):
@@ -304,13 +505,33 @@ async def _run_task(
                 golden_actions_count=eval_result.get("golden_actions_count"),
                 predicted_actions_count=eval_result.get("predicted_actions_count"),
             )
+            if evaluate_communication:
+                logfire.info(
+                    "Communication check",
+                    task_id=eval_result["task_id"],
+                    communicate_match=eval_result.get("communicate_match"),
+                    communicate_eval_skipped=eval_result.get("communicate_eval_skipped"),
+                    communicate_checks=eval_result.get("communicate_checks"),
+                )
 
         outcome = "pass" if success else "fail"
         task_span.message = f"Task:{task_id} [{outcome}]"
+        db_ok = bool(eval_result.get("db_match", False))
         print(
             f"DB match for task {eval_result.get('task_id')}: "
-            f"{'PASS' if success else 'FAIL'}"
+            f"{'PASS' if db_ok else 'FAIL'}"
         )
+        if evaluate_communication:
+            if eval_result.get("communicate_eval_skipped"):
+                print(
+                    f"Communication check for task {eval_result.get('task_id')}: "
+                    "PASS (no communicate_info)"
+                )
+            else:
+                print(
+                    f"Communication check for task {eval_result.get('task_id')}: "
+                    f"{'PASS' if eval_result.get('communicate_match') else 'FAIL'}"
+                )
 
         results.append(
             {
@@ -321,71 +542,69 @@ async def _run_task(
         )
 
 
-async def main_async(config_path: Path) -> None:
-    raw_cfg = _load_retail_solo_config(config_path)
+async def _run_solo_experiment_async(
+    raw_cfg: dict[str, Any],
+    *,
+    include_reference_steps: bool,
+    instructions_text: str,
+    solo_tasks: List[dict[str, Any]],
+    experiment_index: int,
+    experiment_total: int,
+) -> None:
+    """One Cartesian combo: same tasks/instructions, possibly different policy/model/temp/reasoning."""
     sim_cfg = _build_simulation_config(raw_cfg)
-
     domain_cfg: Dict[str, Any] = raw_cfg.get("domain") or {}
-    instructions_path = domain_cfg.get("instructions")
     policy_path = domain_cfg.get("policy")
-    tasks_path = domain_cfg.get("tasks")
+    if not policy_path:
+        raise ValueError("domain.policy missing in experiment config.")
+
     concurrency = int(domain_cfg.get("concurrency", 1))
     trials = int(domain_cfg.get("trials", 1))
     stop_mode_str = str(domain_cfg.get("stop_mode", "task-complete-tool")).lower()
-
-    if not instructions_path or not policy_path or not tasks_path:
-        raise ValueError(
-            "Domain config must set 'instructions', 'policy', and 'tasks' in solo_simulation.yaml."
-        )
 
     if stop_mode_str == "first-text":
         stop_mode = SoloStopMode.FIRST_TEXT_ONLY
     else:
         stop_mode = SoloStopMode.TASK_COMPLETE_TOOL
 
-    instructions_text = Path(instructions_path).read_text(encoding="utf-8")
-    policy_text = Path(policy_path).read_text(encoding="utf-8")
-
+    policy_text = Path(str(policy_path)).read_text(encoding="utf-8")
     assistant_base_cfg = sim_cfg.assistant
-
-    # DB path for evaluation (relative to project root by default)
     db_path = Path(domain_cfg.get("db_path", "domains/retail/db.json"))
+    evaluate_communication = bool(domain_cfg.get("evaluate_communication", False))
 
-    # Reuse the same MCP server command the assistant uses (e.g. retail-tools).
     assistant_mcps = getattr(assistant_base_cfg, "mcps", None) or []
     mcp_command: str | None = None
     for server_cfg in assistant_mcps:
         if server_cfg.get("name") == "retail-tools" or not mcp_command:
             mcp_command = server_cfg.get("command") or server_cfg.get("commad")
 
-    # Derive a run_id if not explicitly provided:
-    # [<domain_name>][<mode>][<assistant_model>]
     assistant_model_for_id = sim_cfg.assistant_model or sim_cfg.model or "unknown-model"
     domain_name = domain_cfg.get("name", "unknown-domain")
-    mode = raw_cfg.get("mode", "solo")
+    policy_basename = Path(str(policy_path)).name
     run_id = domain_cfg.get(
-        "run_id", f"[{domain_name}][{mode}][{assistant_model_for_id}]"
+        "run_id",
+        _default_run_id_from_assistant(
+            domain_name, policy_basename, assistant_model_for_id, sim_cfg
+        ),
     )
 
-    tasks = _load_tasks(Path(tasks_path))
-    # Filter tasks that are allowed for solo mode
-    solo_tasks = [t for t in tasks if t.get("solo_convertible", True)]
-
-    # If domain.task_ids is set, run only those task ids (ids in JSON may be str or int)
-    task_ids_cfg = domain_cfg.get("task_ids")
-    if task_ids_cfg is not None and len(task_ids_cfg) > 0:
-        allowed_ids = {str(i) for i in task_ids_cfg} | {int(i) for i in task_ids_cfg}
-        solo_tasks = [t for t in solo_tasks if t.get("id") in allowed_ids]
-
-    # Generate per-trial seeds deterministically from a base seed.
     base_seed = 300
     rng = random.Random(base_seed)
     trial_seeds = [rng.randint(1, 10**9) for _ in range(trials)]
-
-    # Collect per-task, per-trial outcomes for pass^k metrics.
     results: List[Dict[str, Any]] = []
 
+    cfg_record = _experiment_config_record(raw_cfg, sim_cfg, str(policy_path))
+    cfg_json = json.dumps(cfg_record, default=str, sort_keys=True)
+
     with logfire.span(run_id) as top_span:
+        logfire.info(
+            "experiment_config",
+            experiment_index=experiment_index,
+            experiment_total=experiment_total,
+            run_id=run_id,
+            config_json=cfg_json,
+        )
+
         for trial_idx, seed in enumerate(trial_seeds, start=1):
             trial_span_name = f"Trial:{trial_idx} {seed}"
             with logfire.span(trial_span_name, trial=trial_idx, seed=seed):
@@ -401,7 +620,9 @@ async def main_async(config_path: Path) -> None:
                             mcp_command=mcp_command or "",
                             trial_idx=trial_idx,
                             seed=seed,
+                            include_reference_steps=include_reference_steps,
                             results=results,
+                            evaluate_communication=evaluate_communication,
                         )
                 else:
                     sem = asyncio.Semaphore(concurrency)
@@ -418,12 +639,13 @@ async def main_async(config_path: Path) -> None:
                                 mcp_command=mcp_command or "",
                                 trial_idx=trial_idx,
                                 seed=seed,
+                                include_reference_steps=include_reference_steps,
                                 results=results,
+                                evaluate_communication=evaluate_communication,
                             )
 
                     await asyncio.gather(*(_runner(t) for t in solo_tasks))
 
-        # After all trials + tasks, compute pass^k metrics.
         results_by_task: Dict[Any, List[bool]] = {}
         for r in results:
             tid = r.get("task_id")
@@ -440,7 +662,6 @@ async def main_async(config_path: Path) -> None:
             for outcomes in results_by_task.values():
                 N = len(outcomes)
                 S = sum(1 for s in outcomes if s)
-                # Excel IFERROR(COMBIN(S,k)/COMBIN(N,k),0) → 0 when invalid
                 if N < k or S < k:
                     continue
                 total += math.comb(S, k) / math.comb(N, k)
@@ -455,10 +676,75 @@ async def main_async(config_path: Path) -> None:
                 pass_k=pass_k,
             )
 
-        # Update top-level span with overall pass^1 score (same style as task [pass]/[fail]).
         pass_1 = pass_k.get("pass^1")
         if pass_1 is not None:
             top_span.message = f"{run_id} [{pass_1:.2f}]"
+
+    if experiment_total > 1:
+        print(
+            f"\n[experiment {experiment_index}/{experiment_total}] finished: {run_id}\n",
+            flush=True,
+        )
+
+
+async def main_async(
+    config_path: Path,
+    include_reference_steps: bool = False,
+    experiment_concurrency: int | None = None,
+) -> None:
+    raw_cfg = _load_retail_solo_config(config_path)
+    domain_cfg: Dict[str, Any] = raw_cfg.get("domain") or {}
+    instructions_path = domain_cfg.get("instructions")
+    tasks_path = domain_cfg.get("tasks")
+
+    if not instructions_path or not tasks_path:
+        raise ValueError(
+            "Domain config must set 'instructions' and 'tasks' in the solo YAML."
+        )
+    if not _sweep_list(domain_cfg.get("policy")):
+        raise ValueError(
+            "domain.policy must be set (string or list of paths) for solo runs."
+        )
+
+    expanded_raw = _expand_experiment_raw_configs(raw_cfg)
+    n_exp = len(expanded_raw)
+    yaml_exp_conc = raw_cfg.get("experiment_concurrency")
+    if experiment_concurrency is not None:
+        exp_conc = max(1, int(experiment_concurrency))
+    elif yaml_exp_conc is not None:
+        exp_conc = max(1, int(yaml_exp_conc))
+    else:
+        exp_conc = max(1, min(8, n_exp))
+
+    instructions_text = Path(instructions_path).read_text(encoding="utf-8")
+    tasks = _load_tasks(Path(tasks_path))
+    solo_tasks = [t for t in tasks if t.get("solo_convertible", True)]
+    task_ids_cfg = domain_cfg.get("task_ids")
+    if task_ids_cfg is not None and len(task_ids_cfg) > 0:
+        allowed_ids = {str(i) for i in task_ids_cfg} | {int(i) for i in task_ids_cfg}
+        solo_tasks = [t for t in solo_tasks if t.get("id") in allowed_ids]
+
+    if n_exp > 1:
+        print(
+            f"Sweep: {n_exp} experiments (policy × model × temperature × reasoning_effort), "
+            f"experiment_concurrency={exp_conc}",
+            flush=True,
+        )
+
+    sem = asyncio.Semaphore(exp_conc)
+
+    async def _run_one(idx: int, rc: dict[str, Any]) -> None:
+        async with sem:
+            await _run_solo_experiment_async(
+                rc,
+                include_reference_steps=include_reference_steps,
+                instructions_text=instructions_text,
+                solo_tasks=solo_tasks,
+                experiment_index=idx + 1,
+                experiment_total=n_exp,
+            )
+
+    await asyncio.gather(*(_run_one(i, rc) for i, rc in enumerate(expanded_raw)))
 
 
 def main() -> None:
@@ -471,19 +757,43 @@ def main() -> None:
         required=True,
         help="Path to the retail solo simulation YAML config (required).",
     )
+    parser.add_argument(
+        "--include-reference-steps",
+        action="store_true",
+        default=False,
+        help="Include <reference_steps> tool-name flow block in solo prompts. Default False.",
+    )
+    parser.add_argument(
+        "--experiment-concurrency",
+        type=int,
+        default=None,
+        help="Max concurrent sweep experiments (policy×model×temp×reasoning). "
+        "Overrides YAML key experiment_concurrency. Default: min(8, num_experiments) or YAML.",
+    )
     args = parser.parse_args()
 
-    # Basic Logfire configuration + LiteLLM instrumentation (for cost tracking).
+    load_dotenv()
+    # Google Gen AI OTel integration disabled for now (see agent.gemini_log for I/O).
+    # os.environ.setdefault(
+    #     "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
+    # )
     logfire.configure(scrubbing=False, console=False)
-    os.environ.setdefault(
-        "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
-    )
+    # logfire.instrument_google_genai()
+    from agent.logfire_gemini_integration import instrument_logfire_gemini
+
+    instrument_logfire_gemini()
     logfire.instrument_litellm()
 
     # Ensure MCP/mermaid connection logs from agent.base are visible
     logging.getLogger("agent.base").setLevel(logging.INFO)
 
-    asyncio.run(main_async(args.config))
+    asyncio.run(
+        main_async(
+            args.config,
+            include_reference_steps=bool(args.include_reference_steps),
+            experiment_concurrency=args.experiment_concurrency,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+[
+  {
+    "task_id": "2",
+    "session_id": "a071162c-8717-4094-ae63-63aa00a14f98",
+    "exit_code": 0,
+    "response_preview": "Here's a summary of everything I did for you, Yusuf:\n\n---\n\n### \ud83d\udecd\ufe0f T-Shirt Options\nThere are **12 T-shirt options** available in the online store, with various combinations of color (black, red, blue, "
+  },
+  {
+    "task_id": "32",
+    "session_id": "67e81ffa-eb5a-420e-bbab-2dfbd6efa459",
+    "exit_code": 0,
+    "response_preview": "Here's a summary of everything completed for you, Olivia:\n\n---\n\n### \ud83d\udd0d Tablet Tracking Number\nThe tracking number for your tablet (Order #W2692684) is: **746342064230**\n\n---\n\n### \u2705 Actions Completed:\n\n"
+  },
+  {
+    "task_id": "66",
+    "session_id": "95f9b3fc-af4d-463f-9d0b-cad2b5f4e2a0",
+    "exit_code": 0,
+    "response_preview": "Here's a summary of what was done for Aarav Lee:\n\n- **Change luggage set \u2192 coat**: Not possible, as policy only allows item modifications within the same product type.\n- **Return the luggage set**: No"
+  },
+  {
+    "task_id": "91",
+    "session_id": "bd5fce60-e2bb-4f02-86ae-726c61e1fd54",
+    "exit_code": 0,
+    "response_preview": "All actions have been completed successfully. Here's a summary of everything done for Mei Ahmed:\n\n---\n\n**Order #W7553978 \u2014 Return Requested**\n- \u2705 Returned: **Skateboard (28-inch, plastic, plain)** \u2014 $"
+  },
+  {
+    "task_id": "113",
+    "session_id": "6ee8c490-2447-4b55-898c-875c86ae9ddd",
+    "exit_code": 0,
+    "response_preview": "I found two pending orders for Yara Muller:\n- **#W5056519** \u2013 Makeup Kit ($243.62)\n- **#W5995614** \u2013 Dumbbell Set + Luggage Set ($1,074.31)\n\nHowever, I'm unable to process the cancellations because th"
+  }
+]

@@ -1,0 +1,12 @@
+Here's a summary of what was done for your order:
+
+1. **Change luggage set → coat**: ❌ Not possible — our policy only allows swapping items within the same product type (e.g., a different luggage set option), not switching to a different product category like a coat.
+
+2. **Return the luggage set**: ❌ Not possible — returns are only available for delivered orders, and order #W3361211 was still in **pending** status.
+
+3. **Cancel the entire order**: ✅ Done — Order **#W3361211** has been successfully cancelled with reason "ordered by mistake."
+
+**Refund details:**
+- **Amount**: $1,464.00
+- **Refund method**: Visa card ending in 4451
+- **Timeline**: 5–7 business days

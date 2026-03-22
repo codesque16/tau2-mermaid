@@ -218,6 +218,7 @@ class OpenRouterAgent(BaseAgent):
         # MCP tools path
         await self._ensure_mcp_initialized()
         tools = self._get_mcp_tools_for_llm()
+        self.log_llm_tools_in_request(tools, provider="openrouter", model=self.model)
 
         messages = [
             {"role": "system", "content": self.config.system_prompt},

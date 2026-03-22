@@ -1,0 +1,16 @@
+Perfect! I've successfully completed both requests for Yusuf Hernandez:
+
+## 1. Fleece Jacket Exchange ✓
+**Order #W2466703** has been modified:
+- **Original**: Black Fleece Jacket with full zipper (Size L) - $159.92
+- **New**: Red Fleece Jacket with half zipper (Size L) - $153.18
+- **Refund**: $6.74 will be credited to PayPal account
+- **Order Status**: Now marked as "pending (item modified)"
+
+## 2. Default Address Update ✓
+**Customer's default address** has been changed to:
+- 565 Maple Drive, Suite 501
+- Washington, DC 20307
+- USA
+
+Both changes have been processed and are now active on the customer's account.

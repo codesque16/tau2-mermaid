@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import uuid
 from typing import Any, Literal, Optional
 
 import litellm
@@ -31,6 +32,7 @@ from tau2.config import (
 from tau2.data_model.message import (
     AssistantMessage,
     Message,
+    MultiToolMessage,
     SystemMessage,
     ToolCall,
     ToolMessage,
@@ -91,6 +93,45 @@ def _parse_ft_model_name(model: str) -> str:
         return match.group("model")
     else:
         return model
+
+
+def _is_timeout_error(e: BaseException) -> bool:
+    """Best-effort timeout detection for cache-busting."""
+    name = type(e).__name__.lower()
+    msg = str(e).lower()
+    return (
+        "timeout" in name
+        or "timedout" in name
+        or "timeout" in msg
+        or "timed out" in msg
+    )
+
+
+def _build_tool_call_id_map(
+    messages: list[Message],
+    *,
+    id_prefix: str = "call",
+) -> dict[str, str]:
+    out: dict[str, str] = {}
+
+    def maybe_map(old_id: str) -> None:
+        if not old_id:
+            return
+        if old_id in out:
+            return
+        out[old_id] = f"{id_prefix}_{uuid.uuid4().hex[:16]}"
+
+    for m in messages:
+        if isinstance(m, ToolMessage):
+            maybe_map(m.id)
+        elif isinstance(m, (AssistantMessage, UserMessage)):
+            if m.tool_calls:
+                for tc in m.tool_calls:
+                    maybe_map(tc.id)
+        elif isinstance(m, MultiToolMessage):
+            for tm in m.tool_messages:
+                maybe_map(tm.id)
+    return out
 
 
 def get_response_cost(response: ModelResponse) -> float:
@@ -188,12 +229,21 @@ def to_tau2_messages(
     return tau2_messages
 
 
-def to_litellm_messages(messages: list[Message]) -> list[dict]:
+def to_litellm_messages(
+    messages: list[Message],
+    *,
+    tool_call_id_map: Optional[dict[str, str]] = None,
+) -> list[dict]:
     """
     Convert a list of Tau2 messages to a list of litellm messages.
     """
     litellm_messages = []
     for message in messages:
+        def _map_id(old_id: str) -> str:
+            if not tool_call_id_map:
+                return old_id
+            return tool_call_id_map.get(old_id, old_id)
+
         if isinstance(message, UserMessage):
             litellm_messages.append({"role": "user", "content": message.content})
         elif isinstance(message, AssistantMessage):
@@ -201,7 +251,7 @@ def to_litellm_messages(messages: list[Message]) -> list[dict]:
             if message.is_tool_call():
                 tool_calls = [
                     {
-                        "id": tc.id,
+                        "id": _map_id(tc.id),
                         "name": tc.name,
                         "function": {
                             "name": tc.name,
@@ -223,9 +273,18 @@ def to_litellm_messages(messages: list[Message]) -> list[dict]:
                 {
                     "role": "tool",
                     "content": message.content,
-                    "tool_call_id": message.id,
+                    "tool_call_id": _map_id(message.id),
                 }
             )
+        elif isinstance(message, MultiToolMessage):
+            for tm in message.tool_messages:
+                litellm_messages.append(
+                    {
+                        "role": "tool",
+                        "content": tm.content,
+                        "tool_call_id": _map_id(tm.id),
+                    }
+                )
         elif isinstance(message, SystemMessage):
             litellm_messages.append({"role": "system", "content": message.content})
     return litellm_messages
@@ -294,12 +353,13 @@ def generate(
 
     if model.startswith("claude") and not ALLOW_SONNET_THINKING:
         kwargs["thinking"] = {"type": "disabled"}
-    litellm_messages = to_litellm_messages(messages)
     tools = [tool.openai_schema for tool in tools] if tools else None
     if tools and tool_choice is None:
         tool_choice = "auto"
 
-    def _do_completion():
+    remap_tool_call_ids_for_retry = False
+
+    def _do_completion(*, litellm_messages: list[dict]):
         return litellm.completion(
             model=model,
             messages=litellm_messages,
@@ -309,10 +369,16 @@ def generate(
         )
 
     for attempt in range(TRANSIENT_ERROR_MAX_RETRIES + 1):
+        id_map = _build_tool_call_id_map(messages) if remap_tool_call_ids_for_retry else None
+        litellm_messages = (
+            to_litellm_messages(messages, tool_call_id_map=id_map)
+            if id_map is not None
+            else to_litellm_messages(messages)
+        )
         try:
             if caller:
                 with logfire.span(caller) as caller_span:
-                    response = _do_completion()
+                    response = _do_completion(litellm_messages=litellm_messages)
                     if response.choices:
                         msg = response.choices[0].message
                         reasoning = getattr(msg, "reasoning_content", None)
@@ -320,10 +386,13 @@ def generate(
                             caller_span.set_attribute("reasoning_content", reasoning)
                             caller_span.set_attribute("reasoning_content_length", len(reasoning))
             else:
-                response = _do_completion()
+                response = _do_completion(litellm_messages=litellm_messages)
             break
         except (ServiceUnavailableError, LitellmTimeout) as e:
             if attempt < TRANSIENT_ERROR_MAX_RETRIES:
+                if _is_timeout_error(e):
+                    # Cache-bust the next attempt by randomizing tool_call ids.
+                    remap_tool_call_ids_for_retry = True
                 delay = TRANSIENT_ERROR_BASE_DELAY * (2**attempt)
                 logger.warning(
                     "Transient API error (%s), retrying in %.0fs (attempt %d/%d): %s",

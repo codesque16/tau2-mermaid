@@ -1,0 +1,15 @@
+Here's a summary of what I found and did:
+
+**Regarding partial cancellation:** Unfortunately, partial cancellation of a pending order is **not possible**. Orders can only be cancelled in their entirety — individual items cannot be selectively removed from a pending order.
+
+**What the refund would have been (for reference):**
+The three home office items in order #W1845024 total:
+- Mechanical Keyboard: $235.13
+- Headphones: $346.97
+- Office Chair: $511.24
+- **Total: $1,093.34**
+
+(These would have been refunded via PayPal within 5–7 business days, had a partial cancellation been possible.)
+
+**Action taken:** Since partial cancellation isn't possible and you wanted to keep the order, I've updated your **default address** to the Seattle address from the order:
+> 517 Lakeview Drive, Suite 183, Seattle, WA 98195, USA

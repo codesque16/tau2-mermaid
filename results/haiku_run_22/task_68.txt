@@ -1,0 +1,5 @@
+Based on the user's order history, the most recently placed order is **#W6729841**. 
+
+**The customer paid $829.43 for this order.**
+
+This order contains a Bluetooth Speaker and an Air Purifier, and it's currently in pending status.

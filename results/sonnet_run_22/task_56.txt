@@ -1,0 +1,11 @@
+Here's a summary of what was done:
+
+**Order #W4284542 — Air Purifier Update**
+
+- The air purifier has **not shipped yet** (order is pending), so cancellation/modification was possible.
+- **Partial cancellation is not supported**, so the air purifier was modified to the cheapest available option instead.
+- **Changed from:** Large room, HEPA filter, night mode — $547.55
+- **Changed to:** Large room, ionic filter, smart sensors — $473.43
+- **Refund of $74.12** has been applied to your gift card (gift_card_9368765).
+
+The order status is now **"pending (item modified)"**.

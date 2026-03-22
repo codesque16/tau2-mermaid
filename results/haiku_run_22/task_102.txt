@@ -1,0 +1,24 @@
+Perfect! All modifications have been successfully completed:
+
+## Summary of Changes:
+
+**Order #W4219264 (Pending - Two Watches):**
+✅ **Address Updated**: Changed shipping address from Seattle, WA to New York, NY
+- New address: 144 Lakeview Drive, Suite 925, New York, NY 10228
+
+✅ **Watch Modified**: Silicone blue watch → Metal white watch
+- Item ID changed: 8886009523 → 2407258246
+- Price reduction: $1944.02 → $1822.82
+- **Refund of $121.20** issued to credit card
+- Order status: "pending (item modified)"
+
+**Order #W3445693 (Delivered - Sneakers & Air Purifier):**
+✅ **Air Purifier Exchanged**: Maintained large size & HEPA filter, changed to night mode
+- Item ID changed: 6341716129 → 8302289002
+- Features changed: Smart sensors → Night mode
+- Price increase: $523.31 → $547.55
+- **Additional charge of $24.24** to credit card
+- Order status: "exchange requested"
+- Customer will receive follow-up email with return instructions
+
+All changes have been applied to Noah Ito's account (noah_ito_3850). The customer will receive emails confirming the modifications and exchange process.

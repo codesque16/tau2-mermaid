@@ -1,0 +1,29 @@
+Perfect! I've successfully processed all of Mei Ahmed's requests. Here's a summary:
+
+## Return Processed - Order #W7553978
+✓ **2 Skateboards Returned**
+- 28-inch skateboard: $186.06
+- 34-inch skateboard: $202.13
+
+✓ **Smart Watch Returned**
+- Black metal AMOLED smart watch: $339.85
+
+**Total Return Refund: $728.04** → Credit card ending in 9375
+
+---
+
+## Exchange Processed - Order #W3239882
+✓ **E-Reader Exchanged**
+- **Original item:** 8-inch Wi-Fi E-Reader with 8GB storage ($252.06)
+- **New item:** 7-inch Wi-Fi + Cellular E-Reader with 8GB storage ($267.58)
+  - *(Note: The exact 7-inch Wi-Fi (non-cellular) model with 8GB was unavailable, so this model was selected as it matches the requested 7-inch size and 8GB storage)*
+- **Price difference charge:** $15.52 → Credit card ending in 9375
+
+---
+
+## Next Steps
+Mei will receive two separate emails:
+1. **Return email** for order #W7553978 with instructions on how and where to return the skateboards and smart watch
+2. **Exchange email** for order #W3239882 with instructions for returning the 8-inch e-reader and receiving the 7-inch e-reader replacement
+
+The refunds and charges have been applied to the credit card on file.

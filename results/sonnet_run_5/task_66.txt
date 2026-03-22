@@ -1,0 +1,6 @@
+Here's a summary of what was done for Aarav Lee:
+
+- **Change luggage set → coat**: Not possible, as policy only allows item modifications within the same product type.
+- **Return the luggage set**: Not possible, as the order was still in **pending** status (not yet delivered).
+- **Entire order #W3361211 cancelled** ✅: The order has been successfully cancelled with reason "no longer needed."
+- **Refund of $1,464.00** will be returned to the Visa card ending in **4451** within **5–7 business days**.

@@ -9,6 +9,8 @@ from .config import AgentConfig
 from .utils.cost import compute_cost, usage_from_response
 
 DEFAULT_REQUEST_TIMEOUT = 300.0
+# Anthropic Messages API requires max_tokens; omitting it raises at call time.
+ANTHROPIC_DEFAULT_MAX_TOKENS = 4096
 
 
 class AnthropicAgent(BaseAgent):
@@ -38,9 +40,10 @@ class AnthropicAgent(BaseAgent):
             "temperature": self.config.temperature,
             "system": self.config.system_prompt,
             "messages": self.history,
+            "max_tokens": self.config.max_tokens
+            if self.config.max_tokens is not None
+            else ANTHROPIC_DEFAULT_MAX_TOKENS,
         }
-        if self.config.max_tokens is not None:
-            stream_kw["max_tokens"] = self.config.max_tokens
         async with self.client.messages.stream(**stream_kw) as stream:
             async for event in stream:
                 if event.type == "text":

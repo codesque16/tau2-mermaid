@@ -276,7 +276,7 @@
             ],
             "nl_assertions": null
         },
-        "ticket": "Customer information:\nYusuf Rossi in zip code 19122\n\nCustomer request:\nCustomer wants to know how many t-shirt options are available in the online store and to have the agent count and provide the number. Customer also wants to return the cleaner, headphone, and smart watch.\n\nNote: Customer does not remember email address.\n\nFulfill the request using the available tools. Assume the customer has already agreed to any required confirmations.\n\nIn your final message, tell the customer the number of t-shirt options available (the count they requested).",
+        "ticket": "Customer information:\nYusuf Rossi in zip code 19122\n\nCustomer request:\nCustomer wants to know how many t-shirt options are available in the online store and to have the agent count and provide the number. Customer also wants to return the cleaner, headphone, and smart watch.\n\nNote: Customer does not remember email address.\n\nFulfill the request using the available tools. Assume the customer has already agreed to any required confirmations",
         "solo_convertible": true
     },
     {

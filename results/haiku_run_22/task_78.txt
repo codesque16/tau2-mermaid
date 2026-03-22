@@ -1,0 +1,13 @@
+All requests have been successfully completed for Yara Muller:
+
+**Order #W5056519:**
+- ✅ **Address updated** to 380 Maple Drive, Suite 960, San Diego, CA 92101, USA (matching order #W8277957)
+- ✅ **Makeup Kit exchanged:**
+  - From: Light, Professional, Brand B ($243.62)
+  - To: Dark, Professional, Brand A ($253.98)
+  - Price difference: $10.36 charged to credit card ending in 3095586
+  - Order status: Now "pending (item modified)"
+
+**Order #W5995614:**
+- ✅ **Cancelled** with reason "ordered by mistake"
+  - Refund of $1,074.31 processed to credit card ending in 3095586
