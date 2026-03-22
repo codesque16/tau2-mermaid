@@ -22,6 +22,11 @@ from .utils.cost import compute_cost, usage_from_openai_response
 DEFAULT_REQUEST_TIMEOUT = 300.0
 
 
+def _openai_omit_temperature(model: str) -> bool:
+    """GPT-5 family rejects custom ``temperature`` (e.g. 0); omit the param so the API uses its default."""
+    return (model or "").strip().lower().startswith("gpt-5")
+
+
 def _reasoning_from_openai_message(msg: Any) -> str | None:
     v = getattr(msg, "reasoning_content", None) or getattr(msg, "reasoning", None)
     if isinstance(v, str) and v.strip():
@@ -82,10 +87,9 @@ class OpenAIAgent(BaseAgent):
         return out
 
     def _base_completion_kw(self) -> dict[str, Any]:
-        kw: dict[str, Any] = {
-            "model": self.model,
-            "temperature": self.config.temperature,
-        }
+        kw: dict[str, Any] = {"model": self.model}
+        if not _openai_omit_temperature(self.model):
+            kw["temperature"] = self.config.temperature
         if self.config.max_tokens is not None:
             kw["max_tokens"] = self.config.max_tokens
         reff = getattr(self.config, "reasoning_effort", None)

@@ -33,7 +33,7 @@ domain:
 assistant:
   agent_type: openai
   model: gpt-5-nano
-  temperature: 0
+  # gpt-5* chat: OpenAI only allows default temperature; ``agent_openai`` omits the param.
   reasoning_effort: low
   mcps:
     - name: retail-tools
