@@ -32,10 +32,9 @@ domain:
   seed: 34223423423
 
 assistant:
-  agent_type: gemini
+  agent_type: openai
   model: 
-    - gemini-3.1-flash-lite-preview
-    - gemini-3-flash-preview
+    - gpt-5-nano
   temperature: 0
   reasoning_effort: ["low", "medium", "high"]
   mcps:
