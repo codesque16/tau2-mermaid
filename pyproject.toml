@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "anthropic",
+    "cloudpickle>=3.0.0",
     "google-genai",
     "httpx",
     "openai",
@@ -24,6 +25,12 @@ dependencies = [
     "loguru>=0.7.3",
     "gepa",
 ]
+
+# Use the vendored GEPA under ./gepa (Logfire callbacks, reflective_dataset_format, etc.).
+# PyPI ``gepa`` has a slimmer TrackingConfig without ``use_logfire``, so nested Logfire spans
+# from ``LogfireSpanCallback`` are never registered.
+[tool.uv.sources]
+gepa = { path = "gepa", editable = true }
 
 [build-system]
 requires = ["setuptools>=61"]

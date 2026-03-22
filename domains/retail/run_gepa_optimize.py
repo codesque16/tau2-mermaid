@@ -708,6 +708,9 @@ def main() -> None:
     args = parser.parse_args()
 
     raw_cfg = _load_retail_solo_config(args.config)
+    from agent.api_key_rotation import configure_from_simulation_dict
+
+    configure_from_simulation_dict(raw_cfg)
     sim_cfg = _build_simulation_config(raw_cfg)
     domain_cfg: Dict[str, Any] = raw_cfg.get("domain") or {}
     gepa_cfg: Dict[str, Any] = raw_cfg.get("gepa") or {}

@@ -415,6 +415,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cloudpickle"
+version = "3.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/fb/576f067976d320f5f0114a8d9fa1215425441bb35627b1993e5afd8111e5/cloudpickle-3.1.2.tar.gz", hash = "sha256:7fda9eb655c9c230dab534f1983763de5835249750e85fbcef43aaa30a9a2414", size = 22330, upload-time = "2025-11-03T09:25:26.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl", hash = "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a", size = 22228, upload-time = "2025-11-03T09:25:25.534Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -738,12 +747,50 @@ wheels = [
 
 [[package]]
 name = "gepa"
-version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f5/30/511e52916956508f56eca721260fcd524cfffd580e57782dd471be925f7e/gepa-0.1.0.tar.gz", hash = "sha256:f8b3d7918d4cdcf8593f39ef1cc757c4ba1a4e6793e3ffb622e6c0bc60a1efd9", size = 226064, upload-time = "2026-02-19T19:43:08.272Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/32/fe8afb3d2a6605a6bcbc8f119f0a2adae96e9e5d57ebed055490219956a8/gepa-0.1.0-py3-none-any.whl", hash = "sha256:4e3f8fe8ca20169e60518b2e9d416e8c4a579459848adffdcad12223fbf9643e", size = 191392, upload-time = "2026-02-19T19:43:07.065Z" },
+version = "0.1.1"
+source = { editable = "gepa" }
+
+[package.metadata]
+requires-dist = [
+    { name = "build", marker = "extra == 'build'" },
+    { name = "build", marker = "extra == 'dev'", specifier = ">=1.0.3" },
+    { name = "cloudpickle", marker = "extra == 'full'", specifier = ">=3.0.0" },
+    { name = "datasets", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=4.5.0" },
+    { name = "datasets", marker = "python_full_version < '3.14' and extra == 'full'", specifier = ">=2.14.6" },
+    { name = "docker", marker = "extra == 'gskill'" },
+    { name = "gepa", extras = ["build"], marker = "extra == 'dev'" },
+    { name = "gepa", extras = ["full"], marker = "extra == 'gskill'" },
+    { name = "gepa", extras = ["full"], marker = "extra == 'tau2'" },
+    { name = "gepa", extras = ["full"], marker = "extra == 'test'" },
+    { name = "gepa", extras = ["test"], marker = "extra == 'dev'" },
+    { name = "litellm", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=1.82.0" },
+    { name = "litellm", marker = "python_full_version < '3.14' and extra == 'full'", specifier = ">=1.82.0" },
+    { name = "logfire", extras = ["litellm"], marker = "extra == 'logfire'" },
+    { name = "markdown-it-py", marker = "extra == 'tau2'", specifier = ">=3.0" },
+    { name = "mlflow", marker = "python_full_version < '3.14' and extra == 'full'", specifier = ">=3.0.0" },
+    { name = "mlflow-skinny", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=3.8.1" },
+    { name = "packaging", marker = "extra == 'build'" },
+    { name = "pre-commit", marker = "extra == 'dev'" },
+    { name = "pyarrow", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=22.0.0" },
+    { name = "pydantic", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=2.12.0" },
+    { name = "pyright", marker = "extra == 'test'" },
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "python-dotenv", marker = "extra == 'gskill'" },
+    { name = "pyyaml", marker = "extra == 'gskill'" },
+    { name = "requests", marker = "extra == 'build'" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
+    { name = "semver", marker = "extra == 'build'" },
+    { name = "setuptools", marker = "extra == 'build'", specifier = ">=77.0.1" },
+    { name = "swesmith", marker = "extra == 'gskill'" },
+    { name = "tau2", marker = "extra == 'tau2'", directory = "tau2-bench" },
+    { name = "tiktoken", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=0.12.0" },
+    { name = "tqdm", marker = "extra == 'full'", specifier = ">=4.66.1" },
+    { name = "twine", marker = "extra == 'build'" },
+    { name = "wandb", marker = "python_full_version >= '3.14' and extra == 'full'", specifier = ">=0.23.0" },
+    { name = "wandb", marker = "python_full_version < '3.14' and extra == 'full'" },
+    { name = "wheel", marker = "extra == 'build'" },
 ]
+provides-extras = ["full", "dspy", "test", "build", "dev", "gskill", "tau2", "logfire"]
 
 [[package]]
 name = "google-auth"
@@ -2420,6 +2467,7 @@ source = { editable = "." }
 dependencies = [
     { name = "addict" },
     { name = "anthropic" },
+    { name = "cloudpickle" },
     { name = "deepdiff" },
     { name = "gepa" },
     { name = "google-genai" },
@@ -2447,8 +2495,9 @@ dev = [
 requires-dist = [
     { name = "addict", specifier = ">=2.4.0" },
     { name = "anthropic" },
+    { name = "cloudpickle", specifier = ">=3.0.0" },
     { name = "deepdiff", specifier = ">=8.6.1" },
-    { name = "gepa" },
+    { name = "gepa", editable = "gepa" },
     { name = "google-genai" },
     { name = "httpx" },
     { name = "litellm" },

@@ -10,11 +10,182 @@ For each task:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Dict, List
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
+
+def _json_schema_type_to_python(prop_schema: Any) -> str:
+    if not isinstance(prop_schema, dict):
+        return "Any"
+    if "anyOf" in prop_schema or "oneOf" in prop_schema:
+        return "Any"
+    t = prop_schema.get("type")
+    if t == "string":
+        return "str"
+    if t == "integer":
+        return "int"
+    if t == "number":
+        return "float"
+    if t == "boolean":
+        return "bool"
+    if t == "array":
+        items = prop_schema.get("items")
+        if isinstance(items, dict):
+            inner = _json_schema_type_to_python(items)
+        else:
+            inner = "Any"
+        return f"List[{inner}]"
+    if t == "object":
+        return "dict"
+    return "Any"
+
+
+def _json_literal_for_schema_default(value: Any) -> str:
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    return repr(value)
+
+
+def _format_tool_signature_from_json_schema(schema: Any) -> str:
+    """``(order_id: str, reason: str)`` from MCP/OpenAI-style JSON Schema."""
+    _HIDDEN = frozenset({"session_id", "ctx"})
+    if not isinstance(schema, dict):
+        return "()"
+    props = schema.get("properties")
+    if not isinstance(props, dict) or not props:
+        return "()"
+    props = {k: v for k, v in props.items() if k not in _HIDDEN}
+    if not props:
+        return "()"
+    required = set(schema.get("required") or []) - _HIDDEN
+    keys = list(props.keys())
+    ordered = [k for k in keys if k in required] + [k for k in keys if k not in required]
+    parts: List[str] = []
+    for key in ordered:
+        psub = props[key]
+        if not isinstance(psub, dict):
+            psub = {}
+        typ = _json_schema_type_to_python(psub)
+        if key in required:
+            parts.append(f"{key}: {typ}")
+        elif "default" in psub:
+            parts.append(f"{key}: {typ} = {_json_literal_for_schema_default(psub['default'])}")
+        else:
+            parts.append(f"{key}: {typ}")
+    return "(" + ", ".join(parts) + ")"
+
+
+def _tool_input_schema_dict(tool_obj: Any) -> dict[str, Any]:
+    raw = getattr(tool_obj, "inputSchema", None) or getattr(tool_obj, "input_schema", None)
+    if isinstance(raw, dict):
+        return raw
+    if raw is not None and hasattr(raw, "model_dump"):
+        dumped = raw.model_dump()
+        return dumped if isinstance(dumped, dict) else {}
+    return {}
+
+
+async def list_mcp_tools_tau2_style(*, mcp_command: str) -> str:
+    """Numbered tool list like tau2 GEPA: ``1) name(a: str, b: int = 0)`` from MCP ``list_tools``."""
+    cmd_str = (mcp_command or "").strip()
+    if not cmd_str:
+        return "(MCP command not configured; cannot list tools.)"
+
+    import shlex
+
+    parts = shlex.split(cmd_str)
+    if not parts:
+        return f"(Invalid MCP command: {cmd_str!r})"
+
+    cmd, *args = parts
+    params = StdioServerParameters(command=cmd, args=args)
+
+    try:
+        async with stdio_client(params) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                tools_result = await session.list_tools()
+    except Exception as e:
+        return f"(Failed to list MCP tools: {type(e).__name__}: {e})"
+
+    tools = list(getattr(tools_result, "tools", []) or [])
+    tools.sort(key=lambda t: str(getattr(t, "name", "") or ""))
+
+    lines: List[str] = ["Tool list available to the agent:"]
+    for idx, t in enumerate(tools, start=1):
+        name = getattr(t, "name", "") or ""
+        if not name:
+            continue
+        sig = _format_tool_signature_from_json_schema(_tool_input_schema_dict(t))
+        lines.append(f"{idx}) {name}{sig}")
+
+    return "\n".join(lines) if len(lines) > 1 else "(MCP returned no tools.)"
+
+
+def _norm_args_json(args: Any) -> str:
+    try:
+        return json.dumps(args or {}, sort_keys=True, ensure_ascii=False)
+    except Exception:
+        return str(args or {})
+
+
+def format_solo_eval_for_gepa_diagnosis(
+    *,
+    task: dict[str, Any],
+    eval_result: dict[str, Any],
+    assistant_history: List[dict[str, Any]],
+    score: float,
+    evaluate_communication: bool,
+) -> str:
+    """Tau2-style ``<evaluation>`` block for qualitative diagnosis (solo retail / MCP)."""
+    parts: List[str] = [
+        f"Reward: {score:.4f}",
+        "Termination: AGENT_STOP",
+    ]
+    db_ok = bool(eval_result.get("db_match", False))
+    db_reward = 1.0 if db_ok else 0.0
+    parts.append(f"DB check: {'match' if db_ok else 'MISMATCH'} (reward={db_reward})")
+
+    golden = (task.get("evaluation_criteria") or {}).get("actions") or []
+    predicted = _extract_predicted_actions(assistant_history)
+
+    for i, g in enumerate(golden):
+        name = g.get("name") or "?"
+        exp_args = g.get("arguments") or {}
+        exp_json = _norm_args_json(exp_args)
+        if i >= len(predicted):
+            parts.append(f"Action {name}: NOT CALLED (expected_args={exp_json})")
+            continue
+        p = predicted[i]
+        if p.get("name") != name:
+            parts.append(f"Action {name}: NOT CALLED (expected_args={exp_json})")
+            continue
+        act_args = p.get("arguments") or {}
+        if _norm_args_json(act_args) != exp_json:
+            act_json = _norm_args_json(act_args)
+            parts.append(
+                f"Action {name}: ARGUMENTS_MISMATCH "
+                f"(expected_args={exp_json}, actual_args={act_json})"
+            )
+
+    if evaluate_communication and not eval_result.get("communicate_eval_skipped"):
+        for chk in eval_result.get("communicate_checks") or []:
+            info = str(chk.get("info", ""))
+            met = bool(chk.get("met", False))
+            status = "met" if met else "NOT MET"
+            parts.append(f"Communicate '{info}': {status}")
+            if not met and chk.get("justification"):
+                parts.append(f"  Justification: {chk.get('justification')}")
+
+    return "\n".join(parts)
 
 
 def _compact_trace_preview(
@@ -129,6 +300,43 @@ async def _run_sequence_get_hash(
         return text
 
     raise RuntimeError("MCP get_db_hash returned no content")
+
+
+async def list_mcp_tools_documentation(*, mcp_command: str) -> str:
+    """Return markdown lines of tool names and descriptions via MCP ``list_tools``."""
+    cmd_str = (mcp_command or "").strip()
+    if not cmd_str:
+        return "(MCP command not configured; cannot list tools.)"
+
+    import shlex
+
+    parts = shlex.split(cmd_str)
+    if not parts:
+        return f"(Invalid MCP command: {cmd_str!r})"
+
+    cmd, *args = parts
+    params = StdioServerParameters(command=cmd, args=args)
+
+    try:
+        async with stdio_client(params) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                tools_result = await session.list_tools()
+    except Exception as e:
+        return f"(Failed to list MCP tools: {type(e).__name__}: {e})"
+
+    lines: List[str] = []
+    for t in getattr(tools_result, "tools", []) or []:
+        name = getattr(t, "name", "") or ""
+        if not name:
+            continue
+        desc = (getattr(t, "description", None) or "").strip()
+        if desc:
+            lines.append(f"- **{name}**: {desc}")
+        else:
+            lines.append(f"- **{name}**")
+
+    return "\n".join(lines) if lines else "(MCP returned no tools.)"
 
 
 def _extract_predicted_actions(history: List[dict[str, Any]]) -> List[Dict[str, Any]]:

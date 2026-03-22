@@ -37,6 +37,8 @@ from domains.retail.evaluate import evaluate_communication_from_history, evaluat
 from orchestrator.event_bus import EventBus
 from orchestrator.orchestrator import Orchestrator, SoloStopMode
 
+from agent.api_key_rotation import configure_from_simulation_dict
+
 
 def _make_reference_steps_from_task(task: dict[str, Any]) -> str:
     """
@@ -270,6 +272,7 @@ def make_orchestrator_for_solo(
     assistant_agent_type = sim_cfg.assistant_agent_type or "litellm"
 
     def _make(ticket: str) -> Orchestrator:
+        _ = instructions_text  # still passed by callers; not wrapped in <instructions> in prompt
         has_mermaid = bool(getattr(assistant_base_cfg, "mermaid", None))
         ref_block = (
             f"\n\n<reference_steps>\n{reference_steps}\n</reference_steps>"
@@ -279,25 +282,42 @@ def make_orchestrator_for_solo(
         if has_mermaid:
             full_system_prompt = f"<ticket>\n{ticket.strip()}\n</ticket>{ref_block}"
         else:
+            # Policy = raw markdown (no <policy> wrapper). Ticket only inside <ticket>.
+            # ``instructions_text`` is kept in the API for callers but not injected (see history below).
+            # if include_policy:
+            #     full_system_prompt = (
+            #         "<instructions>\n"
+            #         f"{instructions_text.strip()}\n"
+            #         "</instructions>\n\n"
+            #         "<policy>\n"
+            #         f"{policy_text.strip()}\n"
+            #         "</policy>\n\n"
+            #         "<ticket>\n"
+            #         f"{ticket.strip()}\n"
+            #         "</ticket>"
+            #         f"{ref_block}"
+            #     )
+            # else:
+            #     full_system_prompt = (
+            #         "<instructions>\n"
+            #         f"{instructions_text.strip()}\n"
+            #         "</instructions>\n\n"
+            #         "<ticket>\n"
+            #         f"{ticket.strip()}\n"
+            #         "</ticket>"
+            #         f"{ref_block}"
+            #     )
             if include_policy:
                 full_system_prompt = (
-                    "<instructions>\n"
-                    f"{instructions_text.strip()}\n"
-                    "</instructions>\n\n"
-                    "<policy>\n"
-                    f"{policy_text.strip()}\n"
-                    "</policy>\n\n"
+                    f"{policy_text.strip()}\n\n"
                     "<ticket>\n"
                     f"{ticket.strip()}\n"
                     "</ticket>"
                     f"{ref_block}"
                 )
             else:
-                # GEPA path: only instructions + ticket, no embedded policy block.
+                # GEPA path: no embedded policy block; ticket only.
                 full_system_prompt = (
-                    "<instructions>\n"
-                    f"{instructions_text.strip()}\n"
-                    "</instructions>\n\n"
                     "<ticket>\n"
                     f"{ticket.strip()}\n"
                     "</ticket>"
@@ -443,6 +463,8 @@ async def run_one_solo_task(
                     f"Communication check for task {eval_result.get('task_id')}: "
                     f"{'PASS' if eval_result.get('communicate_match') else 'FAIL'}"
                 )
+    # For GEPA qualitative diagnosis (e.g. tau2.gepa_eval); pop before serializing side_info.
+    eval_result["assistant_history"] = list(history)
     return success, eval_result
 
 
@@ -693,6 +715,7 @@ async def main_async(
     experiment_concurrency: int | None = None,
 ) -> None:
     raw_cfg = _load_retail_solo_config(config_path)
+    configure_from_simulation_dict(raw_cfg)
     domain_cfg: Dict[str, Any] = raw_cfg.get("domain") or {}
     instructions_path = domain_cfg.get("instructions")
     tasks_path = domain_cfg.get("tasks")

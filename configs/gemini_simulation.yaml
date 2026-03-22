@@ -1,6 +1,15 @@
 mode: solo
 max_turns: 60
 
+# Optional: ordered API keys per provider (first = primary). On 429, advance to the next key for
+# the rest of the process; if a backup key fails with a non-rate-limit error, switch back to primary;
+# the next 429 on primary jumps to the third key when present, otherwise the second.
+# Each entry may be a literal key or an env var name (ALL_CAPS_WITH_UNDERSCORES only).
+# api_key_rotation:
+#   gemini: [GEMINI_API_KEY_PRIMARY, GEMINI_API_KEY_BACKUP]
+#   openai: [OPENAI_API_KEY]
+#   anthropic: [ANTHROPIC_API_KEY_PRIMARY, ANTHROPIC_API_KEY_SECONDARY]
+
 domain:
   name: retail
   policy: 

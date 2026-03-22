@@ -1,0 +1,118 @@
+# GEPA retail optimization (tau2-mermaid solo agent). Self-contained YAML (no ``extends``).
+#
+# GEPA ``optimize_anything`` task modes (see ``gepa.optimize_anything`` docstring):
+#   single_task      → dataset=None, valset=None  (one retail task; evaluator has no ``example``)
+#   multi_task       → dataset=<list>, valset=None
+#   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
+#
+# Run from repo root:
+#   uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/gepa_retail_mermaid.yaml
+#
+# Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
+#   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
+#   generalization:   optimization_mode: generalization   task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: [23, 27, 32]
+
+mode: solo
+max_turns: 60
+
+domain:
+  name: retail
+  policy:
+    - "domains/retail/policy_base_solo.md"
+  tasks: "domains/retail/tasks_solo_comms.json"
+  evaluate_communication: true
+  concurrency: 3
+  instructions: "domains/retail/instructions.md"
+  stop_mode: "first-text"
+  task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  trials: 1
+  seed: 34223423423
+  db_path: "domains/retail/db.json"
+
+assistant:
+  agent_type: gemini
+  model: gemini-3.1-flash-lite-preview
+  temperature: 0
+  reasoning_effort: low
+  mcps:
+    - name: retail-tools
+      type: stdio
+      command: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"
+
+gepa:
+  seed_policy_path: "domains/retail/policy_base_solo.md"
+  output_dir: "outputs/tau2_retail_mermaid"
+  fresh: false
+  run_dir: null
+
+  # --- GEPA dataset / valset (names match ``optimize_anything``) ---
+  optimization_mode: multi_task
+  task_id: null
+  dataset_task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  valset_task_ids: null
+
+  evaluation_seed: 7789797979
+
+  reflection_llm_backend: genai
+  reflection_lm: "gemini-3-flash-preview"
+  reflection_genai_temperature: 0.3
+  reflection_genai_max_output_tokens: null
+  reflection_genai_reasoning_effort: high
+
+  diagnosis_llm_backend: genai
+  diagnosis_lm: "gemini-3-flash-preview"
+  diagnosis_genai_temperature: 0.3
+  diagnosis_genai_max_output_tokens: null
+  diagnosis_genai_reasoning_effort: high
+
+  reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_solo_v1.md"
+  gepa_template_file: ""
+
+  reflection_minibatch_size: 10
+  reflection_skip_perfect_score: false
+  reflection_perfect_score: null
+  reflection_batch_sampler: epoch_shuffled
+  reflection_module_selector: round_robin
+
+  max_metric_calls: 200
+  max_candidate_proposals: null
+  max_workers: 4
+  parallel: true
+  raise_on_exception: true
+  use_cloudpickle: false
+  cache_evaluation: true
+  cache_evaluation_storage: auto
+  track_best_outputs: true
+  candidate_selection_strategy: pareto
+  frontier_type: hybrid
+  val_evaluation_policy: full_eval
+  best_example_evals_k: 30
+  capture_traces: false
+  capture_stdio: false
+  display_progress_bar: true
+  reflective_dataset_format: tau2_retail
+  engine_seed: 0
+
+  merge_enabled: false
+  merge_max_invocations: 5
+  merge_val_overlap_floor: 5
+
+  use_wandb: false
+  use_logfire: true
+  dump_visualizer_events: false

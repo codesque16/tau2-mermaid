@@ -16,16 +16,6 @@ GEMINI_ROLE_MODEL = "model"
 GEMINI_ROLE_FUNCTION = "function"  # tool / function_call results (not OpenAI's "tool" role)
 
 
-def _get_client():
-    import os
-    from google import genai
-
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY") or ""
-    if not api_key.strip():
-        raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for Gemini models.")
-    return genai.Client(api_key=api_key.strip())
-
-
 def _content_to_text(content: Any) -> str:
     """Extract visible assistant text; skip thought parts (``part.thought`` is true)."""
     if content is None:
@@ -85,16 +75,29 @@ def _thought_signature_from_history(stored: Any) -> bytes | None:
     return None
 
 
-async def _with_retry(generate_fn: Callable[[], tuple[str, Any]], max_attempts: int = 3) -> tuple[str, Any]:
-    """Run generate in a thread and retry on transient errors."""
+async def _with_retry_gemini(
+    agent: "GeminiAgent",
+    generate_fn: Callable[[], tuple[str, Any]],
+    max_attempts: int = 6,
+) -> tuple[str, Any]:
+    """Run generate in a thread; retry on transient errors and API key rotation (429 / backup fail)."""
+    from agent.api_key_rotation import maybe_rotate_after_provider_error
+
     last_err: BaseException | None = None
     for attempt in range(max_attempts):
         try:
             return await asyncio.to_thread(generate_fn)
         except Exception as e:
             last_err = e
-            if attempt < max_attempts - 1:
-                await asyncio.sleep(2 ** attempt)
+            inv = lambda: setattr(agent, "_client", None)
+            rotated = maybe_rotate_after_provider_error(
+                "gemini", e, invalidate_client=inv
+            )
+            if rotated or attempt < max_attempts - 1:
+                if attempt < max_attempts - 1:
+                    await asyncio.sleep(min(2**attempt, 8))
+                    continue
+            raise
     raise last_err  # type: ignore[misc]
 
 
@@ -107,8 +110,16 @@ class GeminiAgent(BaseAgent):
         self.history: list[dict[str, Any]] = []
 
     def _get_client(self):
-        if self._client is None:
-            self._client = _get_client()
+        from google import genai
+
+        from agent.api_key_rotation import get_gemini_api_key
+
+        api_key = get_gemini_api_key()
+        if not api_key.strip():
+            raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for Gemini models.")
+        if self._client is None or getattr(self, "_gemini_client_key", None) != api_key:
+            self._client = genai.Client(api_key=api_key.strip())
+            self._gemini_client_key = api_key.strip()
         return self._client
 
     async def _do_respond_stream(
@@ -384,8 +395,8 @@ class GeminiAgent(BaseAgent):
                     log_bundle,
                 )
 
-            text, thought_text, response, tool_calls, log_bundle = await _with_retry(
-                _generate
+            text, thought_text, response, tool_calls, log_bundle = await _with_retry_gemini(
+                self, _generate
             )
             log_gemini_generate_io(
                 model=self.model,

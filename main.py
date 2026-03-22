@@ -15,6 +15,8 @@ from chat.config import AgentConfig as ChatAgentConfig, load_simulation_config
 from orchestrator.event_bus import EventBus
 from orchestrator.orchestrator import Orchestrator
 
+from agent.api_key_rotation import configure_from_simulation_dict
+
 
 def _agent_type_from_model(model: str) -> str:
     """Infer agent type from model name."""
@@ -40,6 +42,7 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
 
 async def run(config_path: Path) -> None:
     raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    configure_from_simulation_dict(raw)
     domain = raw.get("domain")
     if isinstance(domain, dict) and domain.get("tasks"):
         print(
