@@ -116,8 +116,11 @@ class LiteLLMAgent(BaseAgent):
                 "messages": messages,
                 "temperature": self.config.temperature,
                 "reasoning_effort": getattr(self.config, "reasoning_effort", None),
-                "seed": getattr(self.config, "seed", None),
+                "drop_params": True,
             }
+            _s = getattr(self.config, "seed", None)
+            if _s is not None:
+                completion_kw["seed"] = _s
             if self.config.max_tokens is not None:
                 completion_kw["max_tokens"] = self.config.max_tokens
             response = await litellm.acompletion(**completion_kw)
@@ -169,8 +172,10 @@ class LiteLLMAgent(BaseAgent):
                 "temperature": self.config.temperature,
                 "reasoning_effort": getattr(self.config, "reasoning_effort", None),
                 "drop_params": True,
-                "seed": getattr(self.config, "seed", None),
             }
+            _st = getattr(self.config, "seed", None)
+            if _st is not None:
+                tool_completion_kw["seed"] = _st
             if self.config.max_tokens is not None:
                 tool_completion_kw["max_tokens"] = self.config.max_tokens
             response = await litellm.acompletion(**tool_completion_kw)

@@ -40,6 +40,56 @@ from typing import Any, Dict, List
 
 import logfire
 from dotenv import load_dotenv
+
+# --- Chained LLM seed (optional ``gepa.llm_seed_chain``) ----------------------------
+
+_MAX_LLM_SEED = 2**31 - 1
+
+
+class LLMSeedChain:
+    """Thread-safe per-iteration LLM ``seed`` for retail simulation evals inside GEPA.
+
+    - **Before** the first ``on_iteration_start``: ``read()`` returns the **master**
+      (``gepa.seed``), used for the initial seed-candidate valset evaluation.
+    - **Each** ``on_iteration_start`` with ``iteration >= 1`` (GEPA's 1-based counter):
+      ``generated = Random(current).randint(1, 10**9)``,
+      ``current = (master + generated) % (2**31 - 1)`` (non-zero).
+
+    All simulator and qualitative-eval LLM calls in that iteration should use
+    ``read()`` so the API sees an explicit integer seed.
+    """
+
+    def __init__(self, master: int) -> None:
+        m = int(master) % _MAX_LLM_SEED
+        self._master = m if m != 0 else 1
+        self._current = self._master
+        self._lock = threading.Lock()
+
+    def read(self) -> int:
+        with self._lock:
+            return self._current
+
+    def advance_on_iteration_start(self, iteration: int) -> None:
+        """Advance after baseline; GEPA passes ``iteration`` = 1 for the first opt loop."""
+        if iteration < 1:
+            return
+        with self._lock:
+            prev = self._current
+            gen = random.Random(prev).randint(1, 10**9)
+            nxt = (self._master + gen) % _MAX_LLM_SEED
+            self._current = nxt if nxt != 0 else 1
+
+
+class _LLMSeedChainCallback:
+    def __init__(self, chain: LLMSeedChain) -> None:
+        self._chain = chain
+
+    def on_iteration_start(self, event: Dict[str, Any]) -> None:
+        try:
+            it = int(event.get("iteration", 0))
+        except (TypeError, ValueError):
+            return
+        self._chain.advance_on_iteration_start(it)
 from rich.console import Console, Group
 from rich.layout import Layout
 from rich.live import Live
@@ -448,6 +498,7 @@ def _make_evaluator(
     mcp_command: str,
     stop_mode: SoloStopMode,
     seed: int | None = None,
+    llm_seed_chain: LLMSeedChain | None = None,
     qualitative_eval: bool = False,
     qualitative_eval_lm: str = "openai/gpt-4.1-mini",
     mermaid_base_graph_path: Path | None = None,
@@ -460,6 +511,7 @@ def _make_evaluator(
     """Return a sync evaluator (candidate, example) -> score for GEPA."""
 
     def evaluate(candidate: str | dict[str, Any], example: dict[str, Any]):
+        eff_seed = llm_seed_chain.read() if llm_seed_chain is not None else seed
         task_id = example.get("id", "?")
         if view_state:
             view_state.inc_eval()
@@ -539,7 +591,7 @@ def _make_evaluator(
                     db_path=db_path,
                     mcp_command=mcp_command,
                     stop_mode=stop_mode,
-                    seed=seed,
+                    seed=eff_seed,
                     mermaid_graph_path=mermaid_graph_override,
                 )
             )
@@ -568,6 +620,7 @@ def _make_evaluator(
                 eval_span.set_attribute("score", score)
                 eval_span.set_attribute("db_match", db_match)
                 eval_span.set_attribute("path_match", path_match)
+                eval_span.set_attribute("llm_seed", eff_seed)
         else:
             _db_ok, eval_result = _run_eval()
             db_match = eval_result.get("db_match", False)
@@ -588,6 +641,7 @@ def _make_evaluator(
             "mermaid_sop_file": mermaid_graph_override,
             "mermaid_sop_digest": mermaid_graph_digest,
             "instructions_file": instructions_path,
+            "llm_seed": eff_seed,
         }
 
         if qualitative_eval:
@@ -621,11 +675,30 @@ def _make_evaluator(
                     task_id=task_id,
                     model=qualitative_eval_lm,
                 ):
-                    completion = litellm.completion(
-                        model=qualitative_eval_lm,
-                        messages=[{"role": "user", "content": judge_prompt}],
-                        temperature=0,
-                    )
+                    eval_messages = [{"role": "user", "content": judge_prompt}]
+                    _q_kw: dict[str, Any] = {
+                        "model": qualitative_eval_lm,
+                        "messages": eval_messages,
+                        "temperature": 0,
+                    }
+                    if eff_seed is not None:
+                        _q_kw["seed"] = eff_seed
+                    completion = litellm.completion(**_q_kw)
+                    try:
+                        from agent.gemini_log import log_litellm_raw_io
+
+                        _extra_q = {"temperature": 0}
+                        if eff_seed is not None:
+                            _extra_q["seed"] = eff_seed
+                        log_litellm_raw_io(
+                            phase="gepa_qualitative_eval",
+                            model=qualitative_eval_lm,
+                            messages=eval_messages,
+                            completion=completion,
+                            extra_completion_kwargs=_extra_q,
+                        )
+                    except ImportError:
+                        pass
                     judge_text = completion.choices[0].message.content  # type: ignore[union-attr]
                 side_info["qualitative_diagnosis"] = (judge_text or "").strip()
             except Exception as e:
@@ -830,13 +903,24 @@ def main() -> None:
         except Exception:
             pass
 
+        llm_seed_chain: LLMSeedChain | None = None
+        gepa_callbacks_list: list[Any] | None = None
+        if bool(gepa_cfg.get("llm_seed_chain", False)):
+            llm_seed_chain = LLMSeedChain(int(gepa_cfg.get("seed", 42)))
+            gepa_callbacks_list = [_LLMSeedChainCallback(llm_seed_chain)]
+            try:
+                top_span.set_attribute("llm_seed_chain", True)
+            except Exception:
+                pass
+
         evaluator = _make_evaluator(
             policy_text=policy_text,
             sim_cfg=sim_cfg,
             db_path=db_path,
             mcp_command=mcp_command,
             stop_mode=stop_mode,
-            seed=gepa_cfg.get("seed"),
+            seed=None if llm_seed_chain is not None else gepa_cfg.get("seed"),
+            llm_seed_chain=llm_seed_chain,
             qualitative_eval=bool(gepa_cfg.get("qualitative_eval", False)),
             qualitative_eval_lm=str(gepa_cfg.get("qualitative_eval_lm", "openai/gpt-4.1-mini")),
             mermaid_base_graph_path=mermaid_graph_path,
@@ -863,6 +947,7 @@ def main() -> None:
                 reflection_minibatch_size=gepa_cfg.get("reflection_minibatch_size", 3),
             ),
             tracking=TrackingConfig(logger=gepa_logger),
+            gepa_callbacks=gepa_callbacks_list,
         )
 
         if use_live_display and view_state is not None:

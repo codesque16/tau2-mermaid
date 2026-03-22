@@ -280,6 +280,9 @@ class MermaidAgent(BaseAgent):
                 "reasoning_effort": getattr(self.config, "reasoning_effort", "low"),
                 "drop_params": True,
             }
+            _s = getattr(self.config, "seed", None)
+            if _s is not None:
+                tool_kw["seed"] = _s
             if self.config.max_tokens is not None:
                 tool_kw["max_tokens"] = self.config.max_tokens
             response = await litellm.acompletion(**tool_kw)

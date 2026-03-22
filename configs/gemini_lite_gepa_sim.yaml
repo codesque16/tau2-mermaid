@@ -13,7 +13,7 @@ domain:
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
   task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
-  trials: 1
+  trials: 4
   seed: 34223423423
 
 assistant:

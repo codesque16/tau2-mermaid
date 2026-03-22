@@ -1,4 +1,5 @@
 # GEPA retail optimization (tau2-mermaid solo agent). Self-contained YAML (no ``extends``).
+# Same as ``gepa_retail_mermaid.yaml`` but assistant uses OpenAI ``gpt-5-nano`` with low reasoning.
 #
 # GEPA ``optimize_anything`` task modes (see ``gepa.optimize_anything`` docstring):
 #   single_task      → dataset=None, valset=None  (one retail task; evaluator has no ``example``)
@@ -6,7 +7,7 @@
 #   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
 #
 # Run from repo root:
-#   uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/gepa_retail_mermaid.yaml
+#   uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/gepa_retail_mermaid_openai_gpt5nano.yaml
 #
 # Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
 #   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
@@ -30,8 +31,8 @@ domain:
   db_path: "domains/retail/db.json"
 
 assistant:
-  agent_type: gemini
-  model: gemini-3.1-flash-lite-preview
+  agent_type: openai
+  model: gpt-5-nano
   temperature: 0
   reasoning_effort: low
   mcps:

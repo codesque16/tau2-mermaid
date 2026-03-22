@@ -18,7 +18,12 @@ from typing import Any
 
 from gepa.proposer.reflective_mutation.base import LanguageModel
 
-from agent.api_key_rotation import get_gemini_api_key, maybe_rotate_after_provider_error
+from agent.api_key_rotation import (
+    get_gemini_api_key,
+    mask_secret,
+    maybe_rotate_after_provider_error,
+)
+from agent.gemini_log import log_gemini_generate_io, to_jsonable
 
 
 def _visible_text_from_response(response: Any) -> str:
@@ -77,11 +82,15 @@ def genai_generate_user_text(
     max_output_tokens: int | None = None,
     reasoning_effort: str | None = None,
     include_thoughts_when_no_level: bool = True,
+    io_phase: str = "gepa_genai",
 ) -> str:
     """Single user-message ``generate_content``; returns visible (non-thought) text.
 
     Used by GEPA reflection (:func:`make_genai_gepa_lm`) and retail failure diagnosis so both go
     through ``instrument_logfire_gemini``-patched ``generate_content``.
+
+    ``io_phase`` is passed to :func:`agent.gemini_log.log_gemini_generate_io` (``TAU2_GEMINI_DUMP_PATH``
+    / Logfire) alongside the raw request/response.
     """
     model = model.strip()
     if not model:
@@ -114,11 +123,21 @@ def genai_generate_user_text(
             api_key = get_gemini_api_key()
             if not api_key.strip():
                 raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for GenAI GEPA LM.")
+            api_key_masked = mask_secret(api_key) or None
             client = genai.Client(api_key=api_key.strip())
             resp = client.models.generate_content(
                 model=model,
                 contents=contents,
                 config=config,
+            )
+            log_gemini_generate_io(
+                model=model,
+                tool_round=0,
+                contents=to_jsonable(contents),
+                config=to_jsonable(config),
+                response=resp,
+                phase=io_phase,
+                api_key_masked=api_key_masked,
             )
             return _visible_text_from_response(resp)
         except Exception as e:
@@ -163,6 +182,7 @@ def make_genai_gepa_lm(
     max_output_tokens: int | None = None,
     reasoning_effort: str | None = None,
     include_thoughts_when_no_level: bool = True,
+    io_phase: str = "gepa_reflection",
 ) -> LanguageModel:
     """Build a callable ``(prompt: str | list[dict]) -> str`` for GEPA reflection / seed generation.
 
@@ -174,6 +194,7 @@ def make_genai_gepa_lm(
             enables thinking config with ``include_thoughts=True`` when supported.
         include_thoughts_when_no_level: If True and ``reasoning_effort`` is unset, try
             ``ThinkingConfig(include_thoughts=True)`` alone so summaries appear in Logfire when the API allows.
+        io_phase: Label for :func:`agent.gemini_log.log_gemini_generate_io` (file + Logfire raw I/O).
     """
     model = model.strip()
     if not model:
@@ -188,6 +209,7 @@ def make_genai_gepa_lm(
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
             include_thoughts_when_no_level=include_thoughts_when_no_level,
+            io_phase=io_phase,
         )
 
     return lm

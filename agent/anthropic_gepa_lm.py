@@ -12,7 +12,11 @@ from typing import Any
 
 from gepa.proposer.reflective_mutation.base import LanguageModel
 
-from agent.api_key_rotation import get_anthropic_api_key, maybe_rotate_after_provider_error
+from agent.api_key_rotation import (
+    get_anthropic_api_key,
+    mask_secret,
+    maybe_rotate_after_provider_error,
+)
 
 _DEFAULT_MAX = 4096
 
@@ -103,6 +107,7 @@ def anthropic_generate_user_text(
                 used_key = api_key
                 client = anthropic.Anthropic(api_key=api_key)
             assert client is not None
+            ak = mask_secret(api_key)
             message = sync_anthropic_messages_with_logfire(
                 agent_name="gepa_reflection",
                 model=model,
@@ -113,6 +118,8 @@ def anthropic_generate_user_text(
                     "temperature": kw.get("temperature"),
                 },
                 create_fn=lambda: client.messages.create(**kw),
+                api_key_masked=ak if ak else None,
+                io_phase="gepa_anthropic",
             )
             parts: list[str] = []
             for block in getattr(message, "content", None) or []:

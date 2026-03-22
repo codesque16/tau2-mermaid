@@ -121,11 +121,55 @@ def is_rate_limit_error(exc: BaseException) -> bool:
     return False
 
 
+def mask_secret(value: str, *, head: int = 4, tail: int = 4) -> str:
+    """Return a non-reversible fingerprint for logs (first ``head`` + last ``tail`` chars, never the full secret)."""
+    s = (value or "").strip()
+    if not s:
+        return ""
+    n = len(s)
+    need = head + tail + 1
+    if n <= need:
+        return f"<{n} chars>"
+    return f"{s[:head]}…{s[-tail:]} (len={n})"
+
+
 def get_gemini_api_key() -> str:
     if _gemini and _gemini.configured:
         with _locks["gemini"]:
             return _gemini.current()
     return (os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY") or "").strip()
+
+
+def get_gemini_api_key_masked() -> str:
+    """``mask_secret(get_gemini_api_key())`` — which key rotation slot is active for the next Gemini call."""
+    return mask_secret(get_gemini_api_key())
+
+
+def get_openai_api_key_masked() -> str:
+    return mask_secret(get_openai_api_key())
+
+
+def get_anthropic_api_key_masked() -> str:
+    return mask_secret(get_anthropic_api_key())
+
+
+def api_key_masked_for_litellm_model(model: str) -> str:
+    """Best-effort masked API key for a LiteLLM ``model`` id (rotation-aware)."""
+    m = (model or "").strip().lower()
+    if not m:
+        return ""
+    if m.startswith("anthropic/") or m.startswith("claude-"):
+        return get_anthropic_api_key_masked()
+    if m.startswith("gemini/") or m.startswith("google/") or m.startswith("vertex_ai/"):
+        return get_gemini_api_key_masked()
+    if m.startswith("openai/") or m.startswith("azure") or m.startswith("text-completion-openai/"):
+        return get_openai_api_key_masked()
+    tail = m.split("/")[-1]
+    if "claude" in tail or tail.startswith("claude"):
+        return get_anthropic_api_key_masked()
+    if "gemini" in tail:
+        return get_gemini_api_key_masked()
+    return get_openai_api_key_masked()
 
 
 def get_openai_api_key() -> str:

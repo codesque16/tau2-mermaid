@@ -38,6 +38,8 @@ def _finalize_openai_span(
     request_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     completion: Any,
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> None:
     resp = openai_chat_completion_to_response_dict(completion)
     usage = resp.get("usage") or {}
@@ -73,6 +75,20 @@ def _finalize_openai_span(
     span.set_attribute("output.mime_type", "application/json")
     span.set_attribute("output.value", resp)
 
+    try:
+        from agent.gemini_log import log_openai_chat_raw_io
+
+        log_openai_chat_raw_io(
+            phase=io_phase,
+            model=model,
+            messages=request_messages,
+            request_extras=request_extras,
+            completion=completion,
+            api_key_masked=api_key_masked,
+        )
+    except ImportError:
+        pass
+
 
 async def async_openai_chat_with_logfire(
     *,
@@ -81,8 +97,19 @@ async def async_openai_chat_with_logfire(
     request_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     create_coro: Callable[[], Awaitable[Any]],
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> Any:
     """Await ``create_coro`` inside a Logfire span (async OpenAI client)."""
+    mk = (api_key_masked or "").strip() or None
+    if not mk:
+        try:
+            from agent.api_key_rotation import get_openai_api_key_masked
+
+            mk = (get_openai_api_key_masked() or "").strip() or None
+        except ImportError:
+            mk = None
+
     with logfire.span(
         "openai chat.completions",
         agent=agent_name,
@@ -93,6 +120,8 @@ async def async_openai_chat_with_logfire(
             "gen_ai.operation.name": "chat",
         },
     ) as span:
+        if mk:
+            span.set_attribute("openai.api_key_masked", mk)
         completion = await create_coro()
         _finalize_openai_span(
             span,
@@ -100,6 +129,8 @@ async def async_openai_chat_with_logfire(
             request_messages=request_messages,
             request_extras=request_extras,
             completion=completion,
+            api_key_masked=mk,
+            io_phase=io_phase,
         )
         return completion
 
@@ -111,8 +142,19 @@ def sync_openai_chat_with_logfire(
     request_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     create_fn: Callable[[], Any],
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> Any:
     """Run sync ``create_fn`` inside a Logfire span (GEPA / sync OpenAI client)."""
+    mk = (api_key_masked or "").strip() or None
+    if not mk:
+        try:
+            from agent.api_key_rotation import get_openai_api_key_masked
+
+            mk = (get_openai_api_key_masked() or "").strip() or None
+        except ImportError:
+            mk = None
+
     with logfire.span(
         "openai chat.completions",
         agent=agent_name,
@@ -123,6 +165,8 @@ def sync_openai_chat_with_logfire(
             "gen_ai.operation.name": "chat",
         },
     ) as span:
+        if mk:
+            span.set_attribute("openai.api_key_masked", mk)
         completion = create_fn()
         _finalize_openai_span(
             span,
@@ -130,6 +174,8 @@ def sync_openai_chat_with_logfire(
             request_messages=request_messages,
             request_extras=request_extras,
             completion=completion,
+            api_key_masked=mk,
+            io_phase=io_phase,
         )
         return completion
 
@@ -142,6 +188,8 @@ def _finalize_anthropic_span(
     api_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     message: Any,
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> None:
     resp = anthropic_message_to_response_dict(message)
     usage = resp.get("usage") or {}
@@ -188,6 +236,21 @@ def _finalize_anthropic_span(
     span.set_attribute("output.mime_type", "application/json")
     span.set_attribute("output.value", resp)
 
+    try:
+        from agent.gemini_log import log_anthropic_messages_raw_io
+
+        log_anthropic_messages_raw_io(
+            phase=io_phase,
+            model=model,
+            system_text=system_text,
+            api_messages=api_messages,
+            request_extras=request_extras,
+            message=message,
+            api_key_masked=api_key_masked,
+        )
+    except ImportError:
+        pass
+
 
 async def async_anthropic_messages_with_logfire(
     *,
@@ -197,7 +260,18 @@ async def async_anthropic_messages_with_logfire(
     api_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     create_coro: Callable[[], Awaitable[Any]],
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> Any:
+    mk = (api_key_masked or "").strip() or None
+    if not mk:
+        try:
+            from agent.api_key_rotation import get_anthropic_api_key_masked
+
+            mk = (get_anthropic_api_key_masked() or "").strip() or None
+        except ImportError:
+            mk = None
+
     with logfire.span(
         "anthropic messages.create",
         agent=agent_name,
@@ -208,6 +282,8 @@ async def async_anthropic_messages_with_logfire(
             "gen_ai.operation.name": "chat",
         },
     ) as span:
+        if mk:
+            span.set_attribute("anthropic.api_key_masked", mk)
         message = await create_coro()
         _finalize_anthropic_span(
             span,
@@ -216,6 +292,8 @@ async def async_anthropic_messages_with_logfire(
             api_messages=api_messages,
             request_extras=request_extras,
             message=message,
+            api_key_masked=mk,
+            io_phase=io_phase,
         )
         return message
 
@@ -228,7 +306,18 @@ def sync_anthropic_messages_with_logfire(
     api_messages: list[dict[str, Any]],
     request_extras: dict[str, Any],
     create_fn: Callable[[], Any],
+    api_key_masked: str | None = None,
+    io_phase: str | None = None,
 ) -> Any:
+    mk = (api_key_masked or "").strip() or None
+    if not mk:
+        try:
+            from agent.api_key_rotation import get_anthropic_api_key_masked
+
+            mk = (get_anthropic_api_key_masked() or "").strip() or None
+        except ImportError:
+            mk = None
+
     with logfire.span(
         "anthropic messages.create",
         agent=agent_name,
@@ -239,6 +328,8 @@ def sync_anthropic_messages_with_logfire(
             "gen_ai.operation.name": "chat",
         },
     ) as span:
+        if mk:
+            span.set_attribute("anthropic.api_key_masked", mk)
         message = create_fn()
         _finalize_anthropic_span(
             span,
@@ -247,5 +338,7 @@ def sync_anthropic_messages_with_logfire(
             api_messages=api_messages,
             request_extras=request_extras,
             message=message,
+            api_key_masked=mk,
+            io_phase=io_phase,
         )
         return message

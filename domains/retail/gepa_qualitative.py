@@ -193,6 +193,7 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
                 temperature=temp,
                 max_output_tokens=diagnosis_genai_max_output_tokens,
                 reasoning_effort=diagnosis_genai_reasoning_effort,
+                io_phase="gepa_eval",
             )
             return text.strip()
         except Exception as e:
@@ -246,11 +247,24 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
         return "(qualitative ASI skipped: litellm not available)"
 
     try:
+        messages = [{"role": "user", "content": prompt}]
         resp = completion(
             model=diagnosis_lm,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=0.3,
         )
+        try:
+            from agent.gemini_log import log_litellm_raw_io
+
+            log_litellm_raw_io(
+                phase="gepa_eval",
+                model=diagnosis_lm,
+                messages=messages,
+                completion=resp,
+                extra_completion_kwargs={"temperature": 0.3},
+            )
+        except ImportError:
+            pass
         text = resp.choices[0].message.content or ""
         return text.strip()
     except Exception as e:

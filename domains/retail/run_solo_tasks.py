@@ -235,6 +235,7 @@ def _experiment_config_record(
         "domain.trials": domain_cfg.get("trials"),
         "domain.task_ids": domain_cfg.get("task_ids"),
         "domain.evaluate_communication": domain_cfg.get("evaluate_communication"),
+        "domain.seed": domain_cfg.get("seed"),
         "assistant.agent_type": assistant_block.get("agent_type"),
         "assistant.model": assistant_block.get("model") or raw_cfg.get("model"),
         "assistant.temperature": assistant_block.get("temperature"),
@@ -610,8 +611,14 @@ async def _run_solo_experiment_async(
         ),
     )
 
-    base_seed = 300
-    rng = random.Random(base_seed)
+    # Master RNG: if ``domain.seed`` is set, it seeds this RNG only (not passed directly to the LLM).
+    # Each trial gets ``trial_seeds[i]`` from this stream; that value is passed as ``seed`` on every LLM call
+    # for that trial (see ``make_orchestrator_for_solo`` / ``AgentConfig.seed``).
+    _domain_seed = domain_cfg.get("seed")
+    if _domain_seed is not None:
+        rng = random.Random(int(_domain_seed))
+    else:
+        rng = random.Random(300)
     trial_seeds = [rng.randint(1, 10**9) for _ in range(trials)]
     results: List[Dict[str, Any]] = []
 

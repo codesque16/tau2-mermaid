@@ -56,9 +56,9 @@ assistant:
         - "transfer_to_human_agents"
 
 gepa:
-  seed_policy_path: "gepa/examples/tau2_retail_mermaid/seed_mermaid.md"
-  # Merge wrapper with <gepa_generated>…</gepa_generated>; reflection output is spliced here (see reflection_prompts_mermaid.md).
-  gepa_template_file: "gepa/examples/tau2_retail_mermaid/seed_mermaid_template.md"
+  seed_policy_path: "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
+  # Merge wrapper with <gepa_generated>…</gepa_generated>; reflection output is spliced here (see reflection_prompts_solo_v1.md).
+  gepa_template_file: "gepa/examples/tau2_retail_mermaid/seed_solo_v1_template.md"
   output_dir: "outputs/tau2_retail_mermaid"
   fresh: false
   run_dir: null
@@ -83,7 +83,7 @@ gepa:
   diagnosis_genai_max_output_tokens: null
   diagnosis_genai_reasoning_effort: high
 
-  reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_mermaid.md"
+  reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_solo_v1.md"
 
   reflection_minibatch_size: 10
   reflection_skip_perfect_score: false

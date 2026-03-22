@@ -6,7 +6,11 @@ import asyncio
 import json
 from typing import Any, Callable, Awaitable, Dict, List
 
-from agent.api_key_rotation import get_openai_api_key, maybe_rotate_after_provider_error
+from agent.api_key_rotation import (
+    get_openai_api_key,
+    mask_secret,
+    maybe_rotate_after_provider_error,
+)
 
 from openai import AsyncOpenAI
 
@@ -116,12 +120,14 @@ class OpenAIAgent(BaseAgent):
                 async def _call() -> Any:
                     return await self.client.chat.completions.create(**kw)
 
+                ak = mask_secret(self._openai_key or "")
                 return await async_openai_chat_with_logfire(
                     agent_name=self.name,
                     model=self.model,
                     request_messages=list(messages),
                     request_extras=extras,
                     create_coro=_call,
+                    api_key_masked=ak if ak else None,
                 )
             except Exception as e:
                 last_err = e

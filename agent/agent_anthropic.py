@@ -6,7 +6,11 @@ import asyncio
 import json
 from typing import Any, Callable, Awaitable, Dict, List
 
-from agent.api_key_rotation import get_anthropic_api_key, maybe_rotate_after_provider_error
+from agent.api_key_rotation import (
+    get_anthropic_api_key,
+    mask_secret,
+    maybe_rotate_after_provider_error,
+)
 
 import anthropic
 
@@ -231,6 +235,7 @@ class AnthropicAgent(BaseAgent):
                 async def _call() -> Any:
                     return await self.client.messages.create(**kw)
 
+                ak = mask_secret(self._anthropic_key or "")
                 return await async_anthropic_messages_with_logfire(
                     agent_name=self.name,
                     model=self.model,
@@ -238,6 +243,7 @@ class AnthropicAgent(BaseAgent):
                     api_messages=list(api_messages),
                     request_extras=extras,
                     create_coro=_call,
+                    api_key_masked=ak if ak else None,
                 )
             except Exception as e:
                 last_err = e

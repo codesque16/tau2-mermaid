@@ -12,7 +12,11 @@ from typing import Any
 
 from gepa.proposer.reflective_mutation.base import LanguageModel
 
-from agent.api_key_rotation import get_openai_api_key, maybe_rotate_after_provider_error
+from agent.api_key_rotation import (
+    get_openai_api_key,
+    mask_secret,
+    maybe_rotate_after_provider_error,
+)
 
 
 def _prompt_to_user_text(prompt: str | list[dict[str, Any]]) -> str:
@@ -68,12 +72,15 @@ def openai_generate_user_text(
                 used_key = api_key
                 client = OpenAI(api_key=api_key)
             assert client is not None
+            ak = mask_secret(api_key)
             completion = sync_openai_chat_with_logfire(
                 agent_name="gepa_reflection",
                 model=model,
                 request_messages=list(messages),
                 request_extras=extras,
                 create_fn=lambda: client.chat.completions.create(**kw),
+                api_key_masked=ak if ak else None,
+                io_phase="gepa_openai",
             )
             msg = completion.choices[0].message if completion.choices else None
             return (getattr(msg, "content", None) or "").strip() if msg else ""

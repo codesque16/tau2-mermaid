@@ -337,6 +337,9 @@ class GeminiAgent(BaseAgent):
                 from google.genai import types
 
                 client = self._get_client()
+                from agent.api_key_rotation import mask_secret
+
+                raw_key = getattr(self, "_gemini_client_key", "") or ""
                 contents = _history_to_gemini_contents()
 
                 gen_config_kw: dict = {
@@ -367,6 +370,9 @@ class GeminiAgent(BaseAgent):
                             )
                 if self.config.max_tokens is not None:
                     gen_config_kw["max_output_tokens"] = self.config.max_tokens
+                _llm_seed = getattr(self.config, "seed", None)
+                if _llm_seed is not None:
+                    gen_config_kw["seed"] = int(_llm_seed)
                 if gemini_tools:
                     gen_config_kw["tools"] = gemini_tools
                     # We manage tool execution ourselves; this prevents the SDK from trying to "help".
@@ -385,6 +391,7 @@ class GeminiAgent(BaseAgent):
                 log_bundle = {
                     "gemini_contents": to_jsonable(contents),
                     "gemini_config": to_jsonable(gen_config),
+                    "api_key_masked": mask_secret(raw_key),
                 }
                 thought_text = _thought_text_from_response(response)
                 return (
@@ -404,6 +411,7 @@ class GeminiAgent(BaseAgent):
                 contents=log_bundle["gemini_contents"],
                 config=log_bundle["gemini_config"],
                 response=response,
+                api_key_masked=log_bundle.get("api_key_masked") or None,
             )
             usage = usage_from_gemini_response(response)
             if usage:

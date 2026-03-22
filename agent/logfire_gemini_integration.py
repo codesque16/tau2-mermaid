@@ -47,6 +47,17 @@ _OI_TOOL_CALL_FN_ARGS = "tool_call.function.arguments"
 _store: dict[str, Any] = {"patched": False, "sync": None, "async": None}
 
 
+def _current_gemini_api_key_masked() -> str | None:
+    """Fingerprint of the API key used for Gemini (rotation-aware); never the full key."""
+    try:
+        from .api_key_rotation import get_gemini_api_key_masked
+
+        m = (get_gemini_api_key_masked() or "").strip()
+        return m if m else None
+    except Exception:
+        return None
+
+
 def _system_instruction_joined_text(config: Any) -> str | None:
     """Plain system prompt text from config (injected into ``request_data`` ``messages``)."""
     if config is None:
@@ -858,7 +869,7 @@ def _attach_raw_generate_content_io(
     if not logfire_raw_io_enabled():
         return
     try:
-        payload = {
+        payload: dict[str, Any] = {
             "request": {
                 "model": model,
                 "contents": to_jsonable(contents),
@@ -866,6 +877,9 @@ def _attach_raw_generate_content_io(
             },
             "response": to_jsonable(response),
         }
+        mk = _current_gemini_api_key_masked()
+        if mk:
+            payload["api_key_masked"] = mk
         s = _dumps(payload)
         if len(s) <= _GEMINI_IO_JSON_MAX_ATTR_CHARS:
             span.set_attribute("gemini_io_json", s)
@@ -891,6 +905,9 @@ def _wrap_sync(orig: Callable[..., Any]) -> Callable[..., Any]:
             "google.genai generate_content",
             **_generate_content_span_kwargs(model),
         ) as span:
+            mk = _current_gemini_api_key_masked()
+            if mk:
+                span.set_attribute("gemini.api_key_masked", mk)
             try:
                 response = orig(self, model=model, contents=contents, config=config, **kwargs)
             except BaseException:
@@ -919,6 +936,9 @@ def _wrap_async(orig: Callable[..., Any]) -> Callable[..., Any]:
             "google.genai generate_content",
             **_generate_content_span_kwargs(model),
         ) as span:
+            mk = _current_gemini_api_key_masked()
+            if mk:
+                span.set_attribute("gemini.api_key_masked", mk)
             try:
                 response = await orig(
                     self, model=model, contents=contents, config=config, **kwargs
