@@ -164,11 +164,11 @@ class GeminiAgent(BaseAgent):
                 params = fn.get("parameters") or {"type": "object", "properties": {}}
                 json_schema = types.JSONSchema.model_validate(params)
                 schema = types.Schema.from_json_schema(json_schema=json_schema)
-                # Match OpenAI path: no MCP docstrings in the tool list.
+                # Reuse the same tool description populated in BaseAgent/OpenAI path.
                 fn_decls.append(
                     types.FunctionDeclaration(
                         name=name,
-                        description="",
+                        description=str(fn.get("description") or ""),
                         parameters=schema,
                     )
                 )
