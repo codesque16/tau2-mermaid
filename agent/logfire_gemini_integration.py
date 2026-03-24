@@ -824,11 +824,23 @@ def _apply_gen_ai_span_attributes(
     if mv:
         span.set_attribute(gen_ai_attributes.GEN_AI_RESPONSE_MODEL, str(mv))
 
-    um = getattr(response, "usage_metadata", None)
+    # SDK shape may expose token counts via `usage_metadata` or `usage`.
+    um = getattr(response, "usage_metadata", None) or getattr(response, "usage", None)
     if um is not None:
-        pt = getattr(um, "prompt_token_count", None)
-        ct = getattr(um, "candidates_token_count", None)
-        tt = getattr(um, "total_token_count", None)
+        pt = (
+            getattr(um, "prompt_token_count", None)
+            or getattr(um, "promptTokenCount", None)
+            or getattr(um, "input_tokens", None)
+        )
+        ct = (
+            getattr(um, "candidates_token_count", None)
+            or getattr(um, "candidatesTokenCount", None)
+            or getattr(um, "output_tokens", None)
+        )
+        tt = (
+            getattr(um, "total_token_count", None)
+            or getattr(um, "totalTokenCount", None)
+        )
         if pt is not None:
             span.set_attribute("gen_ai.usage.input_tokens", pt)
             span.set_attribute("llm.token_count.prompt", pt)
@@ -889,7 +901,7 @@ def _attach_raw_generate_content_io(
 
 def _generate_content_span_kwargs(model: str) -> dict[str, Any]:
     return {
-        "_span_name": "generate_content",
+        "_span_name": "google.genai.generate_content",
         "gen_ai_system": "google",
         "gen_ai_operation_name": "generate_content",
         "gen_ai_request_model": model,
