@@ -78,8 +78,19 @@ def format_openai_style_history_dicts(
     return "\n".join(out).strip()
 
 
-def retail_tools_list_for_gepa_diagnosis(*, mcp_command: str) -> str:
+def retail_tools_list_for_gepa_diagnosis(
+    *,
+    mcp_command: str,
+    tools_markdown_path: str | None = None,
+) -> str:
     """Tool names/descriptions from the retail MCP server (stdio ``list_tools``)."""
+    md_path = (tools_markdown_path or "").strip()
+    if md_path:
+        try:
+            return open(md_path, encoding="utf-8").read().strip()
+        except Exception as e:
+            return f"(Failed to read tools markdown file {md_path!r}: {type(e).__name__}: {e})"
+
     cmd = (mcp_command or "").strip()
     if not cmd:
         return (

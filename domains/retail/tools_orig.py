@@ -138,7 +138,13 @@ def calculate(expression: str) -> str:
 
 @mcp.tool()
 def cancel_pending_order(order_id: str, reason: str) -> Order:
-        """Cancel a pending order.
+        """Cancel a pending order. If the order is already processed or delivered,
+        it cannot be cancelled. The agent needs to explain the cancellation detail
+        and ask for explicit user confirmation (yes/no) to proceed. If the user confirms,
+        the order status will be changed to 'cancelled' and the payment will be refunded.
+        The refund will be added to the user's gift card balance immediately if the payment
+        was made using a gift card, otherwise the refund would take 5-7 business days to process.
+        The function returns the order details after the cancellation.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
@@ -187,6 +193,8 @@ def exchange_delivered_order_items(
     payment_method_id: str,
 ) -> Order:
         """Exchange items in a delivered order to new items of the same product type.
+        For a delivered order, return or exchange can be only done once by the agent.
+        The agent needs to explain the exchange detail and ask for explicit user confirmation (yes/no) to proceed.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
@@ -195,7 +203,8 @@ def exchange_delivered_order_items(
                          There could be duplicate items in the list. Each new item id should match the item id
                          in the same position and be of the same product.
             payment_method_id: The payment method id to pay or receive refund for the item price difference,
-                     such as 'gift_card_0000000' or 'credit_card_0000000'.
+                             such as 'gift_card_0000000' or 'credit_card_0000000'. These can be looked up
+                             from the user or order details.
 
         Returns:
             Order: The order details after the exchange.
@@ -257,7 +266,8 @@ def exchange_delivered_order_items(
 @mcp.tool()
 def find_user_id_by_name_zip(first_name: str, last_name: str, zip: str) -> str:
         """Find user id by first name, last name, and zip code. If the user is not found, the function
-        will return an error message.
+        will return an error message. By default, find user id by email, and only call this function
+        if the user is not found by email or cannot remember email.
 
         Args:
             first_name: The first name of the customer, such as 'John'.
@@ -366,7 +376,7 @@ def modify_pending_order_address(
     country: str,
     zip: str,
 ) -> Order:
-        """Modify the shipping address of a pending order.
+        """Modify the shipping address of a pending order. The agent needs to explain the modification detail and ask for explicit user confirmation (yes/no) to proceed.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
@@ -406,13 +416,13 @@ def modify_pending_order_items(
     new_item_ids: List[str],
     payment_method_id: str,
 ) -> Order:
-        """Modify items in a pending order to new items of the same product type
+        """Modify items in a pending order to new items of the same product type. For a pending order, this function can only be called once. The agent needs to explain the exchange detail and ask for explicit user confirmation (yes/no) to proceed.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
             item_ids: The item ids to be modified, each such as '1008292230'. There could be duplicate items in the list.
             new_item_ids: The item ids to be modified for, each such as '1008292230'. There could be duplicate items in the list. Each new item id should match the item id in the same position and be of the same product.
-            payment_method_id: The payment method id to pay or receive refund for the item price difference, such as 'gift_card_0000000' or 'credit_card_0000000'.
+            payment_method_id: The payment method id to pay or receive refund for the item price difference, such as 'gift_card_0000000' or 'credit_card_0000000'. These can be looked up from the user or order details.
 
         Returns:
             Order: The order details after the modification.
@@ -493,11 +503,11 @@ def modify_pending_order_payment(
     order_id: str,
     payment_method_id: str,
 ) -> Order:
-        """Modify the payment method of a pending order.
+        """Modify the payment method of a pending order. The agent needs to explain the modification detail and ask for explicit user confirmation (yes/no) to proceed.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
-            payment_method_id: The payment method id to pay or receive refund for the item price difference, such as 'gift_card_0000000' or 'credit_card_0000000'.
+            payment_method_id: The payment method id to pay or receive refund for the item price difference, such as 'gift_card_0000000' or 'credit_card_0000000'. These can be looked up from the user or order details.
 
         Returns:
             Order: The order details after the modification.
@@ -577,7 +587,7 @@ def modify_user_address(
     country: str,
     zip: str,
 ) -> User:
-        """Modify the default address of a user.
+        """Modify the default address of a user. The agent needs to explain the modification detail and ask for explicit user confirmation (yes/no) to proceed.
 
         Args:
             user_id: The user id, such as 'sara_doe_496'.
@@ -613,11 +623,14 @@ def return_delivered_order_items(
 ) -> Order:
         """Return some items of a delivered order.
         The order status will be changed to 'return requested'.
+        The agent needs to explain the return detail and ask for explicit user confirmation (yes/no) to proceed.
+        The user will receive follow-up email for how and where to return the item.
 
         Args:
             order_id: The order id, such as '#W0000000'. Be careful there is a '#' symbol at the beginning of the order id.
             item_ids: The item ids to be returned, each such as '1008292230'. There could be duplicate items in the list.
             payment_method_id: The payment method id to pay or receive refund for the item price difference, such as 'gift_card_0000000' or 'credit_card_0000000'.
+                             These can be looked up from the user or order details.
 
         Returns:
             Order: The order details after requesting the return.
@@ -673,6 +686,9 @@ def return_delivered_order_items(
 def transfer_to_human_agents(summary: str) -> str:
         """
         Transfer the user to a human agent, with a summary of the user's issue.
+        Only transfer if
+         -  the user explicitly asks for a human agent
+         -  given the policy and the available tools, you cannot solve the user's issue.
 
         Args:
             summary: A summary of the user's issue.

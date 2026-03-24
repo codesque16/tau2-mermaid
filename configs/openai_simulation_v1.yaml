@@ -42,6 +42,7 @@ assistant:
     - gpt-5-nano
   temperature: 0
   reasoning_effort: "low" #["low", "medium", "high"]
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools
       type: stdio

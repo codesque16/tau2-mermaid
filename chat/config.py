@@ -11,6 +11,7 @@ class AgentConfig:
     max_tokens: int | None = None  # None = unbounded / use provider default
     mcps: list[dict] | None = None
     mermaid: list[dict] | None = None  # Mermaid MCP(s): [{ graph, type, url, tools }]
+    mcp_tools_markdown_path: str | None = None
     reasoning_effort: str | None = None  # None = no thinking; "low", "medium", "high" for Gemini etc.
 
 
@@ -51,6 +52,7 @@ def _agent_config_from_block(block: dict | None) -> AgentConfig:
         max_tokens=block.get("max_tokens"),  # omit or null = unbounded
         mcps=block.get("mcps") or None,
         mermaid=block.get("mermaid") or None,
+        mcp_tools_markdown_path=block.get("mcp_tools_markdown_path"),
         reasoning_effort=block.get("reasoning_effort"),
     )
 

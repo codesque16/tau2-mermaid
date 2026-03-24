@@ -40,6 +40,7 @@ class BaseAgent(ABC):
         self._mermaid_connections: List[Any] = []
         # System prompt from load_graph (role, rules, SOP); when set, use this + ticket only.
         self._mermaid_system_prompt: Optional[str] = None
+        self._tool_docs_by_name: Dict[str, Dict[str, Any]] = {}
 
     async def respond(self, incoming: str) -> tuple[str, dict]:
         """Non-streaming response. Returns (full_text, usage_info)."""
@@ -180,6 +181,15 @@ class BaseAgent(ABC):
             return
 
         tools: List[dict[str, Any]] = []
+        tool_docs_by_name: Dict[str, Dict[str, Any]] = {}
+        tools_md_path = (getattr(self.config, "mcp_tools_markdown_path", None) or "").strip()
+        if tools_md_path:
+            try:
+                from .mcp_tools_markdown import parse_tools_markdown
+
+                tool_docs_by_name = parse_tools_markdown(tools_md_path)
+            except Exception as e:
+                logger.warning("Failed to parse mcp_tools_markdown_path=%r: %s", tools_md_path, e)
 
         # ── Mermaid MCP(s): HTTP, load_graph once, then expose tools ──
         if mermaid_list:
@@ -264,7 +274,7 @@ class BaseAgent(ABC):
                             continue
                         if allow and name not in allow:
                             continue
-                        tool_def = self._mcp_tool_to_openai_format(t)
+                        tool_def = self._mcp_tool_to_openai_format(t, tool_docs_by_name=tool_docs_by_name)
                         tools.append(tool_def)
                         self._mcp_tool_servers[name] = mermaid_cfg
                         self._mcp_tool_sessions[name] = session
@@ -299,17 +309,23 @@ class BaseAgent(ABC):
                 name = getattr(t, "name", "") or ""
                 if allow and name not in allow:
                     continue
-                tool_def = self._mcp_tool_to_openai_format(t)
+                tool_def = self._mcp_tool_to_openai_format(t, tool_docs_by_name=tool_docs_by_name)
                 tools.append(tool_def)
                 self._mcp_tool_servers[name] = server_cfg
 
         self._mcp_tools = tools
+        self._tool_docs_by_name = tool_docs_by_name
         self._mcp_initialized = True
 
-    def _mcp_tool_to_openai_format(self, tool_obj: Any) -> dict[str, Any]:
+    def _mcp_tool_to_openai_format(
+        self,
+        tool_obj: Any,
+        *,
+        tool_docs_by_name: Dict[str, Dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Convert a single MCP tool descriptor to OpenAI/litellm `tools` format.
 
-        Function `description` is always empty; parameter schemas are unchanged.
+        Function/argument descriptions can be enriched from ``mcp_tools_markdown_path``.
         """
         _HIDDEN_PARAMS = {"session_id", "ctx"}
 
@@ -330,12 +346,26 @@ class BaseAgent(ABC):
                 "required": [r for r in required if r not in _HIDDEN_PARAMS],
             }
 
+        tool_docs_by_name = tool_docs_by_name or {}
+        doc = tool_docs_by_name.get(name) or {}
+        description = str(doc.get("description") or "").strip()
+        arg_docs = doc.get("args") if isinstance(doc.get("args"), dict) else {}
+        if isinstance(input_schema, dict) and isinstance(input_schema.get("properties"), dict):
+            for p_name, p_schema in input_schema["properties"].items():
+                if not isinstance(p_schema, dict):
+                    continue
+                arg_desc = str(arg_docs.get(p_name) or "").strip()
+                if not arg_desc:
+                    continue
+                updated = dict(p_schema)
+                updated["description"] = arg_desc
+                input_schema["properties"][p_name] = updated
+
         return {
             "type": "function",
             "function": {
                 "name": name,
-                # MCP tool `description` is not sent to the LLM (empty string only).
-                "description": "",
+                "description": description,
                 "parameters": input_schema,
             },
         }
@@ -403,21 +433,8 @@ class BaseAgent(ABC):
         return self._format_mcp_result(result)
 
     def _get_mcp_tools_for_llm(self) -> List[dict[str, Any]]:
-        """Return the OpenAI-format tools list for the current agent (names + parameters only).
-
-        Strips function-level descriptions so providers always receive `description: \"\"`.
-        """
-        out: List[dict[str, Any]] = []
-        for t in self._mcp_tools or []:
-            if not isinstance(t, dict):
-                out.append(t)
-                continue
-            tc = copy.deepcopy(t)
-            fn = tc.get("function")
-            if isinstance(fn, dict):
-                fn["description"] = ""
-            out.append(tc)
-        return out
+        """Return the OpenAI-format tools list for the current agent."""
+        return [copy.deepcopy(t) for t in (self._mcp_tools or [])]
 
     def log_llm_tools_in_request(
         self,

@@ -38,6 +38,7 @@ assistant:
   model: gemini-3.1-flash-lite-preview
   temperature: 0
   reasoning_effort: low
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools
       type: stdio

@@ -302,7 +302,10 @@ def _finalize_openai_responses_span(
         log_openai_responses_raw_io(
             phase=io_phase,
             model=model,
-            request_kwargs=request_data,
+            # Raw I/O log should capture the exact payload passed to responses.create(...)
+            # (tools, tool_choice, seed, reasoning, previous_response_id, etc.), not the
+            # reduced chat-shaped UI view used by Logfire Model Run rendering.
+            request_kwargs=request_kwargs,
             response=response,
             api_key_masked=api_key_masked,
         )

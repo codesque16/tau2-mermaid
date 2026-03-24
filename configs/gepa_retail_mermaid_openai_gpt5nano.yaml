@@ -35,6 +35,7 @@ assistant:
   model: gpt-5-nano
   # gpt-5* chat: OpenAI only allows default temperature; ``agent_openai`` omits the param.
   reasoning_effort: low
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools
       type: stdio

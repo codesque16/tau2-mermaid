@@ -16,5 +16,7 @@ class AgentConfig:
     mcps: Optional[List[Dict[str, Any]]] = None
     # Optional mermaid MCP(s): list of { graph, type, url, tools }; connect via HTTP, call load_graph(graph), expose tools.
     mermaid: Optional[List[Dict[str, Any]]] = None
+    # Optional markdown file with per-tool descriptions/args (used to enrich LLM tool schemas).
+    mcp_tools_markdown_path: Optional[str] = None
     # Optional deterministic seed for the underlying LLM, if supported.
     seed: Optional[int] = None
