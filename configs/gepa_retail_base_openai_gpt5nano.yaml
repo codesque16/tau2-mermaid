@@ -16,7 +16,7 @@
 mode: solo
 max_turns: 60
 # When true, API keys are read strictly from .env (optionally set dotenv_path), not inherited shell env.
-strict_dotenv_only: false
+strict_dotenv_only: true
 
 domain:
   name: retail
@@ -70,7 +70,7 @@ gepa:
   # --- GEPA dataset / valset (names match ``optimize_anything``) ---
   optimization_mode: multi_task
   task_id: null
-  dataset_task_ids: [2,12] #[2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  dataset_task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
   valset_task_ids: null
 
   evaluation_seed: 7789797979
@@ -99,7 +99,7 @@ gepa:
   reflection_module_selector: round_robin
 
   max_metric_calls: null
-  max_candidate_proposals: 2
+  max_candidate_proposals: 10
   max_workers: 4
   parallel: true
   raise_on_exception: true
