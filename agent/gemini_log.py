@@ -35,6 +35,7 @@ __all__ = [
     "to_jsonable",
     "log_gemini_generate_io",
     "log_openai_chat_raw_io",
+    "log_openai_responses_raw_io",
     "log_anthropic_messages_raw_io",
     "log_litellm_raw_io",
     "logfire_raw_io_enabled",
@@ -179,6 +180,48 @@ def log_openai_chat_raw_io(
         return
     logfire.info(
         "openai.chat.completions",
+        model=model,
+        **({"phase": phase} if phase else {}),
+        **({"api_key_masked": api_key_masked} if api_key_masked else {}),
+        llm_io_json=_dumps(payload),
+    )
+
+
+def log_openai_responses_raw_io(
+    *,
+    phase: str | None = None,
+    model: str,
+    request_kwargs: dict[str, Any] | None = None,
+    response: Any,
+    api_key_masked: str | None = None,
+) -> None:
+    """Append one JSON line (and optional Logfire event) for native OpenAI ``responses.create`` calls."""
+    payload: dict[str, Any] = {
+        "provider": "openai",
+        "request": {
+            "model": model,
+            **(request_kwargs or {}),
+        },
+        "response": to_jsonable(response),
+    }
+    if phase:
+        payload["phase"] = phase
+    if api_key_masked:
+        payload["api_key_masked"] = api_key_masked
+
+    path = os.environ.get("TAU2_GEMINI_DUMP_PATH", "").strip()
+    if path:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(_dumps(payload) + "\n")
+
+    if not logfire_raw_io_enabled():
+        return
+    try:
+        import logfire
+    except ImportError:
+        return
+    logfire.info(
+        "openai.responses",
         model=model,
         **({"phase": phase} if phase else {}),
         **({"api_key_masked": api_key_masked} if api_key_masked else {}),

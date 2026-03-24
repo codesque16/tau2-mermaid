@@ -4,6 +4,14 @@
       "type": "stdio",
       "command": "uv",
       "args": ["run", "domains/retail/tools.py"]
+    },
+    "llm-probe": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "python", "-m", "llm_gateway.mcp_llm_probe"],
+      "env": {
+        "LLM_PROBE_VERBOSE": "1"
+      }
     }
   }
 }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from mcp.server.fastmcp import FastMCP
 
@@ -707,6 +707,17 @@ def get_db_hash() -> str:
         of different tool call sequences (e.g. golden vs predicted).
         """
         return DB.get_hash()
+
+
+@mcp.tool()
+def get_db_json() -> dict[str, Any]:
+        """Get a JSON-serializable representation of the current in-memory DB state.
+
+        Used by offline evaluators to produce a field-level JSON diff when
+        golden vs predicted DB states diverge.
+        """
+        # Pydantic BaseModel -> python primitives; safe to return via MCP.
+        return DB.model_dump(exclude_defaults=True)
 
 
 def main() -> None:

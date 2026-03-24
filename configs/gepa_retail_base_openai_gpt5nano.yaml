@@ -6,8 +6,8 @@
 #   multi_task       → dataset=<list>, valset=None
 #   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
 #
-# Run from repo root:
-#   uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/gepa_retail_base_openai_gpt5nano.yaml
+# Run from repo root (must use ``domains.retail.run_gepa_optimize`` — this file is not loaded by ``main.py``):
+#   uv run python -m domains.retail.run_gepa_optimize --config configs/gepa_retail_base_openai_gpt5nano.yaml
 #
 # Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
 #   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
@@ -95,8 +95,8 @@ gepa:
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
-  max_metric_calls: 200
-  max_candidate_proposals: null
+  max_metric_calls: null
+  max_candidate_proposals: 10
   max_workers: 4
   parallel: true
   raise_on_exception: true

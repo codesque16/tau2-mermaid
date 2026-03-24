@@ -7,6 +7,7 @@ LLM feedback for failed policy evaluations — same prompt shape as the historic
 from __future__ import annotations
 
 import asyncio
+import re
 import json
 from typing import Any
 
@@ -186,13 +187,30 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
         except ImportError as e:
             return f"(Diagnosis skipped: cannot import agent.genai_gepa_lm: {e})"
         try:
+            sys_m = re.search(
+                r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            user_m = re.search(
+                r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+            if user_m:
+                user_text = user_m.group(1).strip()
+            else:
+                user_text = prompt.replace(sys_m.group(0), "").strip() if sys_m else prompt.strip()
+
             temp = 0.3 if diagnosis_genai_temperature is None else float(diagnosis_genai_temperature)
             text = genai_generate_user_text(
                 diagnosis_lm.strip(),
-                prompt,
+                user_text,
                 temperature=temp,
                 max_output_tokens=diagnosis_genai_max_output_tokens,
                 reasoning_effort=diagnosis_genai_reasoning_effort,
+                system_instruction=system_text or None,
                 io_phase="gepa_eval",
             )
             return text.strip()
@@ -208,10 +226,27 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
             dm = diagnosis_lm.strip()
             if dm.startswith("openai/"):
                 dm = dm.split("/", 1)[1].strip()
+            sys_m = re.search(
+                r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            user_m = re.search(
+                r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+            if user_m:
+                user_text = user_m.group(1).strip()
+            else:
+                user_text = prompt.replace(sys_m.group(0), "").strip() if sys_m else prompt.strip()
+
             temp = 0.3 if diagnosis_genai_temperature is None else float(diagnosis_genai_temperature)
             text = openai_generate_user_text(
                 dm,
-                prompt,
+                user_text,
+                system_text=system_text or None,
                 temperature=temp,
                 max_tokens=diagnosis_genai_max_output_tokens,
                 reasoning_effort=diagnosis_genai_reasoning_effort,
@@ -229,10 +264,27 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
             dm = diagnosis_lm.strip()
             if dm.startswith("anthropic/"):
                 dm = dm.split("/", 1)[1].strip()
+            sys_m = re.search(
+                r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            user_m = re.search(
+                r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+            if user_m:
+                user_text = user_m.group(1).strip()
+            else:
+                user_text = prompt.replace(sys_m.group(0), "").strip() if sys_m else prompt.strip()
+
             temp = 0.3 if diagnosis_genai_temperature is None else float(diagnosis_genai_temperature)
             text = anthropic_generate_user_text(
                 dm,
-                prompt,
+                user_text,
+                system_text=system_text or None,
                 temperature=temp,
                 max_tokens=diagnosis_genai_max_output_tokens,
                 reasoning_effort=diagnosis_genai_reasoning_effort,
@@ -247,7 +299,27 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
         return "(qualitative ASI skipped: litellm not available)"
 
     try:
-        messages = [{"role": "user", "content": prompt}]
+        sys_m = re.search(
+            r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+            prompt,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        user_m = re.search(
+            r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+            prompt,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+        if user_m:
+            user_text = user_m.group(1).strip()
+        else:
+            user_text = prompt.replace(sys_m.group(0), "").strip() if sys_m else prompt.strip()
+
+        messages: list[dict[str, Any]] = []
+        if system_text:
+            messages.append({"role": "system", "content": system_text})
+        messages.append({"role": "user", "content": user_text})
+
         resp = completion(
             model=diagnosis_lm,
             messages=messages,

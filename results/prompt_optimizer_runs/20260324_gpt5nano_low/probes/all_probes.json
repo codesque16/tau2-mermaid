@@ -1,0 +1,74 @@
+[
+  {
+    "probe_id": "probe_01_baseline_task27",
+    "hypothesis": "Baseline policy causes premature transfer after auth",
+    "policy": "original",
+    "input_summary": "task_27: return hose+backpack, exchange boots - after auth result returned",
+    "result": "TRANSFERS immediately",
+    "pass": false
+  },
+  {
+    "probe_id": "probe_02_v01_task27",
+    "hypothesis": "H1+H3: Anti-transfer instruction stops premature transfer",
+    "policy": "v01",
+    "input_summary": "task_27: return hose+backpack, exchange boots - after auth result returned",
+    "result": "PROCEEDS - describes returning/exchanging correctly",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_03_v01_task81",
+    "hypothesis": "H3: Partial cancel fallback executes correctly",
+    "policy": "v01",
+    "input_summary": "task_81: cancel items; if partial not possible, cancel whole order",
+    "result": "PROCEEDS - cancels whole order",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_04_v01_task17",
+    "hypothesis": "H2: Order ID format fixed",
+    "policy": "v01",
+    "input_summary": "task_17: change address for order #W8665881",
+    "result": "PROCEEDS - uses #W prefix correctly",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_05_v01_task86",
+    "hypothesis": "H4: Cross-reference address from another order",
+    "policy": "v01",
+    "input_summary": "task_86: change default address to DC address from one of the orders",
+    "result": "PROCEEDS - would scan orders for DC address",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_06_v01_task56",
+    "hypothesis": "H3: Conditional cancel of air purifier",
+    "policy": "v01",
+    "input_summary": "task_56: conditional cancel with modify fallback",
+    "result": "PROCEEDS - executes conditional logic correctly",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_07_v01_task73",
+    "hypothesis": "H1: Return everything except coffee machine",
+    "policy": "v01",
+    "input_summary": "task_73: return everything just bought except coffee machine",
+    "result": "PROCEEDS - finds order and initiates partial return",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_08_v01_task33",
+    "hypothesis": "H3: Partial cancel fallback to address change",
+    "policy": "v01",
+    "input_summary": "task_33: partial cancel not possible -> change default address to Seattle",
+    "result": "PROCEEDS - identifies partial cancel not possible, changes address",
+    "pass": true
+  },
+  {
+    "probe_id": "probe_09_v01_task2",
+    "hypothesis": "H1+H5: Information + return handled together",
+    "policy": "v01",
+    "input_summary": "task_2: count t-shirt options + return cleaner/headphone/watch",
+    "result": "PROCEEDS - handles both information and return requests",
+    "pass": true
+  }
+]

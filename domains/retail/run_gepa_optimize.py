@@ -33,6 +33,7 @@ import hashlib
 import logging
 import os
 import random
+from datetime import datetime
 import re
 import threading
 from pathlib import Path
@@ -53,6 +54,32 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.text import Text
 from rich.theme import Theme
+
+
+def _parse_max_metric_calls(gepa_cfg: Dict[str, Any]) -> int | None:
+    """Budget cap for ``MaxMetricCallsStopper``: YAML ``null`` → no cap; key omitted → 100 (legacy default)."""
+    if "max_metric_calls" not in gepa_cfg:
+        return 100
+    raw = gepa_cfg["max_metric_calls"]
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        raise ValueError("gepa.max_metric_calls must be an integer or null, not a boolean")
+    return int(raw)
+
+
+def _resolve_gepa_run_dir(gepa_cfg: Dict[str, Any]) -> str | None:
+    """``run_dir`` if set; else timestamped directory under ``output_dir`` (disk cache + state saves)."""
+    rd = gepa_cfg.get("run_dir")
+    if rd is not None and str(rd).strip():
+        return str(rd)
+    out = gepa_cfg.get("output_dir")
+    if not out or not str(out).strip():
+        return None
+    base = Path(str(out))
+    stamp = datetime.now().strftime("%m-%d_%H-%M-%S")
+    return str(base.parent / f"{base.name}_{stamp}")
+
 
 def _make_litellm_lm_with_span(model_name: str, span_title: str):
     """Wrap LiteLLM completion calls in a clean Logfire span."""
@@ -77,7 +104,7 @@ SIM_VIEW_LINES = 200
 class ViewState:
     """Thread-safe state for GEPA and simulation panels."""
 
-    def __init__(self, max_metric_calls: int) -> None:
+    def __init__(self, max_metric_calls: int | None) -> None:
         self._lock = threading.Lock()
         self.gepa_log: List[str] = []
         self.sim_log: List[str] = []
@@ -280,7 +307,11 @@ def _run_live_display(
         header.append(stage + "  ", style="cyan")
         header.append("|  Eval count: ", style="bold")
         header.append(str(eval_count), style="yellow")
-        header.append(f"  |  Budget: {state.max_metric_calls} metric calls", style="dim")
+        _bud = state.max_metric_calls
+        header.append(
+            f"  |  Budget: {_bud if _bud is not None else '∞'} metric calls",
+            style="dim",
+        )
 
         left = Panel(
             gepa_content,
@@ -808,7 +839,12 @@ def main() -> None:
         rng=rng,
     )
 
-    max_metric_calls = gepa_cfg.get("max_metric_calls", 100)
+    max_metric_calls = _parse_max_metric_calls(gepa_cfg)
+    engine_run_dir = _resolve_gepa_run_dir(gepa_cfg)
+    _raw_max_proposals = gepa_cfg.get("max_candidate_proposals")
+    max_candidate_proposals: int | None = (
+        int(_raw_max_proposals) if _raw_max_proposals is not None else None
+    )
     gepa_log_path: Path | None = args.gepa_log_file or gepa_cfg.get("log_file")
     if gepa_log_path is not None:
         gepa_log_path = Path(gepa_log_path)
@@ -835,7 +871,19 @@ def main() -> None:
         objective=objective[:200],
         num_train=len(train_tasks),
         num_val=len(val_tasks),
+        max_candidate_proposals=max_candidate_proposals,
+        engine_run_dir=engine_run_dir,
     ) as top_span:
+        try:
+            logfire.info(
+                "gepa_engine_resolved",
+                max_metric_calls=max_metric_calls,
+                max_candidate_proposals=max_candidate_proposals,
+                engine_run_dir=engine_run_dir,
+                config_file=str(args.config.resolve()),
+            )
+        except Exception:
+            pass
         if gepa_log_path is not None:
             iter_mgr = IterationSpanManager()
             gepa_logger = GEPAFileLogger(
@@ -891,11 +939,27 @@ def main() -> None:
 
         config = GEPAConfig(
             engine=EngineConfig(
+                run_dir=engine_run_dir,
                 max_metric_calls=max_metric_calls,
+                max_candidate_proposals=max_candidate_proposals,
                 seed=_gepa_master,
                 cache_evaluation=gepa_cfg.get("cache_evaluation", True),
+                cache_evaluation_storage=gepa_cfg.get("cache_evaluation_storage", "auto"),
                 parallel=gepa_cfg.get("parallel", False),
                 max_workers=gepa_cfg.get("max_workers", 1),
+                display_progress_bar=bool(gepa_cfg.get("display_progress_bar", False)),
+                raise_on_exception=bool(gepa_cfg.get("raise_on_exception", True)),
+                use_cloudpickle=bool(gepa_cfg.get("use_cloudpickle", True)),
+                track_best_outputs=bool(gepa_cfg.get("track_best_outputs", False)),
+                capture_traces=bool(gepa_cfg.get("capture_traces", False)),
+                capture_stdio=bool(gepa_cfg.get("capture_stdio", False)),
+                candidate_selection_strategy=gepa_cfg.get("candidate_selection_strategy", "pareto"),
+                frontier_type=gepa_cfg.get("frontier_type", "hybrid"),
+                val_evaluation_policy=gepa_cfg.get("val_evaluation_policy", "full_eval"),
+                best_example_evals_k=int(gepa_cfg.get("best_example_evals_k", 30)),
+                seed_candidate_file=(str(p) if (p := gepa_cfg.get("seed_policy_path")) else None),
+                reflection_prompts_file=(str(p) if (p := gepa_cfg.get("reflection_prompts_file")) else None),
+                gepa_template_file=(str(p) if (p := gepa_cfg.get("gepa_template_file")) else None),
             ),
             reflection=ReflectionConfig(
                 reflection_lm=_make_litellm_lm_with_span(
@@ -904,7 +968,12 @@ def main() -> None:
                 ),
                 reflection_minibatch_size=gepa_cfg.get("reflection_minibatch_size", 3),
             ),
-            tracking=TrackingConfig(logger=gepa_logger),
+            tracking=TrackingConfig(
+                logger=gepa_logger,
+                use_wandb=bool(gepa_cfg.get("use_wandb", False)),
+                use_logfire=bool(gepa_cfg.get("use_logfire", False)),
+                dump_visualizer_events=bool(gepa_cfg.get("dump_visualizer_events", False)),
+            ),
             gepa_callbacks=gepa_callbacks_list,
         )
 
@@ -920,8 +989,11 @@ def main() -> None:
             if view_state:
                 view_state.set_stage("Running GEPA optimize_anything")
             if gepa_log_path is not None and isinstance(gepa_logger, GEPAFileLogger):
+                _plan = f"budget={max_metric_calls} metric calls"
+                if max_candidate_proposals is not None:
+                    _plan += f", max_candidate_proposals={max_candidate_proposals}"
                 gepa_logger.log(
-                    f"[GEPA] Plan: budget={max_metric_calls} metric calls. "
+                    f"[GEPA] Plan: {_plan}. "
                     "Progress % = metric_calls_used / budget. Evals and iteration logs below."
                 )
                 gepa_logger.log("[GEPA] Starting optimize_anything (evals will appear below).")

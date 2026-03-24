@@ -17,6 +17,10 @@ from typing import Any, Dict, List
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+# MCP tools omitted from LLM-facing tool enumerations (reflection / diagnosis prompts).
+# The solo agent still receives them via MCP; they are mainly for eval / DB inspection.
+_TOOLS_OMITTED_FROM_LLM_TOOL_LIST: frozenset[str] = frozenset({"get_db_hash", "get_db_json"})
+
 
 def _json_schema_type_to_python(prop_schema: Any) -> str:
     if not isinstance(prop_schema, dict):
@@ -118,6 +122,11 @@ async def list_mcp_tools_tau2_style(*, mcp_command: str) -> str:
 
     tools = list(getattr(tools_result, "tools", []) or [])
     tools.sort(key=lambda t: str(getattr(t, "name", "") or ""))
+    tools = [
+        t
+        for t in tools
+        if (getattr(t, "name", "") or "") not in _TOOLS_OMITTED_FROM_LLM_TOOL_LIST
+    ]
 
     lines: List[str] = ["Tool list available to the agent:"]
     for idx, t in enumerate(tools, start=1):
@@ -130,11 +139,184 @@ async def list_mcp_tools_tau2_style(*, mcp_command: str) -> str:
     return "\n".join(lines) if len(lines) > 1 else "(MCP returned no tools.)"
 
 
+def _normalize_action_args_value(value: Any, *, key_name: str | None = None) -> Any:
+    """Normalize tool arguments for stable equality checks.
+
+    We treat some fields as formatting-insensitive (e.g. `order_id` may be
+    provided with or without a leading '#') and some list-like fields as
+    order-insensitive where that matches domain intent (e.g. `item_ids`).
+    """
+    # Normalize order_id formatting differences (e.g. "#W123" vs "W123").
+    if key_name == "order_id" and isinstance(value, str):
+        return value.lstrip("#")
+
+    if isinstance(value, dict):
+        return {k: _normalize_action_args_value(v, key_name=str(k)) for k, v in value.items()}
+
+    if isinstance(value, list):
+        # For some tool args, the caller order is irrelevant (e.g. item_ids set).
+        if key_name in {"item_ids"}:
+            normalized_items = [
+                _normalize_action_args_value(v, key_name=None) for v in value
+            ]
+            return sorted(normalized_items, key=lambda x: str(x))
+
+        return [_normalize_action_args_value(v, key_name=None) for v in value]
+
+    return value
+
+
 def _norm_args_json(args: Any) -> str:
+    """Canonical JSON for tool args equality checks."""
     try:
-        return json.dumps(args or {}, sort_keys=True, ensure_ascii=False)
+        normalized = _normalize_action_args_value(args or {}, key_name=None)
+        return json.dumps(normalized, sort_keys=True, ensure_ascii=False)
     except Exception:
         return str(args or {})
+
+
+def _truncate_repr(value: Any, *, max_chars: int = 600) -> str:
+    try:
+        s = repr(value)
+    except Exception:
+        s = str(value)
+    if len(s) > max_chars:
+        return s[: max_chars - 1] + "…"
+    return s
+
+
+def _json_diff(expected: Any, actual: Any, *, path: str = "", max_entries: int = 80) -> list[dict[str, Any]]:
+    """Compute a compact, JSON-serializable structural diff.
+
+    Output is a list of entries with `path`, `expected`, and `actual` (or
+    extra type/length fields). Designed to be short enough for LLM prompts.
+    """
+    diffs: list[dict[str, Any]] = []
+
+    def _add(entry: dict[str, Any]) -> None:
+        if len(diffs) >= max_entries:
+            return
+        diffs.append(entry)
+
+    def _rec(e: Any, a: Any, p: str) -> None:
+        if len(diffs) >= max_entries:
+            return
+
+        # Handle dicts
+        if isinstance(e, dict) and isinstance(a, dict):
+            e_keys = set(e.keys())
+            a_keys = set(a.keys())
+            for k in sorted(e_keys - a_keys):
+                _add({"path": f"{p}/{k}" if p else k, "expected": _truncate_repr(e[k]), "actual": None, "reason": "missing_key"})
+            for k in sorted(a_keys - e_keys):
+                _add({"path": f"{p}/{k}" if p else k, "expected": None, "actual": _truncate_repr(a[k]), "reason": "extra_key"})
+            for k in sorted(e_keys & a_keys):
+                _rec(e[k], a[k], f"{p}/{k}" if p else str(k))
+            return
+
+        # Handle lists
+        if isinstance(e, list) and isinstance(a, list):
+            if len(e) != len(a):
+                _add(
+                    {
+                        "path": p or "(root)",
+                        "reason": "list_length_mismatch",
+                        "expected_len": len(e),
+                        "actual_len": len(a),
+                    }
+                )
+            n = min(len(e), len(a))
+            for i in range(n):
+                _rec(e[i], a[i], f"{p}[{i}]" if p else f"[{i}]")
+            return
+
+        # Scalar / mismatched types
+        if type(e) != type(a):
+            _add(
+                {
+                    "path": p or "(root)",
+                    "reason": "type_mismatch",
+                    "expected_type": type(e).__name__,
+                    "actual_type": type(a).__name__,
+                    "expected": _truncate_repr(e),
+                    "actual": _truncate_repr(a),
+                }
+            )
+            return
+
+        if e != a:
+            _add(
+                {
+                    "path": p or "(root)",
+                    "reason": "value_mismatch",
+                    "expected": _truncate_repr(e),
+                    "actual": _truncate_repr(a),
+                }
+            )
+
+    _rec(expected, actual, path)
+    return diffs
+
+
+async def _run_sequence_get_db_json(
+    *,
+    actions: List[Dict[str, Any]],
+    mcp_command: str,
+) -> dict[str, Any]:
+    """Run a sequence of tool calls and return the final DB state as JSON."""
+    cmd_str = (mcp_command or "").strip()
+    if not cmd_str:
+        raise ValueError("mcp_command is required for DB evaluation")
+
+    import shlex
+
+    parts = shlex.split(cmd_str)
+    if not parts:
+        raise ValueError(f"Invalid MCP command: {cmd_str!r}")
+
+    cmd, *args = parts
+    params = StdioServerParameters(command=cmd, args=args)
+
+    async with stdio_client(params) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+
+            # Replay actions
+            for action in actions:
+                name = action.get("name")
+                if not name:
+                    continue
+                arguments = action.get("arguments") or {}
+                await session.call_tool(name, arguments=arguments)
+
+            result = await session.call_tool("get_db_json", arguments={})
+
+    # Extract hash from MCP response defensively (structuredContent is used for some SDKs).
+    if hasattr(result, "structuredContent") and result.structuredContent:
+        sc = result.structuredContent
+        if isinstance(sc, dict):
+            return sc
+        if isinstance(sc, list) and sc and isinstance(sc[0], dict):
+            return sc[0]
+
+    if hasattr(result, "content"):
+        texts: List[str] = []
+        for c in getattr(result, "content", []) or []:
+            if hasattr(c, "text") and c.text:
+                texts.append(c.text)
+        if texts:
+            text = "\n".join(texts).strip()
+            if text.startswith("{"):
+                try:
+                    import json
+
+                    payload = json.loads(text)
+                    if isinstance(payload, dict):
+                        return payload
+                except Exception:
+                    pass
+
+    raise RuntimeError("MCP get_db_json returned no content")
 
 
 def format_solo_eval_for_gepa_diagnosis(
@@ -157,33 +339,115 @@ def format_solo_eval_for_gepa_diagnosis(
     golden = (task.get("evaluation_criteria") or {}).get("actions") or []
     predicted = _extract_predicted_actions(assistant_history)
 
-    for i, g in enumerate(golden):
+    # Only emit argument mismatches when the ground-truth expects this tool
+    # exactly once. If the ground truth expects multiple calls (same tool,
+    # different args), it's ambiguous which one the agent's single call
+    # should correspond to, so we avoid noisy diagnostics.
+    from collections import Counter
+
+    expected_name_counts = Counter(
+        str(g.get("name") or "") for g in golden if g.get("name") is not None
+    )
+
+    # Match expected actions against predicted tool calls by:
+    # - Same tool name
+    # - Same normalized args
+    #
+    # We do NOT require strict in-order matching because the agent may perform
+    # extra lookups and re-order "non-critical" calls while still achieving the
+    # correct final DB state (DB check can be PASS).
+    used_pred_indices: set[int] = set()
+    for g in golden:
         name = g.get("name") or "?"
         exp_args = g.get("arguments") or {}
         exp_json = _norm_args_json(exp_args)
-        if i >= len(predicted):
-            parts.append(f"Action {name}: NOT CALLED (expected_args={exp_json})")
-            continue
-        p = predicted[i]
-        if p.get("name") != name:
-            parts.append(f"Action {name}: NOT CALLED (expected_args={exp_json})")
-            continue
-        act_args = p.get("arguments") or {}
-        if _norm_args_json(act_args) != exp_json:
+
+        matched_idx: int | None = None
+        mismatch_idx: int | None = None
+        mismatch_act_json: str | None = None
+
+        # First pass: exact match (name + normalized args) anywhere in the trace.
+        for idx, p in enumerate(predicted):
+            if idx in used_pred_indices:
+                continue
+            if p.get("name") != name:
+                continue
+            act_args = p.get("arguments") or {}
             act_json = _norm_args_json(act_args)
-            parts.append(
-                f"Action {name}: ARGUMENTS_MISMATCH "
-                f"(expected_args={exp_json}, actual_args={act_json})"
-            )
+            if act_json == exp_json:
+                matched_idx = idx
+                break
+
+        if matched_idx is not None:
+            used_pred_indices.add(matched_idx)
+            continue
+
+        # Second pass: same name but wrong args (for better diagnostics).
+        for idx, p in enumerate(predicted):
+            if idx in used_pred_indices:
+                continue
+            if p.get("name") != name:
+                continue
+            act_args = p.get("arguments") or {}
+            mismatch_idx = idx
+            mismatch_act_json = _norm_args_json(act_args)
+            break
+
+        # Only emit parameter mismatches; ignore 'NOT CALLED' cases.
+        if mismatch_idx is None:
+            continue
+
+        # Consume the predicted call used for this diagnostic so we don't
+        # repeat the same mismatch line.
+        used_pred_indices.add(mismatch_idx)
+
+        # Skip noisy cases: tool appears multiple times in ground truth.
+        if expected_name_counts.get(str(name), 0) != 1:
+            continue
+
+        assert mismatch_act_json is not None
+        parts.append(
+            f"Action {name}: ARGUMENTS_MISMATCH "
+            f"(expected_args={exp_json}, actual_args={mismatch_act_json})"
+        )
 
     if evaluate_communication and not eval_result.get("communicate_eval_skipped"):
-        for chk in eval_result.get("communicate_checks") or []:
+        communicate_checks = eval_result.get("communicate_checks") or []
+        failed_infos: list[str] = []
+        any_failed = False
+        for chk in communicate_checks:
             info = str(chk.get("info", ""))
             met = bool(chk.get("met", False))
-            status = "met" if met else "NOT MET"
-            parts.append(f"Communicate '{info}': {status}")
-            if not met and chk.get("justification"):
-                parts.append(f"  Justification: {chk.get('justification')}")
+            if not met:
+                any_failed = True
+                if info.strip():
+                    failed_infos.append(info.strip())
+
+        if not any_failed:
+            parts.append("Communication check: Passed (all required info communicated.)")
+        else:
+            if len(failed_infos) == 1:
+                parts.append(
+                    f"Communication check: Failed (Information '{failed_infos[0]}' not communicated.)"
+                )
+            else:
+                info_block = "\n".join([f"'{x}'" for x in failed_infos])
+                parts.append(
+                    "Communication check: Failed (Information {"
+                    + info_block
+                    + "} not communicated.)"
+                )
+
+    if not db_ok:
+        db_diff = eval_result.get("db_diff")
+        if isinstance(db_diff, list) and db_diff:
+            try:
+                # Keep the diff compact for LLM readability.
+                diff_text = json.dumps(db_diff, ensure_ascii=False)
+            except Exception:
+                diff_text = str(db_diff)
+            parts.append("DB diff:")
+            parts.append(diff_text[:4000] + ("…" if len(diff_text) > 4000 else ""))
 
     return "\n".join(parts)
 
@@ -328,7 +592,7 @@ async def list_mcp_tools_documentation(*, mcp_command: str) -> str:
     lines: List[str] = []
     for t in getattr(tools_result, "tools", []) or []:
         name = getattr(t, "name", "") or ""
-        if not name:
+        if not name or name in _TOOLS_OMITTED_FROM_LLM_TOOL_LIST:
             continue
         desc = (getattr(t, "description", None) or "").strip()
         if desc:
@@ -411,6 +675,7 @@ async def evaluate_task_db(
     assistant_history: List[dict[str, Any]],
     db_path: Path,
     mcp_command: str,
+    return_db_state: bool = False,
 ) -> Dict[str, Any]:
     """Evaluate one task by comparing golden vs predicted DB hashes and (optional) mermaid path.
 
@@ -424,6 +689,9 @@ async def evaluate_task_db(
       - golden_mermaid_path (list or None)
       - predicted_goto_sequence (list)
       - path_match (bool; True if no golden path or predicted sequence equals golden)
+    If `return_db_state=True`, also include:
+      - golden_db (JSON-serializable DB state)
+      - predicted_db (JSON-serializable DB state)
     """
     eval_crit = task.get("evaluation_criteria") or {}
     golden_actions = eval_crit.get("actions") or []
@@ -447,11 +715,28 @@ async def evaluate_task_db(
     mismatch = _first_path_mismatch(predicted_goto, golden_mermaid_path)
     trace_preview = _compact_trace_preview(assistant_history)
 
-    return {
+    db_match = golden_hash == predicted_hash
+    golden_db_json: dict[str, Any] | None = None
+    predicted_db_json: dict[str, Any] | None = None
+
+    db_diff: list[dict[str, Any]] | None = None
+    if not db_match:
+        # Only compute and attach JSON diff when there is a mismatch.
+        golden_db_json = await _run_sequence_get_db_json(
+            actions=golden_actions,
+            mcp_command=mcp_command,
+        )
+        predicted_db_json = await _run_sequence_get_db_json(
+            actions=predicted_actions,
+            mcp_command=mcp_command,
+        )
+        db_diff = _json_diff(golden_db_json, predicted_db_json)
+
+    out: Dict[str, Any] = {
         "task_id": task.get("id"),
         "golden_hash": golden_hash,
         "predicted_hash": predicted_hash,
-        "db_match": golden_hash == predicted_hash,
+        "db_match": db_match,
         "golden_actions_count": len(golden_actions),
         "predicted_actions_count": len(predicted_actions),
         "golden_mermaid_path": golden_mermaid_path if golden_mermaid_path else None,
@@ -459,7 +744,17 @@ async def evaluate_task_db(
         "path_match": path_match,
         "path_mismatch": mismatch,
         "trace_preview": trace_preview,
+        "db_diff": db_diff,
     }
+
+    # For prompt-optimization traces, always expose the fields, but only
+    # populate them with full snapshots on mismatches (to avoid bloating
+    # successful traces).
+    if return_db_state:
+        out["golden_db"] = golden_db_json
+        out["predicted_db"] = predicted_db_json
+
+    return out
 
 
 def evaluate_communication_from_history(

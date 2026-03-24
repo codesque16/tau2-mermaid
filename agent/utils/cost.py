@@ -111,9 +111,13 @@ def usage_from_openai_response(usage: Any) -> dict[str, int]:
         return {}
     inp = getattr(usage, "prompt_tokens", None)
     out = getattr(usage, "completion_tokens", None)
+    # Responses API uses `input_tokens` / `output_tokens` (and may not include
+    # prompt_tokens / completion_tokens).
+    inp = inp or getattr(usage, "input_tokens", None)
+    out = out or getattr(usage, "output_tokens", None)
     if isinstance(usage, dict):
-        inp = inp or usage.get("prompt_tokens")
-        out = out or usage.get("completion_tokens")
+        inp = inp or usage.get("prompt_tokens") or usage.get("input_tokens")
+        out = out or usage.get("completion_tokens") or usage.get("output_tokens")
     inp = int(inp) if inp is not None else 0
     out = int(out) if out is not None else 0
     return {

@@ -14,6 +14,7 @@ Usage: pass the return value of :func:`make_genai_gepa_lm` as ``ReflectionConfig
 from __future__ import annotations
 
 import time
+import re
 from typing import Any
 
 from gepa.proposer.reflective_mutation.base import LanguageModel
@@ -74,10 +75,39 @@ def _prompt_to_user_text(prompt: str | list[dict[str, Any]]) -> str:
     return "\n\n".join(chunks)
 
 
+def _extract_gepa_system_and_first_user_text(prompt_text: str) -> tuple[str, str]:
+    """Extract system prompt + first user message from GEPA-tagged prompt text."""
+    if not prompt_text:
+        return "", ""
+
+    sys_m = re.search(
+        r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+        prompt_text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    user_m = re.search(
+        r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+        prompt_text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+    if user_m:
+        user_text = user_m.group(1).strip()
+        return system_text, user_text
+
+    if sys_m:
+        cleaned = prompt_text.replace(sys_m.group(0), "").strip()
+        return system_text, cleaned
+
+    return "", prompt_text.strip()
+
+
 def genai_generate_user_text(
     model: str,
     user_text: str,
     *,
+    system_instruction: str | None = None,
     temperature: float | None = None,
     max_output_tokens: int | None = None,
     reasoning_effort: str | None = None,
@@ -99,6 +129,11 @@ def genai_generate_user_text(
     from google.genai import types
 
     gen_kw: dict[str, Any] = {}
+    # Explicitly disable built-in tool/citation paths for reflection/diagnosis calls.
+    gen_kw["tools"] = []
+    if system_instruction is not None and str(system_instruction).strip():
+        # Gemini SDK supports passing system instructions via config.
+        gen_kw["system_instruction"] = str(system_instruction).strip()
     if temperature is not None:
         gen_kw["temperature"] = float(temperature)
     if max_output_tokens is not None:
@@ -202,6 +237,9 @@ def make_genai_gepa_lm(
 
     def lm(prompt: str | list[dict[str, Any]]) -> str:
         user_text = _prompt_to_user_text(prompt)
+        system_text, extracted_user_text = _extract_gepa_system_and_first_user_text(user_text)
+        if extracted_user_text:
+            user_text = extracted_user_text
         return genai_generate_user_text(
             model,
             user_text,
@@ -209,6 +247,7 @@ def make_genai_gepa_lm(
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
             include_thoughts_when_no_level=include_thoughts_when_no_level,
+            system_instruction=system_text or None,
             io_phase=io_phase,
         )
 

@@ -1,0 +1,26 @@
+[
+  {
+    "probe_id": "probe_01_baseline_task27",
+    "hypothesis": "Baseline policy causes premature transfer after auth for return+exchange task",
+    "result": "TRANSFERS immediately after auth",
+    "policy_version": "original"
+  },
+  {
+    "probe_id": "probe_02_antitransfer_task27",
+    "hypothesis": "H1+H3: Anti-transfer instruction + workflow stops premature transfer",
+    "result": "PROCEEDS to complete task (no tool calls available in probe but model describes correct steps)",
+    "policy_version": "v01_candidate"
+  },
+  {
+    "probe_id": "probe_03_partialcancel_task81",
+    "hypothesis": "H3: Model executes fallback (cancel whole) when partial cancel not possible",
+    "result": "PROCEEDS correctly - describes canceling whole order",
+    "policy_version": "v01_candidate"
+  },
+  {
+    "probe_id": "probe_04_orderid_task17",
+    "hypothesis": "H2: Order ID format fix - model uses correct #W prefix",
+    "result": "PROCEEDS correctly - uses #W8665881 without error",
+    "policy_version": "v01_candidate"
+  }
+]

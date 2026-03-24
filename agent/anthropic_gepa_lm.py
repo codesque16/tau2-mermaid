@@ -8,6 +8,7 @@ Logfire spans match :mod:`agent.logfire_native_llm` / solo :class:`~agent.agent_
 from __future__ import annotations
 
 import time
+import re
 from typing import Any
 
 from gepa.proposer.reflective_mutation.base import LanguageModel
@@ -49,6 +50,34 @@ def _prompt_to_user_text(prompt: str | list[dict[str, Any]]) -> str:
     return "\n\n".join(chunks)
 
 
+def _extract_gepa_system_and_first_user_text(prompt_text: str) -> tuple[str, str]:
+    """Extract system prompt + first user message from GEPA-tagged prompt text."""
+    if not prompt_text:
+        return "", ""
+
+    sys_m = re.search(
+        r"<gepa_system_prompt>(.*?)</gepa_system_prompt>",
+        prompt_text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    user_m = re.search(
+        r"<gepa_first_user_message>(.*?)</gepa_first_user_message>",
+        prompt_text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    system_text = (sys_m.group(1).strip() if sys_m else "").strip()
+    if user_m:
+        user_text = user_m.group(1).strip()
+        return system_text, user_text
+
+    if sys_m:
+        cleaned = prompt_text.replace(sys_m.group(0), "").strip()
+        return system_text, cleaned
+
+    return "", prompt_text.strip()
+
+
 def _thinking_budget(effort: str | None, max_tokens: int) -> tuple[dict[str, Any] | None, int]:
     b = _thinking_budget_from_effort(effort, max_tokens)
     if b is None:
@@ -65,6 +94,7 @@ def anthropic_generate_user_text(
     model: str,
     user_text: str,
     *,
+    system_text: str | None = None,
     temperature: float | None = None,
     max_tokens: int | None = None,
     reasoning_effort: str | None = None,
@@ -86,7 +116,7 @@ def anthropic_generate_user_text(
     kw: dict[str, Any] = {
         "model": model,
         "max_tokens": mt2,
-        "system": "",
+        "system": (system_text or "").strip(),
         "messages": api_messages,
     }
     if thinking is not None:
@@ -111,7 +141,7 @@ def anthropic_generate_user_text(
             message = sync_anthropic_messages_with_logfire(
                 agent_name="gepa_reflection",
                 model=model,
-                system_text="",
+                system_text=(system_text or "").strip(),
                 api_messages=list(api_messages),
                 request_extras={
                     "thinking": thinking,
@@ -146,9 +176,12 @@ def make_anthropic_gepa_lm(
     reasoning_effort: str | None = None,
 ) -> LanguageModel:
     def lm(prompt: str | list[dict[str, Any]]) -> str:
+        pt = _prompt_to_user_text(prompt)
+        system_text, user_text = _extract_gepa_system_and_first_user_text(pt)
         return anthropic_generate_user_text(
             model,
-            _prompt_to_user_text(prompt),
+            user_text,
+            system_text=system_text or None,
             temperature=temperature,
             max_tokens=max_tokens,
             reasoning_effort=reasoning_effort,

@@ -10,6 +10,12 @@ Sweep mode: `domain.policy`, `assistant.model`, `assistant.temperature`, and
 `assistant.reasoning_effort` may each be a scalar or a YAML list. The run expands
 the Cartesian product and executes each combo as a separate top-level Logfire span
 (see `experiment_concurrency` / `--experiment-concurrency` for parallel combos).
+
+When ``domain.output_task_transcripts`` is true, each task JSON includes
+``conversation_history`` (first message is ``role: system`` with the effective
+system prompt, then user/assistant/tool turns) and ``evaluation`` (metrics,
+hashes, optional DB snapshots) without duplicating the message list under
+``evaluation``.
 """
 
 from __future__ import annotations
@@ -17,6 +23,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import copy
+from datetime import datetime
 import json
 import logging
 import math
@@ -24,6 +31,8 @@ import random
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict, List
+import re
+import hashlib
 
 import yaml
 import logfire
@@ -134,6 +143,44 @@ def _format_temp_for_run_id(t: Any) -> str:
     return str(t)
 
 
+def _safe_path_component(value: str, *, max_len: int = 120) -> str:
+    """
+    Make a filesystem-safe path component without creating collisions too easily.
+    """
+    v = value or ""
+    v = v.strip()
+    # Replace common problematic path characters with underscores.
+    v = re.sub(r"[^a-zA-Z0-9._-]+", "_", v)
+    if len(v) <= max_len:
+        return v
+    digest = hashlib.sha1(v.encode("utf-8")).hexdigest()[:10]
+    return v[: max_len - 11] + "_" + digest
+
+
+# Omitted from written transcript ``evaluation`` object (keep DB/comm metrics only).
+_TRACE_EVAL_OMIT_KEYS = frozenset(
+    {
+        "golden_mermaid_path",
+        "path_mismatch",
+        "golden_actions_count",
+        "predicted_actions_count",
+        "trace_preview",
+    }
+)
+
+
+def _write_json_atomic(path: Path, payload: Any) -> None:
+    """
+    Write JSON to disk with an atomic rename, to avoid partial files if multiple
+    tasks run concurrently.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    data = json.dumps(payload, ensure_ascii=False, default=str)
+    tmp.write_text(data, encoding="utf-8")
+    tmp.replace(path)
+
+
 def _default_run_id_from_assistant(
     domain_name: str,
     policy_basename: str,
@@ -149,6 +196,11 @@ def _default_run_id_from_assistant(
         safe = str(reff).strip().replace('"', "'")
         suffix += f'[reasoning="{safe}"]'
     return base + suffix
+
+
+def _fresh_run_suffix() -> str:
+    """Suffix like '03-23_14-05' to keep transcript dirs from overwriting."""
+    return datetime.now().strftime("%m-%d_%H-%M")
 
 
 def _sweep_list(value: Any, *, default_when_missing: Any = None) -> List[Any]:
@@ -272,7 +324,7 @@ def make_orchestrator_for_solo(
     assistant_model = sim_cfg.assistant_model or sim_cfg.model
     assistant_agent_type = sim_cfg.assistant_agent_type or "litellm"
 
-    def _make(ticket: str) -> Orchestrator:
+    def _make(_ticket: str) -> Orchestrator:
         _ = instructions_text  # still passed by callers; not wrapped in <instructions> in prompt
         has_mermaid = bool(getattr(assistant_base_cfg, "mermaid", None))
         ref_block = (
@@ -281,9 +333,12 @@ def make_orchestrator_for_solo(
             else ""
         )
         if has_mermaid:
-            full_system_prompt = f"<ticket>\n{ticket.strip()}\n</ticket>{ref_block}"
+            # Ticket is provided in the first *user* message (not system prompt)
+            # so it shows up in conversation traces.
+            full_system_prompt = ref_block.strip()
         else:
-            # Policy = raw markdown (no <policy> wrapper). Ticket only inside <ticket>.
+            # Policy = raw markdown (no <policy> wrapper). Ticket is provided
+            # in the first user message (not the system prompt).
             # ``instructions_text`` is kept in the API for callers but not injected (see history below).
             # if include_policy:
             #     full_system_prompt = (
@@ -309,21 +364,13 @@ def make_orchestrator_for_solo(
             #         f"{ref_block}"
             #     )
             if include_policy:
-                full_system_prompt = (
-                    f"{policy_text.strip()}\n\n"
-                    "<ticket>\n"
-                    f"{ticket.strip()}\n"
-                    "</ticket>"
-                    f"{ref_block}"
-                )
+                # For non-mermaid mode, embed the policy in the system prompt.
+                # The ticket is supplied as the first user message.
+                full_system_prompt = f"{policy_text.strip()}{ref_block}".strip()
             else:
-                # GEPA path: no embedded policy block; ticket only.
-                full_system_prompt = (
-                    "<ticket>\n"
-                    f"{ticket.strip()}\n"
-                    "</ticket>"
-                    f"{ref_block}"
-                )
+                # GEPA path: no embedded policy block; keep system prompt empty
+                # (except for optional <reference_steps>).
+                full_system_prompt = ref_block.strip()
 
         assistant_cfg = AgentAgentConfig(
             system_prompt=full_system_prompt,
@@ -394,6 +441,7 @@ async def run_one_solo_task(
     quiet: bool = False,
     include_policy: bool = True,
     evaluate_communication: bool = False,
+    trace_dump: bool = False,
 ) -> tuple[bool, dict[str, Any]]:
     """Run a single solo task and return (success, eval_result).
 
@@ -405,6 +453,10 @@ async def run_one_solo_task(
         _make_reference_steps_from_task(task) if include_reference_steps else ""
     )
     task_id = task.get("id")
+    solo_user_prompt = (
+        "Resolve this ticket and respond in 1 single final reply.\n\n"
+        f"<ticket>\n{ticket.strip()}\n</ticket>"
+    )
 
     if not quiet:
         print(f"\n{'=' * 80}")
@@ -424,7 +476,7 @@ async def run_one_solo_task(
     )
     orchestrator = make_orch(ticket)
     await orchestrator.run_solo(
-        prompt="Complete all the tasks and respond in 1 single reply.",
+        prompt=solo_user_prompt,
         stop_mode=stop_mode,
         task_complete_tools=["task_complete", "task_done"],
     )
@@ -437,6 +489,7 @@ async def run_one_solo_task(
         assistant_history=history,
         db_path=db_path,
         mcp_command=mcp_command,
+        return_db_state=trace_dump,
     )
     db_ok = bool(eval_result.get("db_match", False))
     if evaluate_communication:
@@ -466,6 +519,22 @@ async def run_one_solo_task(
                 )
     # For GEPA qualitative diagnosis (e.g. tau2.gepa_eval); pop before serializing side_info.
     eval_result["assistant_history"] = list(history)
+    if trace_dump:
+        for _k in _TRACE_EVAL_OMIT_KEYS:
+            eval_result.pop(_k, None)
+        # Effective system prompt is stored only as the first message in the trace (role=system).
+        try:
+            sys_prompt = orchestrator.assistant.get_effective_system_prompt()
+        except Exception:
+            cfg = getattr(orchestrator.assistant, "config", None)
+            sys_prompt = getattr(cfg, "system_prompt", "") or ""
+        eval_result["assistant_history"] = [
+            {"role": "system", "content": sys_prompt if isinstance(sys_prompt, str) else str(sys_prompt)},
+            *eval_result["assistant_history"],
+        ]
+        eval_result["stop_mode"] = stop_mode.value if hasattr(stop_mode, "value") else str(stop_mode)
+        eval_result["task_ticket"] = ticket
+        eval_result["trial_seed"] = seed
     return success, eval_result
 
 
@@ -483,6 +552,9 @@ async def _run_task(
     seed: int | None,
     results: List[Dict[str, Any]],
     evaluate_communication: bool,
+    trace_dir: Path | None,
+    trace_run_id: str,
+    trace_experiment_index: int,
 ) -> None:
     task_id = task.get("id")
     ticket = task.get("ticket") or ""
@@ -516,6 +588,7 @@ async def _run_task(
                 quiet=True,
                 include_policy=True,
                 evaluate_communication=evaluate_communication,
+                trace_dump=trace_dir is not None,
             )
 
         with logfire.span("evaluation"):
@@ -564,6 +637,30 @@ async def _run_task(
             }
         )
 
+    if trace_dir is not None:
+        # One file per (task_id, trial, seed) to enable later reconstruction.
+        task_trace_path = trace_dir / (
+            f"task_{_safe_path_component(str(task_id))}"
+            f"__trial_{trial_idx}"
+            f"__seed_{_safe_path_component(str(seed))}"
+            f".json"
+        )
+        # Full LLM+MCP conversation (all roles, tool calls, tool outputs, reasoning) lives here.
+        # Keep evaluation.* for scores/metadata only to avoid duplicating the big message list.
+        eval_snapshot = dict(eval_result)
+        conversation_history = list(eval_snapshot.pop("assistant_history", []))
+        payload = {
+            "trace_run_id": trace_run_id,
+            "trace_experiment_index": trace_experiment_index,
+            "task_id": task_id,
+            "trial": trial_idx,
+            "seed": seed,
+            "success": success,
+            "conversation_history": conversation_history,
+            "evaluation": eval_snapshot,
+        }
+        _write_json_atomic(task_trace_path, payload)
+
 
 async def _run_solo_experiment_async(
     raw_cfg: dict[str, Any],
@@ -573,6 +670,7 @@ async def _run_solo_experiment_async(
     solo_tasks: List[dict[str, Any]],
     experiment_index: int,
     experiment_total: int,
+    fresh: bool = False,
 ) -> None:
     """One Cartesian combo: same tasks/instructions, possibly different policy/model/temp/reasoning."""
     sim_cfg = _build_simulation_config(raw_cfg)
@@ -610,6 +708,19 @@ async def _run_solo_experiment_async(
             domain_name, policy_basename, assistant_model_for_id, sim_cfg
         ),
     )
+    if fresh:
+        run_id = f"{run_id}_{_fresh_run_suffix()}"
+
+    output_task_transcripts = bool(domain_cfg.get("output_task_transcripts", False))
+    trace_dir: Path | None = None
+    if output_task_transcripts:
+        output_base_dir = Path(domain_cfg.get("output_base_dir") or "outputs")
+        trace_dir = (
+            output_base_dir
+            / _safe_path_component(str(run_id))
+            / f"experiment_{experiment_index}"
+        )
+        trace_dir.mkdir(parents=True, exist_ok=True)
 
     # Master RNG: if ``domain.seed`` is set, it seeds this RNG only (not passed directly to the LLM).
     # Each trial gets ``trial_seeds[i]`` from this stream; that value is passed as ``seed`` on every LLM call
@@ -652,6 +763,9 @@ async def _run_solo_experiment_async(
                             include_reference_steps=include_reference_steps,
                             results=results,
                             evaluate_communication=evaluate_communication,
+                            trace_dir=trace_dir,
+                            trace_run_id=str(run_id),
+                            trace_experiment_index=experiment_index,
                         )
                 else:
                     sem = asyncio.Semaphore(concurrency)
@@ -671,6 +785,9 @@ async def _run_solo_experiment_async(
                                 include_reference_steps=include_reference_steps,
                                 results=results,
                                 evaluate_communication=evaluate_communication,
+                                trace_dir=trace_dir,
+                                trace_run_id=str(run_id),
+                                trace_experiment_index=experiment_index,
                             )
 
                     await asyncio.gather(*(_runner(t) for t in solo_tasks))
@@ -720,10 +837,12 @@ async def main_async(
     config_path: Path,
     include_reference_steps: bool = False,
     experiment_concurrency: int | None = None,
+    fresh: bool = False,
 ) -> None:
     raw_cfg = _load_retail_solo_config(config_path)
     configure_from_simulation_dict(raw_cfg)
     domain_cfg: Dict[str, Any] = raw_cfg.get("domain") or {}
+    fresh = fresh or bool(domain_cfg.get("fresh", False))
     instructions_path = domain_cfg.get("instructions")
     tasks_path = domain_cfg.get("tasks")
 
@@ -772,6 +891,7 @@ async def main_async(
                 solo_tasks=solo_tasks,
                 experiment_index=idx + 1,
                 experiment_total=n_exp,
+                fresh=fresh,
             )
 
     await asyncio.gather(*(_run_one(i, rc) for i, rc in enumerate(expanded_raw)))
@@ -800,6 +920,12 @@ def main() -> None:
         help="Max concurrent sweep experiments (policy×model×temp×reasoning). "
         "Overrides YAML key experiment_concurrency. Default: min(8, num_experiments) or YAML.",
     )
+    parser.add_argument(
+        "--fresh",
+        action="store_true",
+        default=False,
+        help="Append a timestamp to run_id so output transcripts don't overwrite.",
+    )
     args = parser.parse_args()
 
     load_dotenv()
@@ -822,6 +948,7 @@ def main() -> None:
             args.config,
             include_reference_steps=bool(args.include_reference_steps),
             experiment_concurrency=args.experiment_concurrency,
+            fresh=bool(args.fresh),
         )
     )
 

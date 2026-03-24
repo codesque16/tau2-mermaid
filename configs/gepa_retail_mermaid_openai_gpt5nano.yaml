@@ -95,8 +95,8 @@ gepa:
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
-  max_metric_calls: 200
-  max_candidate_proposals: null
+  max_metric_calls: null
+  max_candidate_proposals: 10
   max_workers: 4
   parallel: true
   raise_on_exception: true

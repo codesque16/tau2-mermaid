@@ -14,14 +14,19 @@ domain:
   name: retail
   policy: 
     - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_openai.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_openai.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_openai.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_openai.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/results/prompt_optimizer_runs/20260324_gpt5nano_low/candidates/v01.md"
   tasks: "domains/retail/tasks_solo_comms.json"
   # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
   evaluate_communication: true
-  concurrency: 3
+  # When true, writes one JSON transcript per task (including tool-call
+  # request/response history) under `outputs/<run_id>/experiment_<n>/`.
+  output_task_transcripts: true
+  output_base_dir: "outputs"
+  concurrency: 4
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
   task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
@@ -36,7 +41,7 @@ assistant:
   model: 
     - gpt-5-nano
   temperature: 0
-  reasoning_effort: ["low", "medium", "high"]
+  reasoning_effort: "low" #["low", "medium", "high"]
   mcps:
     - name: retail-tools
       type: stdio

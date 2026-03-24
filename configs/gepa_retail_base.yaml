@@ -1,12 +1,16 @@
 # GEPA retail optimization (tau2-mermaid solo agent). Self-contained YAML (no ``extends``).
 #
+# Credentials: set ``GOOGLE_API_KEY`` or ``GEMINI_API_KEY`` (Google AI Studio key for
+# ``generativelanguage.googleapis.com``) in the environment or a repo-root ``.env``.
+# Optional: top-level ``api_key_rotation: { gemini: [KEY_OR_ENV_NAME, ...] }`` in stacked YAML.
+#
 # GEPA ``optimize_anything`` task modes (see ``gepa.optimize_anything`` docstring):
 #   single_task      → dataset=None, valset=None  (one retail task; evaluator has no ``example``)
 #   multi_task       → dataset=<list>, valset=None
 #   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
 #
-# Run from repo root:
-#   uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/gepa_retail_mermaid.yaml
+# Run from repo root (``domains.retail.run_gepa_optimize`` reads this file’s ``domain`` + ``gepa`` sections):
+#   uv run python -m domains.retail.run_gepa_optimize --config configs/gepa_retail_base.yaml
 #
 # Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
 #   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
@@ -94,8 +98,10 @@ gepa:
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
-  max_metric_calls: 200
-  max_candidate_proposals: null
+  # Stopping: GEPA stops when any bound trips — ``max_metric_calls`` (eval budget) and/or
+  # ``max_candidate_proposals`` (outer proposal / iteration rounds). Set either to null to disable that cap.
+  max_metric_calls: null
+  max_candidate_proposals: 10
   max_workers: 4
   parallel: true
   raise_on_exception: true
