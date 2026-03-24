@@ -106,6 +106,7 @@ def log_gemini_generate_io(
     response: Any,
     phase: str | None = None,
     api_key_masked: str | None = None,
+    emit_logfire_event: bool = True,
 ) -> None:
     """Log exactly what was sent to and received from ``models.generate_content``."""
     payload: dict[str, Any] = {
@@ -127,6 +128,8 @@ def log_gemini_generate_io(
         with open(path, "a", encoding="utf-8") as f:
             f.write(_dumps(payload) + "\n")
 
+    if not emit_logfire_event:
+        return
     if not logfire_raw_io_enabled():
         return
     try:

@@ -8,6 +8,10 @@ from typing import Any, Callable, Awaitable
 from .base import BaseAgent
 from .config import AgentConfig
 from .gemini_log import log_gemini_generate_io, to_jsonable
+from .logfire_gemini_integration import (
+    reset_current_gemini_tool_round,
+    set_current_gemini_tool_round,
+)
 from .utils.cost import compute_cost, usage_from_gemini_response
 
 # Gemini API roles for `contents` (see https://ai.google.dev/gemini-api/docs/function-calling ).
@@ -396,11 +400,15 @@ class GeminiAgent(BaseAgent):
                 gen_config = types.GenerateContentConfig(**gen_config_kw)
                 # Raw I/O: ``gemini_io_json`` on the generate_content span (if small enough) +
                 # ``log_gemini_generate_io`` below (includes ``tool_round`` in the log payload).
-                response = client.models.generate_content(
-                    model=self.model,
-                    contents=contents,
-                    config=gen_config,
-                )
+                _tool_round_token = set_current_gemini_tool_round(_round)
+                try:
+                    response = client.models.generate_content(
+                        model=self.model,
+                        contents=contents,
+                        config=gen_config,
+                    )
+                finally:
+                    reset_current_gemini_tool_round(_tool_round_token)
                 log_bundle = {
                     "gemini_contents": to_jsonable(contents),
                     "gemini_config": to_jsonable(gen_config),
@@ -425,6 +433,8 @@ class GeminiAgent(BaseAgent):
                 config=log_bundle["gemini_config"],
                 response=response,
                 api_key_masked=log_bundle.get("api_key_masked") or None,
+                # Wrapper span already emits nested raw IO event; keep dump-file logging only.
+                emit_logfire_event=False,
             )
             usage = usage_from_gemini_response(response)
             if usage:

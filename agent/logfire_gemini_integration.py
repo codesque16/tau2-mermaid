@@ -23,6 +23,7 @@ import dataclasses
 import functools
 import json
 import logging
+from contextvars import ContextVar, Token
 from collections.abc import Sequence
 from typing import Any, Callable, Literal
 
@@ -45,6 +46,19 @@ _OI_TOOL_CALL_FN_NAME = "tool_call.function.name"
 _OI_TOOL_CALL_FN_ARGS = "tool_call.function.arguments"
 
 _store: dict[str, Any] = {"patched": False, "sync": None, "async": None}
+_tool_round_var: ContextVar[int | None] = ContextVar(
+    "tau2_gemini_tool_round", default=None
+)
+
+
+def set_current_gemini_tool_round(tool_round: int) -> Token[int | None]:
+    """Set current Gemini tool round for wrapper-local nested raw logging."""
+    return _tool_round_var.set(int(tool_round))
+
+
+def reset_current_gemini_tool_round(token: Token[int | None]) -> None:
+    """Reset Gemini tool round context set by set_current_gemini_tool_round()."""
+    _tool_round_var.reset(token)
 
 
 def _current_gemini_api_key_masked() -> str | None:
@@ -875,7 +889,12 @@ def _attach_raw_generate_content_io(
 ) -> None:
     """Same payload shape as ``gemini_log.log_gemini_generate_io`` (minus ``tool_round``) on this span."""
     try:
-        from .gemini_log import _dumps, logfire_raw_io_enabled, to_jsonable
+        from .gemini_log import (
+            _dumps,
+            log_gemini_generate_io,
+            logfire_raw_io_enabled,
+            to_jsonable,
+        )
     except ImportError:
         return
     if not logfire_raw_io_enabled():
@@ -895,6 +914,17 @@ def _attach_raw_generate_content_io(
         s = _dumps(payload)
         if len(s) <= _GEMINI_IO_JSON_MAX_ATTR_CHARS:
             span.set_attribute("gemini_io_json", s)
+        # Emit the existing raw event shape while this span is active so it nests
+        # under `google.genai generate_content` in trace view.
+        log_gemini_generate_io(
+            model=model,
+            tool_round=_tool_round_var.get() if _tool_round_var.get() is not None else -1,
+            contents=to_jsonable(contents),
+            config=to_jsonable(config),
+            response=response,
+            api_key_masked=mk,
+            emit_logfire_event=True,
+        )
     except Exception:
         pass
 
