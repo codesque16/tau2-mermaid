@@ -122,7 +122,7 @@ class GeminiAgent(BaseAgent):
 
         from agent.api_key_rotation import get_gemini_api_key
 
-        api_key = get_gemini_api_key()
+        api_key = get_gemini_api_key("assistant")
         if not api_key.strip():
             raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for Gemini models.")
         if self._client is None or getattr(self, "_gemini_client_key", None) != api_key:

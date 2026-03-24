@@ -15,6 +15,8 @@ import os
 import threading
 from typing import Any, Callable
 
+from dotenv import dotenv_values
+
 _logger = logging.getLogger(__name__)
 
 _ENV_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]+$")
@@ -28,6 +30,10 @@ _locks: dict[str, threading.Lock] = {
 _gemini: "_KeyRotator | None" = None
 _openai: "_KeyRotator | None" = None
 _anthropic: "_KeyRotator | None" = None
+_strict_dotenv_only = False
+_dotenv_path: str | None = None
+_dotenv_cache: dict[str, str] = {}
+_dotenv_cache_path: str | None = None
 
 
 def _resolve_entry(entry: str) -> str:
@@ -37,6 +43,47 @@ def _resolve_entry(entry: str) -> str:
     if _ENV_NAME_RE.fullmatch(s):
         return (os.environ.get(s) or "").strip()
     return s
+
+
+def set_strict_dotenv_only(enabled: bool, dotenv_path: str | None = None) -> None:
+    """When enabled, read API keys only from ``.env`` (ignore inherited process env)."""
+    global _strict_dotenv_only, _dotenv_path, _dotenv_cache, _dotenv_cache_path
+    _strict_dotenv_only = bool(enabled)
+    _dotenv_path = str(dotenv_path).strip() if dotenv_path else None
+    _dotenv_cache = {}
+    _dotenv_cache_path = None
+
+
+def _dotenv_values_cached() -> dict[str, str]:
+    """Cached ``dotenv_values`` lookup for strict dotenv-only mode."""
+    global _dotenv_cache, _dotenv_cache_path
+    path = _dotenv_path or ".env"
+    if _dotenv_cache and _dotenv_cache_path == path:
+        return _dotenv_cache
+    raw = dotenv_values(path)
+    out: dict[str, str] = {}
+    for k, v in raw.items():
+        if v is None:
+            continue
+        out[str(k)] = str(v).strip()
+    _dotenv_cache = out
+    _dotenv_cache_path = path
+    return out
+
+
+def _read_env_value(name: str) -> str:
+    """Read from process env, or strictly from .env when configured."""
+    if _strict_dotenv_only:
+        return (_dotenv_values_cached().get(name) or "").strip()
+    return (os.environ.get(name) or "").strip()
+
+
+def _first_non_empty(names: list[str]) -> str:
+    for n in names:
+        v = _read_env_value(n)
+        if v:
+            return v
+    return ""
 
 
 class _KeyRotator:
@@ -77,7 +124,21 @@ class _KeyRotator:
 def configure_from_simulation_dict(cfg: dict[str, Any] | None) -> None:
     """Load ``api_key_rotation`` from a merged simulation YAML dict. Safe to call repeatedly."""
     global _gemini, _openai, _anthropic
-    block = (cfg or {}).get("api_key_rotation")
+    root_cfg = cfg or {}
+    strict = bool(
+        root_cfg.get("strict_dotenv_only")
+        or root_cfg.get("dotenv_only")
+        or ((root_cfg.get("gepa") or {}).get("strict_dotenv_only") if isinstance(root_cfg.get("gepa"), dict) else False)
+        or ((root_cfg.get("domain") or {}).get("strict_dotenv_only") if isinstance(root_cfg.get("domain"), dict) else False)
+    )
+    dotenv_path = root_cfg.get("dotenv_path")
+    if dotenv_path is None and isinstance(root_cfg.get("gepa"), dict):
+        dotenv_path = (root_cfg.get("gepa") or {}).get("dotenv_path")
+    if dotenv_path is None and isinstance(root_cfg.get("domain"), dict):
+        dotenv_path = (root_cfg.get("domain") or {}).get("dotenv_path")
+    set_strict_dotenv_only(strict, str(dotenv_path) if dotenv_path else None)
+
+    block = root_cfg.get("api_key_rotation")
     if not isinstance(block, dict):
         _gemini = _openai = _anthropic = None
         return
@@ -133,11 +194,30 @@ def mask_secret(value: str, *, head: int = 4, tail: int = 4) -> str:
     return f"{s[:head]}…{s[-tail:]} (len={n})"
 
 
-def get_gemini_api_key() -> str:
+def get_gemini_api_key(scope: str | None = None) -> str:
     if _gemini and _gemini.configured:
         with _locks["gemini"]:
             return _gemini.current()
-    return (os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY") or "").strip()
+    s = (scope or "").strip().lower()
+    if s == "assistant":
+        return _first_non_empty(
+            [
+                "GOOGLE_API_KEY_ASSISTANT",
+                "GEMINI_API_KEY_ASSISTANT",
+                "GOOGLE_API_KEY",
+                "GEMINI_API_KEY",
+            ]
+        )
+    if s in ("gepa", "optimizer", "reflection", "diagnosis"):
+        return _first_non_empty(
+            [
+                "GOOGLE_API_KEY_GEPA",
+                "GEMINI_API_KEY_GEPA",
+                "GOOGLE_API_KEY",
+                "GEMINI_API_KEY",
+            ]
+        )
+    return _first_non_empty(["GOOGLE_API_KEY", "GEMINI_API_KEY"])
 
 
 def get_gemini_api_key_masked() -> str:
@@ -172,18 +252,28 @@ def api_key_masked_for_litellm_model(model: str) -> str:
     return get_openai_api_key_masked()
 
 
-def get_openai_api_key() -> str:
+def get_openai_api_key(scope: str | None = None) -> str:
     if _openai and _openai.configured:
         with _locks["openai"]:
             return _openai.current()
-    return os.environ.get("OPENAI_API_KEY", "").strip()
+    s = (scope or "").strip().lower()
+    if s == "assistant":
+        return _first_non_empty(["OPENAI_API_KEY_ASSISTANT", "OPENAI_API_KEY"])
+    if s in ("gepa", "optimizer", "reflection", "diagnosis"):
+        return _first_non_empty(["OPENAI_API_KEY_GEPA", "OPENAI_API_KEY"])
+    return _first_non_empty(["OPENAI_API_KEY"])
 
 
-def get_anthropic_api_key() -> str:
+def get_anthropic_api_key(scope: str | None = None) -> str:
     if _anthropic and _anthropic.configured:
         with _locks["anthropic"]:
             return _anthropic.current()
-    return (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
+    s = (scope or "").strip().lower()
+    if s == "assistant":
+        return _first_non_empty(["ANTHROPIC_API_KEY_ASSISTANT", "ANTHROPIC_API_KEY"])
+    if s in ("gepa", "optimizer", "reflection", "diagnosis"):
+        return _first_non_empty(["ANTHROPIC_API_KEY_GEPA", "ANTHROPIC_API_KEY"])
+    return _first_non_empty(["ANTHROPIC_API_KEY"])
 
 
 def maybe_rotate_after_provider_error(

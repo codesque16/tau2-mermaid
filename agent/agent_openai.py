@@ -76,7 +76,7 @@ class OpenAIAgent(BaseAgent):
         self.history: list[dict[str, Any]] = []
 
     def _sync_openai_client(self) -> None:
-        api_key = get_openai_api_key()
+        api_key = get_openai_api_key("assistant")
         if not api_key:
             raise ValueError("Set OPENAI_API_KEY for OpenAI models.")
         if self._openai_key != api_key:

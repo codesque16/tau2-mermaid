@@ -118,7 +118,7 @@ def openai_generate_user_text(
     client: OpenAI | None = None
     for attempt in range(max_attempts):
         try:
-            api_key = get_openai_api_key()
+            api_key = get_openai_api_key("gepa")
             if not api_key:
                 raise ValueError("Set OPENAI_API_KEY for OpenAI GEPA LM.")
             if used_key != api_key:

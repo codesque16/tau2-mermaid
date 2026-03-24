@@ -120,7 +120,7 @@ class AnthropicAgent(BaseAgent):
         self.history: list[dict[str, Any]] = []
 
     def _sync_anthropic_client(self) -> None:
-        api_key = get_anthropic_api_key()
+        api_key = get_anthropic_api_key("assistant")
         if not api_key:
             raise ValueError("Set ANTHROPIC_API_KEY for Anthropic models.")
         if self._anthropic_key != api_key:

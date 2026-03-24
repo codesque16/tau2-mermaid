@@ -130,7 +130,7 @@ def anthropic_generate_user_text(
     client: anthropic.Anthropic | None = None
     for attempt in range(max_attempts):
         try:
-            api_key = get_anthropic_api_key()
+            api_key = get_anthropic_api_key("gepa")
             if not api_key:
                 raise ValueError("Set ANTHROPIC_API_KEY for Anthropic GEPA LM.")
             if used_key != api_key:

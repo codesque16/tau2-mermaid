@@ -15,6 +15,8 @@
 
 mode: solo
 max_turns: 60
+# When true, API keys are read strictly from .env (optionally set dotenv_path), not inherited shell env.
+strict_dotenv_only: false
 
 domain:
   name: retail
@@ -97,7 +99,7 @@ gepa:
   reflection_module_selector: round_robin
 
   max_metric_calls: null
-  max_candidate_proposals: 4
+  max_candidate_proposals: 2
   max_workers: 4
   parallel: true
   raise_on_exception: true

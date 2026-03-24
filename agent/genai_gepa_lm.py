@@ -155,7 +155,7 @@ def genai_generate_user_text(
     last_err: BaseException | None = None
     for attempt in range(max_attempts):
         try:
-            api_key = get_gemini_api_key()
+            api_key = get_gemini_api_key("gepa")
             if not api_key.strip():
                 raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for GenAI GEPA LM.")
             api_key_masked = mask_secret(api_key) or None
