@@ -113,6 +113,7 @@ def genai_generate_user_text(
     reasoning_effort: str | None = None,
     include_thoughts_when_no_level: bool = True,
     io_phase: str = "gepa_genai",
+    vertex_ai: bool = False,
 ) -> str:
     """Single user-message ``generate_content``; returns visible (non-thought) text.
 
@@ -159,7 +160,10 @@ def genai_generate_user_text(
             if not api_key.strip():
                 raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for GenAI GEPA LM.")
             api_key_masked = mask_secret(api_key) or None
-            client = genai.Client(api_key=api_key.strip())
+            client = genai.Client(
+                vertexai=bool(vertex_ai),
+                api_key=api_key.strip(),
+            )
             resp = client.models.generate_content(
                 model=model,
                 contents=contents,
@@ -218,6 +222,7 @@ def make_genai_gepa_lm(
     reasoning_effort: str | None = None,
     include_thoughts_when_no_level: bool = True,
     io_phase: str = "gepa_reflection",
+    vertex_ai: bool = False,
 ) -> LanguageModel:
     """Build a callable ``(prompt: str | list[dict]) -> str`` for GEPA reflection / seed generation.
 
@@ -249,6 +254,7 @@ def make_genai_gepa_lm(
             include_thoughts_when_no_level=include_thoughts_when_no_level,
             system_instruction=system_text or None,
             io_phase=io_phase,
+            vertex_ai=vertex_ai,
         )
 
     return lm

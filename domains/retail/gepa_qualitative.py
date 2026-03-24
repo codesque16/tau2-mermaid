@@ -118,6 +118,7 @@ def diagnose_single_retail_failure_for_gepa(
     diagnosis_genai_temperature: float | None = None,
     diagnosis_genai_max_output_tokens: int | None = None,
     diagnosis_genai_reasoning_effort: str | None = None,
+    diagnosis_genai_vertex_ai: bool = False,
 ) -> str:
     """LLM diagnosis + policy improvement suggestions (retail), one failed task.
 
@@ -223,6 +224,7 @@ You MUST output feedback for this trace (it is a failed trace) in the following 
                 reasoning_effort=diagnosis_genai_reasoning_effort,
                 system_instruction=system_text or None,
                 io_phase="gepa_eval",
+                vertex_ai=bool(diagnosis_genai_vertex_ai),
             )
             return text.strip()
         except Exception as e:

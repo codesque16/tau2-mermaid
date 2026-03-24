@@ -122,12 +122,17 @@ class GeminiAgent(BaseAgent):
 
         from agent.api_key_rotation import get_gemini_api_key
 
+        use_vertex_ai = bool(getattr(self.config, "vertex_ai", False))
         api_key = get_gemini_api_key("assistant")
         if not api_key.strip():
             raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for Gemini models.")
-        if self._client is None or getattr(self, "_gemini_client_key", None) != api_key:
-            self._client = genai.Client(api_key=api_key.strip())
-            self._gemini_client_key = api_key.strip()
+        client_cache_key = f"vertexai:{int(use_vertex_ai)}|api_key:{api_key.strip()}"
+        if self._client is None or getattr(self, "_gemini_client_key", None) != client_cache_key:
+            self._client = genai.Client(
+                vertexai=use_vertex_ai,
+                api_key=api_key.strip(),
+            )
+            self._gemini_client_key = client_cache_key
         return self._client
 
     async def _do_respond_stream(

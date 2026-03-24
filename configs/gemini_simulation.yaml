@@ -37,6 +37,8 @@ domain:
 
 assistant:
   agent_type: gemini
+  # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
+  vertex_ai: true
   model: 
     - gemini-3.1-flash-lite-preview
     # - gemini-3-flash-preview

@@ -80,12 +80,14 @@ gepa:
 
   reflection_llm_backend: genai
   reflection_lm: "gemini-3-flash-preview"
+  reflection_genai_vertex_ai: true
   reflection_genai_temperature: 0.3
   reflection_genai_max_output_tokens: null
   reflection_genai_reasoning_effort: high
 
   diagnosis_llm_backend: genai
   diagnosis_lm: "gemini-3-flash-preview"
+  diagnosis_genai_vertex_ai: true
   diagnosis_genai_temperature: 0.3
   diagnosis_genai_max_output_tokens: null
   diagnosis_genai_reasoning_effort: high

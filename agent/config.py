@@ -20,3 +20,5 @@ class AgentConfig:
     mcp_tools_markdown_path: Optional[str] = None
     # Optional deterministic seed for the underlying LLM, if supported.
     seed: Optional[int] = None
+    # Optional Google GenAI transport switch (Gemini): use Vertex AI instead of API key endpoint.
+    vertex_ai: Optional[bool] = None

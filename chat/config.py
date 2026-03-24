@@ -13,6 +13,7 @@ class AgentConfig:
     mermaid: list[dict] | None = None  # Mermaid MCP(s): [{ graph, type, url, tools }]
     mcp_tools_markdown_path: str | None = None
     reasoning_effort: str | None = None  # None = no thinking; "low", "medium", "high" for Gemini etc.
+    vertex_ai: bool | None = None
 
 
 @dataclass
@@ -54,6 +55,7 @@ def _agent_config_from_block(block: dict | None) -> AgentConfig:
         mermaid=block.get("mermaid") or None,
         mcp_tools_markdown_path=block.get("mcp_tools_markdown_path"),
         reasoning_effort=block.get("reasoning_effort"),
+        vertex_ai=block.get("vertex_ai"),
     )
 
 

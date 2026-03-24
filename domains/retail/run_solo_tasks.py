@@ -101,6 +101,7 @@ def _build_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
         mermaid=assistant_block.get("mermaid") or None,
         mcp_tools_markdown_path=assistant_block.get("mcp_tools_markdown_path"),
         reasoning_effort=assistant_block.get("reasoning_effort"),
+        vertex_ai=assistant_block.get("vertex_ai"),
     )
     # Solo mode: user agent is not used, but SimulationConfig expects one.
     user_chat_cfg = ChatAgentConfig(system_prompt="", temperature=0.0, max_tokens=1)
@@ -133,6 +134,7 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
         mcps=getattr(loaded, "mcps", None),
         mermaid=getattr(loaded, "mermaid", None),
         mcp_tools_markdown_path=getattr(loaded, "mcp_tools_markdown_path", None),
+        vertex_ai=getattr(loaded, "vertex_ai", None),
     )
 
 
@@ -383,6 +385,7 @@ def make_orchestrator_for_solo(
             mermaid=_override_mermaid_graph(getattr(assistant_base_cfg, "mermaid", None), mermaid_graph_path),
             mcp_tools_markdown_path=getattr(assistant_base_cfg, "mcp_tools_markdown_path", None),
             seed=seed,
+            vertex_ai=getattr(assistant_base_cfg, "vertex_ai", None),
         )
         assistant = create_agent(
             assistant_agent_type,
