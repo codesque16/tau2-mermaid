@@ -15,7 +15,7 @@ dependencies = [
     "python-dotenv",
     "logfire[google-genai,litellm]",
     "pydantic>=2.0",
-    "litellm",
+    "litellm==1.82.0",
     "mcp[cli]",
     "starlette",
     "uvicorn",
@@ -29,6 +29,9 @@ dependencies = [
 # Use the vendored GEPA under ./gepa (Logfire callbacks, reflective_dataset_format, etc.).
 # PyPI ``gepa`` has a slimmer TrackingConfig without ``use_logfire``, so nested Logfire spans
 # from ``LogfireSpanCallback`` are never registered.
+[tool.uv]
+override-dependencies = ["litellm==1.82.0"]
+
 [tool.uv.sources]
 gepa = { path = "gepa", editable = true }
 
@@ -38,7 +41,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agent*", "orchestrator*", "chat*"]
+include = ["agent*", "orchestrator*", "chat*", "llm_gateway*"]
+exclude = ["llm_gateway.tests*"]
 
 [tool.logfire]
 project_name = "tau2-mermaid"
@@ -48,4 +52,9 @@ console_colors = "auto"  # 'auto' | 'always' | 'never'
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+]
+# HTTP gateway (see llm_gateway/README.md).
+llm_gateway = [
+    "fastapi>=0.115.0",
+    "asyncpg>=0.30.0",
 ]
