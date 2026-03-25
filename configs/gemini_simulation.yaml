@@ -13,11 +13,13 @@ max_turns: 60
 domain:
   name: retail
   policy: 
-    - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
+    # - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
     # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_openai.md"
-    - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
+    #- "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
     # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_openai.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/base_gemini31flashlite_03-24_10-41-11/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gemini31flashlite_03-24_10-42-21[520]/best_policy.md"
   tasks: "domains/retail/tasks_solo_comms.json"
   # When true, writes one JSON transcript per task (including tool-call
   # request/response history) under `outputs/<run_id>/experiment_<n>/`.
@@ -29,7 +31,7 @@ domain:
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
   # task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
-  trials: 4
+  trials: 1
   # Master RNG seed for ``run_solo_tasks``: used only to draw one integer seed per trial; that per-trial
   # value is passed through to each LLM API call (Gemini ``GenerateContentConfig.seed``, LiteLLM/OpenAI ``seed``).
   # Omit to keep the previous default (internal base 300).
@@ -43,7 +45,7 @@ assistant:
     - gemini-3.1-flash-lite-preview
     # - gemini-3-flash-preview
   temperature: 0
-  reasoning_effort: "low" # ["low", "medium", "high"]
+  reasoning_effort: ["low", "medium", "high"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools
