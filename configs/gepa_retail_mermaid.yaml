@@ -94,14 +94,14 @@ gepa:
 
   reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_mermaid.md"
 
-  reflection_minibatch_size: 5
+  reflection_minibatch_size: 10
   reflection_skip_perfect_score: false
   reflection_perfect_score: null
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
   max_metric_calls: null
-  max_candidate_proposals: 20
+  max_candidate_proposals: 10
   max_workers: 4
   parallel: true
   raise_on_exception: true
