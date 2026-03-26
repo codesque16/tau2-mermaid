@@ -1,5 +1,6 @@
 mode: solo
 max_turns: 60
+strict_dotenv_only: true
 
 # Optional: ordered API keys per provider (first = primary). On 429, advance to the next key for
 # the rest of the process; if a backup key fails with a non-rate-limit error, switch back to primary;
@@ -16,20 +17,19 @@ domain:
     # - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
     # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
     # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_openai.md"
-    #- "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
+    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
     # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_openai.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/base_gemini31flashlite_03-24_10-41-11/best_policy.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gemini31flashlite_03-24_10-42-21[520]/best_policy.md"
+    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/results/prompt_optimizer_runs/20260324_gpt5nano_low/candidates/v01.md"
+    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/base_gpt5nano_03-24_07-45-15/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gpt5nano_03-24_07-46-32/best_policy.md"
     # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/results/prompt_optimizer_runs/20260324_gpt5nano_low/candidates/v01.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gemini31flashlite_03-25_05-03-03/best_policy.md"
   tasks: "domains/retail/tasks_solo_comms.json"
+  # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
+  evaluate_communication: true
   # When true, writes one JSON transcript per task (including tool-call
   # request/response history) under `outputs/<run_id>/experiment_<n>/`.
   output_task_transcripts: true
   output_base_dir: "outputs"
-  # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
-  evaluate_communication: true
   concurrency: 40
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
@@ -38,17 +38,14 @@ domain:
   # Master RNG seed for ``run_solo_tasks``: used only to draw one integer seed per trial; that per-trial
   # value is passed through to each LLM API call (Gemini ``GenerateContentConfig.seed``, LiteLLM/OpenAI ``seed``).
   # Omit to keep the previous default (internal base 300).
-  seed: 34223423423
+  seed: 67578567
 
 assistant:
-  agent_type: gemini
-  # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
-  vertex_ai: true
+  agent_type: openai
   model: 
-    - gemini-3.1-flash-lite-preview
-    # - gemini-3-flash-preview
+    - gpt-5-nano
   temperature: 0
-  reasoning_effort: ["low", "medium", "high"]
+  reasoning_effort: ["medium"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools
