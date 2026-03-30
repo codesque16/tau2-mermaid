@@ -3,21 +3,47 @@
 import asyncio
 import base64
 import json
+import os
 from typing import Any, Callable, Awaitable
+
+import logfire
 
 from .base import BaseAgent
 from .config import AgentConfig
-from .gemini_log import log_gemini_generate_io, to_jsonable
+from .gemini_log import log_gemini_generate_io, log_openai_chat_raw_io, to_jsonable
 from .logfire_gemini_integration import (
     reset_current_gemini_tool_round,
     set_current_gemini_tool_round,
 )
-from .utils.cost import compute_cost, usage_from_gemini_response
+from .utils.cost import compute_cost, usage_from_gemini_response, usage_from_openai_response
 
 # Gemini API roles for `contents` (see https://ai.google.dev/gemini-api/docs/function-calling ).
 GEMINI_ROLE_USER = "user"
 GEMINI_ROLE_MODEL = "model"
 GEMINI_ROLE_FUNCTION = "function"  # tool / function_call results (not OpenAI's "tool" role)
+
+
+def _supports_gemini_thinking_level(model: str) -> bool:
+    """Return whether `thinking_level` should be sent for this model."""
+    m = (model or "").strip().lower()
+    # Gemini 2.5 Flash Lite rejects `thinking_level` today (400 INVALID_ARGUMENT).
+    if "gemini-2.5-flash-lite" in m or "gemini-2.5-flash" in m:
+        return False
+    return True
+
+
+def _gemini_thinking_budget_from_effort(effort: str | None) -> int | None:
+    if effort is None or not str(effort).strip():
+        return None
+    lvl = str(effort).strip().lower()
+    # Conservative defaults for 2.5 flash-lite budget-based thinking.
+    budget_map = {
+        "minimal": 0,
+        "low": 1024,
+        "medium": 4096,
+        "high": 8192,
+    }
+    return budget_map.get(lvl)
 
 
 def _gemini_api_seed_i32(raw: int) -> int:
@@ -127,10 +153,11 @@ class GeminiAgent(BaseAgent):
         from agent.api_key_rotation import get_gemini_api_key
 
         use_vertex_ai = bool(getattr(self.config, "vertex_ai", False))
-        api_key = get_gemini_api_key("assistant")
+        scope = (self.name or "assistant").strip().lower() or "assistant"
+        api_key = get_gemini_api_key(scope)
         if not api_key.strip():
             raise ValueError("Set GOOGLE_API_KEY or GEMINI_API_KEY for Gemini models.")
-        client_cache_key = f"vertexai:{int(use_vertex_ai)}|api_key:{api_key.strip()}"
+        client_cache_key = f"vertexai:{int(use_vertex_ai)}|name:{scope}|api_key:{api_key.strip()}"
         if self._client is None or getattr(self, "_gemini_client_key", None) != client_cache_key:
             self._client = genai.Client(
                 vertexai=use_vertex_ai,
@@ -139,6 +166,317 @@ class GeminiAgent(BaseAgent):
             self._gemini_client_key = client_cache_key
         return self._client
 
+    def _is_vertex_endpoint_mode(self) -> bool:
+        return bool((getattr(self.config, "vertex_endpoint_id", None) or "").strip())
+
+    def _vertex_endpoint_predict(
+        self,
+        *,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None,
+        phase: str,
+    ) -> dict[str, Any]:
+        import google.auth
+        from google.auth.transport.requests import Request
+
+        endpoint_id = (getattr(self.config, "vertex_endpoint_id", None) or "").strip()
+        if not endpoint_id:
+            raise ValueError("assistant.vertex_endpoint_id is required for dedicated Vertex endpoint mode.")
+        project = (
+            (getattr(self.config, "vertex_project", None) or "").strip()
+            or (os.getenv("GOOGLE_CLOUD_PROJECT") or "").strip()
+        )
+        if not project:
+            raise ValueError("Set assistant.vertex_project or GOOGLE_CLOUD_PROJECT for dedicated Vertex endpoint mode.")
+        location = (getattr(self.config, "vertex_location", None) or "").strip() or "us-central1"
+
+        base = (getattr(self.config, "vertex_http_predict_base", None) or "").strip().rstrip("/")
+        if not base:
+            dedicated_domain = (os.getenv("DEDICATED_ENDPOINT_DOMAIN") or "").strip()
+            if dedicated_domain:
+                base = f"https://{dedicated_domain}"
+        if not base:
+            # Console "sample request" style host (see scripts/test_vertex_openai.py).
+            base = f"https://{endpoint_id}.{location}-{project}.prediction.vertexai.goog"
+
+        params = getattr(self.config, "vertex_endpoint_parameters", None) or {}
+        if not isinstance(params, dict):
+            raise ValueError("assistant.vertex_endpoint_parameters must be a dict/object when provided.")
+
+        api_ver = (getattr(self.config, "vertex_http_predict_api_version", None) or "v1").strip().strip(
+            "/"
+        )
+        if not api_ver:
+            api_ver = "v1"
+
+        creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+        creds.refresh(Request())
+        token = getattr(creds, "token", None) or ""
+        if not token:
+            raise RuntimeError("Failed to obtain Google ADC token for dedicated Vertex endpoint mode.")
+
+        instance: dict[str, Any] = {
+            "@requestFormat": "chatCompletions",
+            "messages": messages,
+            "temperature": float(getattr(self.config, "temperature", 0.0) or 0.0),
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+        if self.config.max_tokens is not None:
+            instance["max_tokens"] = int(self.config.max_tokens)
+        for k, v in dict(params).items():
+            if k not in ("messages", "@requestFormat"):
+                instance[k] = v
+        if tools:
+            instance["tools"] = tools
+            # tool_choice semantics (vLLM / OpenAI-compatible servers on Vertex):
+            # - **Omitting** the `tool_choice` field is NOT the same as sending `"tool_choice":"auto"`.
+            #   Many stacks only enforce --enable-auto-tool-choice when the **string** "auto" appears.
+            # - scripts/test_vertex_openai.py call_chat(..., tool_choice=None) **drops the key** from JSON.
+            # - If the agent ever merged `"auto"` here (or via vertex_endpoint_parameters), the same
+            #   URL returns predictions with object=error and message about --enable-auto-tool-choice.
+            # - To match the test script: do not set tool_choice unless YAML sets it explicitly.
+
+        url = (
+            f"{base}/{api_ver}/projects/{project}/locations/{location}/endpoints/"
+            f"{endpoint_id}:predict"
+        )
+        body = {"instances": [instance]}
+
+        from agent.vertex_dedicated_http import vertex_predict_post
+        from agent.logfire_native_llm import _finalize_openai_span
+
+        _tc_in_body = "tool_choice" in instance
+        _tc_val = instance.get("tool_choice") if _tc_in_body else None
+
+        request_extras: dict[str, Any] = {
+            "url": url,
+            # Keep tools visible in Logfire "Model Run" request_data.
+        }
+        if tools is not None:
+            request_extras["tools"] = tools
+        # Exact POST instance keys / tool_choice (compare to a working test_vertex_openai call).
+        request_extras["vertex_instance_keys"] = sorted(instance.keys())
+        request_extras["vertex_body_has_tool_choice"] = _tc_in_body
+        request_extras["vertex_body_tool_choice"] = _tc_val
+
+        model_for_log = f"vertex-endpoint:{endpoint_id}"
+        # Create the same Logfire "Model Run" structure as OpenAI chat.completions,
+        # so vertex :predict calls appear with request_data/response_data consistently.
+        payload = vertex_predict_post(url, token, body, timeout_s=120)
+
+        # Shape payload.predictions as an OpenAI-compatible "completion" object for Logfire UI
+        # (match _vertex_prediction_obj behavior, but without raising).
+        completion_for_log: Any = payload.get("predictions")
+        if isinstance(completion_for_log, str):
+            try:
+                completion_for_log = json.loads(completion_for_log)
+            except json.JSONDecodeError:
+                pass
+        if isinstance(completion_for_log, list) and completion_for_log:
+            first = completion_for_log[0]
+            if isinstance(first, str):
+                try:
+                    first = json.loads(first)
+                except json.JSONDecodeError:
+                    pass
+            completion_for_log = first
+        if completion_for_log is None:
+            completion_for_log = payload
+
+        with logfire.span(
+            "vertex chat.completions",
+            agent=self.name,
+            model=model_for_log,
+            **{
+                "gen_ai.system": "vertex",
+                "gen_ai.request.model": model_for_log,
+                "gen_ai.operation.name": "chat",
+            },
+        ) as span:
+            # Best-effort: even if the endpoint returns {"object":"error"}, we still want
+            # request/response structure in Logfire UI.
+            _finalize_openai_span(
+                span,
+                model=model_for_log,
+                request_messages=messages,
+                request_extras=request_extras,
+                completion=completion_for_log,
+                api_key_masked=None,
+                io_phase=phase,
+            )
+
+        return payload
+
+    @staticmethod
+    def _vertex_format_vertex_prediction_error(msg: str | None) -> str:
+        """Append deployment hint when vLLM complains about auto tool choice."""
+        base = str(msg or "")
+        if "enable-auto-tool-choice" in base or "tool-call-parser" in base:
+            return (
+                base
+                + " — The client is not sending tool_choice (see Logfire vertex_body_has_tool_choice). "
+                "Many OpenAI-compatible servers still use internal tool_choice=auto whenever "
+                "`tools` is non-empty, which requires --enable-auto-tool-choice and "
+                "--tool-call-parser on the **model worker**. Fix: add those flags to the serving "
+                "deployment (Vertex custom container / vLLM args), or use an endpoint where "
+                "they are already enabled (your standalone test may hit a different revision)."
+            )
+        return base
+
+    @staticmethod
+    def _vertex_prediction_obj(payload: dict[str, Any]) -> dict[str, Any]:
+        preds = payload.get("predictions")
+        if preds is None:
+            return {}
+        if isinstance(preds, str):
+            try:
+                preds = json.loads(preds)
+            except json.JSONDecodeError:
+                return {}
+        if isinstance(preds, dict):
+            if preds.get("object") == "error":
+                m = preds.get("message")
+                raise RuntimeError(
+                    "Vertex endpoint returned error payload: "
+                    f"code={preds.get('code')} type={preds.get('type')} "
+                    f"message={GeminiAgent._vertex_format_vertex_prediction_error(m if isinstance(m, str) else None)}"
+                )
+            return preds
+        if isinstance(preds, list) and preds:
+            first = preds[0]
+            if isinstance(first, str):
+                try:
+                    first = json.loads(first)
+                except json.JSONDecodeError:
+                    return {}
+            if isinstance(first, dict):
+                if first.get("object") == "error":
+                    m = first.get("message")
+                    raise RuntimeError(
+                        "Vertex endpoint returned error payload: "
+                        f"code={first.get('code')} type={first.get('type')} "
+                        f"message={GeminiAgent._vertex_format_vertex_prediction_error(m if isinstance(m, str) else None)}"
+                    )
+                return first
+        return {}
+
+    @staticmethod
+    def _vertex_chat_text(pred: dict[str, Any]) -> str:
+        choices = pred.get("choices")
+        if not isinstance(choices, list) or not choices:
+            return ""
+        c0 = choices[0] if isinstance(choices[0], dict) else {}
+        msg = c0.get("message") if isinstance(c0, dict) else {}
+        if not isinstance(msg, dict):
+            return ""
+        content = msg.get("content")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts: list[str] = []
+            for p in content:
+                if isinstance(p, dict):
+                    t = p.get("text")
+                    if isinstance(t, str) and t:
+                        parts.append(t)
+            return "".join(parts)
+        return ""
+
+    @staticmethod
+    def _vertex_chat_tool_calls(pred: dict[str, Any]) -> list[dict[str, Any]]:
+        choices = pred.get("choices")
+        if not isinstance(choices, list) or not choices:
+            return []
+        c0 = choices[0] if isinstance(choices[0], dict) else {}
+        msg = c0.get("message") if isinstance(c0, dict) else {}
+        if not isinstance(msg, dict):
+            return []
+        tool_calls = msg.get("tool_calls")
+        if not isinstance(tool_calls, list):
+            return []
+        out: list[dict[str, Any]] = []
+        for tc in tool_calls:
+            if not isinstance(tc, dict):
+                continue
+            fn = tc.get("function") if isinstance(tc.get("function"), dict) else {}
+            name = fn.get("name") if isinstance(fn.get("name"), str) else ""
+            args_raw = fn.get("arguments")
+            args: dict[str, Any] = {}
+            if isinstance(args_raw, str):
+                try:
+                    parsed = json.loads(args_raw)
+                    if isinstance(parsed, dict):
+                        args = parsed
+                except json.JSONDecodeError:
+                    args = {}
+            elif isinstance(args_raw, dict):
+                args = args_raw
+            if not name:
+                continue
+            out.append(
+                {
+                    "id": str(tc.get("id") or ""),
+                    "name": name,
+                    "arguments": args,
+                }
+            )
+        return out
+
+    def _vertex_messages_from_history(self) -> list[dict[str, Any]]:
+        """OpenAI chat messages for @requestFormat chatCompletions (see scripts/test_vertex_openai.py)."""
+        messages: list[dict[str, Any]] = []
+        system = (self.get_effective_system_prompt() or "").strip()
+        if system:
+            messages.append({"role": "system", "content": system})
+        for m in self.history:
+            role = m.get("role")
+            if role == "user":
+                messages.append({"role": "user", "content": str(m.get("content") or "")})
+                continue
+            if role == "assistant":
+                raw_content = m.get("content")
+                if raw_content is None:
+                    text = ""
+                else:
+                    text = raw_content if isinstance(raw_content, str) else str(raw_content)
+                msg: dict[str, Any] = {"role": "assistant", "content": text}
+                api_calls: list[dict[str, Any]] = []
+                tcs = m.get("tool_calls") or []
+                if isinstance(tcs, list) and tcs:
+                    for tc in tcs:
+                        if not isinstance(tc, dict):
+                            continue
+                        name = str(tc.get("name") or "").strip()
+                        if not name:
+                            continue
+                        args = tc.get("arguments")
+                        if isinstance(args, dict):
+                            args_s = json.dumps(args)
+                        else:
+                            args_s = str(args or "{}")
+                        api_calls.append(
+                            {
+                                "id": str(tc.get("id") or ""),
+                                "type": "function",
+                                "function": {"name": name, "arguments": args_s},
+                            }
+                        )
+                    if api_calls:
+                        msg["tool_calls"] = api_calls
+                messages.append(msg)
+                continue
+            if role == "tool":
+                tc_id = str(m.get("tool_call_id") or "")
+                raw = m.get("content")
+                if raw is None:
+                    body = ""
+                elif isinstance(raw, (dict, list)):
+                    body = json.dumps(raw)
+                else:
+                    body = str(raw)
+                messages.append({"role": "tool", "tool_call_id": tc_id, "content": body})
+        return messages
+
     async def _do_respond_stream(
         self,
         incoming: str,
@@ -146,6 +484,68 @@ class GeminiAgent(BaseAgent):
         on_chunk: Callable[[str, Any], Awaitable[None]] | None = None,
     ) -> tuple[str, dict]:
         """Generate reply via Gemini. Returns (full_text, usage_info). Calls on_chunk with full text when done."""
+        if self._is_vertex_endpoint_mode():
+            await self._ensure_mcp_initialized()
+            self.history.append({"role": "user", "content": incoming})
+
+            tools = self._get_mcp_tools_for_llm()
+            if tools:
+                self.log_llm_tools_in_request(tools, provider="vertex", model=self.model)
+            total_usage: dict[str, int] = {}
+            total_cost = 0.0
+            max_tool_rounds = 20
+            final_text = ""
+
+            for _round in range(max_tool_rounds):
+                api_messages = self._vertex_messages_from_history()
+                payload = await asyncio.to_thread(
+                    self._vertex_endpoint_predict,
+                    messages=api_messages,
+                    tools=tools or None,
+                    phase=f"vertex_endpoint_chat_round_{_round}",
+                )
+                pred = self._vertex_prediction_obj(payload)
+                usage = usage_from_openai_response(pred.get("usage") if isinstance(pred, dict) else None)
+                if usage:
+                    total_usage = {
+                        k: int(total_usage.get(k, 0)) + int(usage.get(k, 0))
+                        for k in set(total_usage) | set(usage)
+                    }
+                    total_cost += compute_cost(self.model, usage)
+
+                content = self._vertex_chat_text(pred).strip()
+                tool_calls = self._vertex_chat_tool_calls(pred)
+                assistant_record: dict[str, Any] = {"role": "assistant", "content": content}
+                if tool_calls:
+                    assistant_record["tool_calls"] = tool_calls
+                self.history.append(assistant_record)
+
+                if not tool_calls:
+                    final_text = content
+                    if on_chunk is not None:
+                        await on_chunk("text", final_text)
+                    return final_text, {"usage": total_usage, "cost": total_cost}
+
+                for tc in tool_calls:
+                    tc_id = tc.get("id") or ""
+                    fn_name = tc.get("name") or ""
+                    args = tc.get("arguments") or {}
+                    if on_chunk is not None:
+                        await on_chunk("tool_use", {"name": fn_name, "id": tc_id, "input": args})
+                    result = await self._call_mcp_tool(fn_name, args)
+                    self.history.append(
+                        {
+                            "role": "tool",
+                            "name": fn_name,
+                            "content": result,
+                            "tool_call_id": tc_id,
+                        }
+                    )
+
+            if on_chunk is not None and final_text:
+                await on_chunk("text", final_text)
+            return final_text, {"usage": total_usage, "cost": total_cost}
+
         # In solo mode (retail), tools are required. We mimic LiteLLM's approach:
         # 1) initialize MCP tool schemas via BaseAgent
         # 2) pass tool declarations to Gemini
@@ -365,26 +765,39 @@ class GeminiAgent(BaseAgent):
                 }
                 reff = getattr(self.config, "reasoning_effort", None)
                 if reff is not None and str(reff).strip():
-                    lvl = str(reff).strip().lower()
-                    level_map = {
-                        "low": types.ThinkingLevel.LOW,
-                        "medium": types.ThinkingLevel.MEDIUM,
-                        "high": types.ThinkingLevel.HIGH,
-                        "minimal": types.ThinkingLevel.MINIMAL,
-                    }
-                    tl = level_map.get(lvl)
-                    if tl is not None:
-                        # ``include_thoughts`` returns summaries in ``Part(text=..., thought=True)``.
-                        # ``thought_signature`` on tool-call parts is still required for replay.
-                        try:
-                            gen_config_kw["thinking_config"] = types.ThinkingConfig(
-                                thinking_level=tl,
-                                include_thoughts=True,
-                            )
-                        except Exception:
-                            gen_config_kw["thinking_config"] = types.ThinkingConfig(
-                                thinking_level=tl
-                            )
+                    if _supports_gemini_thinking_level(self.model):
+                        lvl = str(reff).strip().lower()
+                        level_map = {
+                            "low": types.ThinkingLevel.LOW,
+                            "medium": types.ThinkingLevel.MEDIUM,
+                            "high": types.ThinkingLevel.HIGH,
+                            "minimal": types.ThinkingLevel.MINIMAL,
+                        }
+                        tl = level_map.get(lvl)
+                        if tl is not None:
+                            # ``include_thoughts`` returns summaries in ``Part(text=..., thought=True)``.
+                            # ``thought_signature`` on tool-call parts is still required for replay.
+                            try:
+                                gen_config_kw["thinking_config"] = types.ThinkingConfig(
+                                    thinking_level=tl,
+                                    include_thoughts=True,
+                                )
+                            except Exception:
+                                gen_config_kw["thinking_config"] = types.ThinkingConfig(
+                                    thinking_level=tl
+                                )
+                    else:
+                        budget = _gemini_thinking_budget_from_effort(reff)
+                        if budget is not None:
+                            try:
+                                gen_config_kw["thinking_config"] = types.ThinkingConfig(
+                                    thinking_budget=budget,
+                                    include_thoughts=True,
+                                )
+                            except Exception:
+                                gen_config_kw["thinking_config"] = types.ThinkingConfig(
+                                    thinking_budget=budget
+                                )
                 if self.config.max_tokens is not None:
                     gen_config_kw["max_output_tokens"] = self.config.max_tokens
                 _llm_seed = getattr(self.config, "seed", None)

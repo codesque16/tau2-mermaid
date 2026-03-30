@@ -37,6 +37,13 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
         mcps=getattr(loaded, "mcps", None),
         mermaid=getattr(loaded, "mermaid", None),
         reasoning_effort=getattr(loaded, "reasoning_effort", None),
+        vertex_ai=getattr(loaded, "vertex_ai", None),
+        vertex_endpoint_id=getattr(loaded, "vertex_endpoint_id", None),
+        vertex_project=getattr(loaded, "vertex_project", None),
+        vertex_location=getattr(loaded, "vertex_location", None),
+        vertex_endpoint_parameters=getattr(loaded, "vertex_endpoint_parameters", None),
+        vertex_http_predict_base=getattr(loaded, "vertex_http_predict_base", None),
+        vertex_http_predict_api_version=getattr(loaded, "vertex_http_predict_api_version", None),
     )
 
 
@@ -45,12 +52,21 @@ async def run(config_path: Path) -> None:
     configure_from_simulation_dict(raw)
     domain = raw.get("domain")
     if isinstance(domain, dict) and domain.get("tasks"):
-        print(
-            "This YAML is a retail solo batch config (domain.tasks). "
-            "Use run_solo_tasks, not main.py:\n"
-            f"  uv run python -m domains.retail.run_solo_tasks --config {config_path}",
-            file=sys.stderr,
-        )
+        mode = (raw.get("mode") or "").strip().lower()
+        if mode == "conversation":
+            print(
+                "This YAML is a retail conversational batch config (domain.tasks). "
+                "Use run_conversation_tasks, not main.py:\n"
+                f"  uv run python -m domains.retail.run_conversation_tasks --config {config_path}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "This YAML is a retail solo batch config (domain.tasks). "
+                "Use run_solo_tasks, not main.py:\n"
+                f"  uv run python -m domains.retail.run_solo_tasks --config {config_path}",
+                file=sys.stderr,
+            )
         sys.exit(1)
 
     config = load_simulation_config(config_path)

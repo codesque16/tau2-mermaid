@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import copy
+from dataclasses import replace
 from datetime import datetime
 import json
 import logging
@@ -102,6 +103,12 @@ def _build_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
         mcp_tools_markdown_path=assistant_block.get("mcp_tools_markdown_path"),
         reasoning_effort=assistant_block.get("reasoning_effort"),
         vertex_ai=assistant_block.get("vertex_ai"),
+        vertex_endpoint_id=assistant_block.get("vertex_endpoint_id"),
+        vertex_project=assistant_block.get("vertex_project"),
+        vertex_location=assistant_block.get("vertex_location"),
+        vertex_endpoint_parameters=assistant_block.get("vertex_endpoint_parameters"),
+        vertex_http_predict_base=assistant_block.get("vertex_http_predict_base"),
+        vertex_http_predict_api_version=assistant_block.get("vertex_http_predict_api_version"),
     )
     # Solo mode: user agent is not used, but SimulationConfig expects one.
     user_chat_cfg = ChatAgentConfig(system_prompt="", temperature=0.0, max_tokens=1)
@@ -122,6 +129,10 @@ def _build_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
         mcp_server_url=None,
         graph_id=None,
         mode=(raw.get("mode") or "solo"),
+        stop_on_user_stop_word=bool(raw.get("stop_on_user_stop_word", False)),
+        first_agent_message=(
+            str(raw["first_agent_message"]).strip() if raw.get("first_agent_message") else None
+        ),
     )
 
 
@@ -135,6 +146,12 @@ def _to_agent_config(loaded: ChatAgentConfig) -> AgentAgentConfig:
         mermaid=getattr(loaded, "mermaid", None),
         mcp_tools_markdown_path=getattr(loaded, "mcp_tools_markdown_path", None),
         vertex_ai=getattr(loaded, "vertex_ai", None),
+        vertex_endpoint_id=getattr(loaded, "vertex_endpoint_id", None),
+        vertex_project=getattr(loaded, "vertex_project", None),
+        vertex_location=getattr(loaded, "vertex_location", None),
+        vertex_endpoint_parameters=getattr(loaded, "vertex_endpoint_parameters", None),
+        vertex_http_predict_base=getattr(loaded, "vertex_http_predict_base", None),
+        vertex_http_predict_api_version=getattr(loaded, "vertex_http_predict_api_version", None),
     )
 
 
@@ -216,10 +233,35 @@ def _sweep_list(value: Any, *, default_when_missing: Any = None) -> List[Any]:
     return [value]
 
 
-def _expand_experiment_raw_configs(raw_cfg: dict[str, Any]) -> List[dict[str, Any]]:
-    """Cartesian product over domain.policy × assistant.model × temperature × reasoning_effort.
+def _vertex_endpoint_pairs_for_sweep(assistant_block: Dict[str, Any]) -> List[tuple[str | None, str | None]]:
+    """Pairs (endpoint_id, predict_base_or_none) for dedicated Vertex endpoint sweep.
 
-    Each list may be a single scalar or a YAML list. Missing assistant fields use sensible singles.
+    If ``vertex_endpoint_id`` is a list, optionally pair with ``vertex_http_predict_base`` list of the
+    same length. Omitted bases default to None (URL built in the agent from id/project/location).
+    """
+    vep_raw = assistant_block.get("vertex_endpoint_id")
+    if vep_raw is None:
+        return [(None, None)]
+    vep_ids = _sweep_list(vep_raw)
+    bases_raw = assistant_block.get("vertex_http_predict_base")
+    if bases_raw is not None:
+        bases = _sweep_list(bases_raw)
+        if len(bases) != len(vep_ids):
+            raise ValueError(
+                "assistant.vertex_http_predict_base must list the same length as assistant.vertex_endpoint_id "
+                "when both are lists."
+            )
+        return list(zip(vep_ids, bases))
+    return [(vid, None) for vid in vep_ids]
+
+
+def _expand_experiment_raw_configs(raw_cfg: dict[str, Any]) -> List[dict[str, Any]]:
+    """Cartesian product over domain.policy × temperature × reasoning_effort, with optional
+    **paired** ``assistant.model`` × dedicated Vertex endpoint lists.
+
+    When ``assistant.model`` and ``assistant.vertex_endpoint_id`` are both YAML lists of the **same
+    length**, they are zipped (one experiment per index). Otherwise ``model`` and endpoint pairs
+    multiply as usual (Cartesian product).
     """
     domain_cfg: Dict[str, Any] = dict(raw_cfg.get("domain") or {})
     assistant_block: Dict[str, Any] = dict(raw_cfg.get("assistant") or {})
@@ -253,8 +295,27 @@ def _expand_experiment_raw_configs(raw_cfg: dict[str, Any]) -> List[dict[str, An
     if not reasonings:
         reasonings = [None]
 
+    vep_pairs = _vertex_endpoint_pairs_for_sweep(assistant_block)
+
+    model_is_list = isinstance(assistant_block.get("model"), list)
+    vep_id_is_list = isinstance(assistant_block.get("vertex_endpoint_id"), list)
+    zip_model_with_endpoint = (
+        model_is_list
+        and vep_id_is_list
+        and len(models) == len(vep_pairs)
+        and len(models) > 0
+    )
+    if zip_model_with_endpoint:
+        model_vep_rows: List[tuple[Any, tuple[str | None, str | None]]] = list(
+            zip(models, vep_pairs)
+        )
+    else:
+        model_vep_rows = list(product(models, vep_pairs))
+
     out: List[dict[str, Any]] = []
-    for pol, model, temp, reff in product(policies, models, temps, reasonings):
+    for pol, (model, (vep_id, vep_base)), temp, reff in product(
+        policies, model_vep_rows, temps, reasonings
+    ):
         rc = copy.deepcopy(raw_cfg)
         dom = dict(rc.get("domain") or {})
         dom["policy"] = pol
@@ -263,6 +324,14 @@ def _expand_experiment_raw_configs(raw_cfg: dict[str, Any]) -> List[dict[str, An
         asst["model"] = model
         asst["temperature"] = temp
         asst["reasoning_effort"] = reff
+        if vep_id is not None:
+            asst["vertex_endpoint_id"] = vep_id
+        else:
+            asst.pop("vertex_endpoint_id", None)
+        if vep_base is not None:
+            asst["vertex_http_predict_base"] = vep_base
+        else:
+            asst.pop("vertex_http_predict_base", None)
         rc["assistant"] = asst
         out.append(rc)
     # A shared domain.run_id would collide across combos; only allow it for a single experiment.
@@ -297,6 +366,7 @@ def _experiment_config_record(
         "assistant.temperature": assistant_block.get("temperature"),
         "assistant.reasoning_effort": assistant_block.get("reasoning_effort"),
         "assistant.max_tokens": assistant_block.get("max_tokens"),
+        "assistant.vertex_endpoint_id": assistant_block.get("vertex_endpoint_id"),
         "max_turns": raw_cfg.get("max_turns"),
         "mode": raw_cfg.get("mode"),
     }
@@ -386,6 +456,14 @@ def make_orchestrator_for_solo(
             mcp_tools_markdown_path=getattr(assistant_base_cfg, "mcp_tools_markdown_path", None),
             seed=seed,
             vertex_ai=getattr(assistant_base_cfg, "vertex_ai", None),
+            vertex_endpoint_id=getattr(assistant_base_cfg, "vertex_endpoint_id", None),
+            vertex_project=getattr(assistant_base_cfg, "vertex_project", None),
+            vertex_location=getattr(assistant_base_cfg, "vertex_location", None),
+            vertex_endpoint_parameters=getattr(assistant_base_cfg, "vertex_endpoint_parameters", None),
+            vertex_http_predict_base=getattr(assistant_base_cfg, "vertex_http_predict_base", None),
+            vertex_http_predict_api_version=getattr(
+                assistant_base_cfg, "vertex_http_predict_api_version", None
+            ),
         )
         assistant = create_agent(
             assistant_agent_type,
@@ -410,6 +488,75 @@ def make_orchestrator_for_solo(
         return Orchestrator(assistant, user, bus, sim_cfg)
 
     return _make
+
+
+def make_orchestrator_for_conversation(
+    policy_text: str,
+    sim_cfg: SimulationConfig,
+    user_system_prompt: str,
+    initial_message: str | None,
+    seed: int | None = None,
+    mermaid_graph_path: str | None = None,
+) -> Orchestrator:
+    """Multi-turn retail sim: assistant policy + LLM user simulator (tau2-style user_scenario)."""
+    assistant_base_cfg = sim_cfg.assistant
+    assistant_model = sim_cfg.assistant_model or sim_cfg.model
+    assistant_agent_type = sim_cfg.assistant_agent_type or "litellm"
+    user_model = sim_cfg.user_model or sim_cfg.model
+    user_agent_type = sim_cfg.user_agent_type or "litellm"
+
+    has_mermaid = bool(getattr(assistant_base_cfg, "mermaid", None))
+    if has_mermaid:
+        full_system_prompt = ""
+    else:
+        full_system_prompt = f"{policy_text.strip()}".strip()
+
+    assistant_cfg = AgentAgentConfig(
+        system_prompt=full_system_prompt,
+        max_tokens=assistant_base_cfg.max_tokens,
+        temperature=assistant_base_cfg.temperature,
+        reasoning_effort=getattr(assistant_base_cfg, "reasoning_effort", None),
+        mcps=getattr(assistant_base_cfg, "mcps", None),
+        mermaid=_override_mermaid_graph(getattr(assistant_base_cfg, "mermaid", None), mermaid_graph_path),
+        mcp_tools_markdown_path=getattr(assistant_base_cfg, "mcp_tools_markdown_path", None),
+        seed=seed,
+        vertex_ai=getattr(assistant_base_cfg, "vertex_ai", None),
+        vertex_endpoint_id=getattr(assistant_base_cfg, "vertex_endpoint_id", None),
+        vertex_project=getattr(assistant_base_cfg, "vertex_project", None),
+        vertex_location=getattr(assistant_base_cfg, "vertex_location", None),
+        vertex_endpoint_parameters=getattr(assistant_base_cfg, "vertex_endpoint_parameters", None),
+        vertex_http_predict_base=getattr(assistant_base_cfg, "vertex_http_predict_base", None),
+        vertex_http_predict_api_version=getattr(
+            assistant_base_cfg, "vertex_http_predict_api_version", None
+        ),
+    )
+    user_base = sim_cfg.user
+    user_cfg = AgentAgentConfig(
+        system_prompt=user_system_prompt,
+        max_tokens=user_base.max_tokens,
+        temperature=user_base.temperature,
+        reasoning_effort=getattr(user_base, "reasoning_effort", None),
+        mcps=None,
+        mermaid=None,
+        mcp_tools_markdown_path=None,
+        seed=seed,
+        vertex_ai=getattr(user_base, "vertex_ai", None),
+        vertex_endpoint_id=getattr(user_base, "vertex_endpoint_id", None),
+        vertex_project=getattr(user_base, "vertex_project", None),
+        vertex_location=getattr(user_base, "vertex_location", None),
+        vertex_endpoint_parameters=getattr(user_base, "vertex_endpoint_parameters", None),
+        vertex_http_predict_base=getattr(user_base, "vertex_http_predict_base", None),
+        vertex_http_predict_api_version=getattr(user_base, "vertex_http_predict_api_version", None),
+    )
+    assistant = create_agent(assistant_agent_type, "assistant", assistant_cfg, assistant_model)
+    user = create_agent(user_agent_type, "user", user_cfg, user_model)
+    bus = EventBus()
+    run_cfg = replace(
+        sim_cfg,
+        initial_message=initial_message.strip() if initial_message else None,
+        user=replace(sim_cfg.user, system_prompt=user_system_prompt),
+    )
+    return Orchestrator(assistant, user, bus, run_cfg)
 
 
 def _override_mermaid_graph(mermaid_cfg: Any, mermaid_graph_path: str | None) -> Any:
@@ -881,7 +1028,7 @@ async def main_async(
 
     if n_exp > 1:
         print(
-            f"Sweep: {n_exp} experiments (policy × model × temperature × reasoning_effort), "
+            f"Sweep: {n_exp} experiments (policy × model × temperature × reasoning_effort × vertex endpoint), "
             f"experiment_concurrency={exp_conc}",
             flush=True,
         )

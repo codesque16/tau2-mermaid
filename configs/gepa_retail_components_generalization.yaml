@@ -1,0 +1,10 @@
+# Generalization: train/val IDs from autosplit JSON (full retail solo dataset split), same pattern as
+# ``generalization_gepa_retail_base_s2.yaml``.
+extends: configs/gepa_retail_components.yaml
+
+gepa:
+  optimization_mode: generalization
+  task_id: null
+  split_file_path: "configs/gepa_experiment1_autosplit_60_20_20.json"
+  dataset_task_ids: null
+  valset_task_ids: null

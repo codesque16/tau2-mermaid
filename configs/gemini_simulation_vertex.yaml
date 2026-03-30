@@ -30,10 +30,35 @@ domain:
   output_base_dir: "outputs"
   # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
   evaluate_communication: true
-  concurrency: 4
+  concurrency: 10
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
-  task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
+  # task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
+  task_ids: [
+    5,
+    7,
+    9,
+    19,
+    21,
+    28,
+    30,
+    35,
+    39,
+    44,
+    49,
+    55,
+    57,
+    61,
+    66,
+    88,
+    91,
+    92,
+    93,
+    96,
+    106,
+    111,
+    113
+  ]
   trials: 1
   # Master RNG seed for ``run_solo_tasks``: used only to draw one integer seed per trial; that per-trial
   # value is passed through to each LLM API call (Gemini ``GenerateContentConfig.seed``, LiteLLM/OpenAI ``seed``).
@@ -44,22 +69,28 @@ assistant:
   agent_type: gemini
   # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
   vertex_ai: true
-  # Dedicated endpoint chatCompletions-over-predict config.
-  vertex_endpoint_id: "mg-endpoint-1baf55cd-6319-42d1-a3f4-8f3b9d13fee3"
+
+  # Dedicated endpoint: must match scripts/test_vertex_openai.py (PROJECT_ID, REGION, ENDPOINT_ID).
+  # The YAML `model:` name is only for logs/cost; the *deployed* endpoint decides Gemma vs Qwen, etc.
+  vertex_endpoint_id: "mg-endpoint-411386e5-c7ad-40d7-80e2-723bbb793132"
   vertex_project: "53845524870"
   vertex_location: "us-central1"
-  # Optional when DEDICATED_ENDPOINT_DOMAIN is set in env.
-  vertex_http_predict_base: "https://mg-endpoint-1baf55cd-6319-42d1-a3f4-8f3b9d13fee3.us-central1-529069367369.prediction.vertexai.goog"
-  # Extra fields merged into the instance payload.
+  vertex_http_predict_base: "https://mg-endpoint-411386e5-c7ad-40d7-80e2-723bbb793132.us-central1-53845524870.prediction.vertexai.goog"
+  vertex_http_predict_api_version: "v1"
+  # Merged into the chatCompletions instance.
+  # If Logfire shows vertex_body_has_tool_choice=false but you still get errors about
+  # --enable-auto-tool-choice: the *server* defaults to auto when `tools` is non-empty.
+  # Fix the **model serving** args (vLLM: --enable-auto-tool-choice --tool-call-parser), not the YAML.
   vertex_endpoint_parameters:
-    max_tokens: 1024
+    max_tokens: 2048
     temperature: 0
-  model: 
-    # - gemini-3.1-flash-lite-preview
-    # - gemini-3-flash-preview
-    # - gemini-2.5-flash
-    - "gemma-vertex-endpoint"
-  temperature: 0.7
+    top_p: 0.95
+    chat_template_kwargs:
+      enable_thinking: false
+
+  model:
+    - qwen3-5-9b-vertex
+  temperature: 0
   reasoning_effort: "low" #["low", "medium", "high"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:

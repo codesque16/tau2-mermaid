@@ -1,0 +1,79 @@
+# Solo batch: Qwen3 27B and two 9B deploys on dedicated Vertex AI prediction endpoints (one sweep = three experiments).
+# When ``model`` and ``vertex_endpoint_id`` are **lists of the same length**, ``run_solo_tasks`` zips them:
+# experiment i uses ``model[i]`` with ``vertex_endpoint_id[i]`` (and matching ``vertex_http_predict_base[i]``).
+# Use a scalar ``model`` if you want the same label for every endpoint. Traffic is still decided by each deploy.
+#
+# Optional: scalar single-endpoint configs — gemini_solo_qwen3_*_vertex_attached.yaml, gemini_solo_vertex_endpoints_example.yaml
+#
+#   uv run python -m domains.retail.run_solo_tasks --config configs/gemini_solo_batch_qwen_vertex.yaml
+#
+# Requires ADC with access to project 53845524870 (Vertex AI User or equivalent).
+
+mode: solo
+max_turns: 60
+
+domain:
+  name: retail
+  policy: gepa/examples/tau2_retail_mermaid/seed_solo_v1.md
+  tasks: domains/retail/tasks_solo_comms.json
+  output_task_transcripts: true
+  output_base_dir: "outputs"
+  evaluate_communication: true
+  concurrency: 20
+  instructions: domains/retail/instructions.md
+  stop_mode: "first-text"
+  trials: 1
+  seed: 34223423423
+
+assistant:
+  agent_type: gemini
+  vertex_ai: true
+  vertex_project: "53845524870"
+  vertex_location: "us-central1"
+  vertex_http_predict_api_version: "v1"
+
+  # One row per deploy (zipped with ``model``). Bases optional; omitted = built from id.
+  vertex_endpoint_id:
+    # - "mg-endpoint-bb43cb6b-36b6-44cc-a475-b7240c592b46" # qwen_qwen3_5-27b-fp8-mg-one-click-deploy
+    # - "mg-endpoint-466f89a2-3872-43db-8708-29f13e8d7bd0" # qwen_qwen3_5-9b-mg-one-click-deploy
+    - "mg-endpoint-b9895d67-2e18-417d-ad70-a68e58f25dd9" # qwen_qwen3_5-9b-mg-one-click-deploy (second deploy)
+  vertex_http_predict_base:
+    # - "https://mg-endpoint-bb43cb6b-36b6-44cc-a475-b7240c592b46.us-central1-53845524870.prediction.vertexai.goog"
+    # - "https://mg-endpoint-466f89a2-3872-43db-8708-29f13e8d7bd0.us-central1-53845524870.prediction.vertexai.goog"
+    - "https://mg-endpoint-b9895d67-2e18-417d-ad70-a68e58f25dd9.us-central1-53845524870.prediction.vertexai.goog"
+
+  # Paired with ``vertex_endpoint_id`` (same length → zip, not Cartesian product).
+  model:
+    # - "qwen3-5-27b-vertex-endpoint"
+    # - "qwen3-5-9b-vertex-endpoint"
+    - "qwen3-5-9b-vertex-endpoint-b9895d67"
+  temperature: 0
+  reasoning_effort: "low"
+  vertex_endpoint_parameters:
+    max_tokens: 2048
+    temperature: 0
+    top_p: 0.95
+    chat_template_kwargs:
+      enable_thinking: false
+
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
+  mcps:
+    - name: retail-tools
+      type: stdio
+      command: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"

@@ -27,6 +27,26 @@ from agent.api_key_rotation import (
 from agent.gemini_log import log_gemini_generate_io, to_jsonable
 
 
+def _supports_gemini_thinking_level(model: str) -> bool:
+    m = (model or "").strip().lower()
+    if "gemini-2.5-flash-lite" in m or "gemini-2.5-flash" in m:
+        return False
+    return True
+
+
+def _gemini_thinking_budget_from_effort(effort: str | None) -> int | None:
+    if effort is None or not str(effort).strip():
+        return None
+    lvl = str(effort).strip().lower()
+    budget_map = {
+        "minimal": 0,
+        "low": 1024,
+        "medium": 4096,
+        "high": 8192,
+    }
+    return budget_map.get(lvl)
+
+
 def _visible_text_from_response(response: Any) -> str:
     """Model-visible text only (omit ``Part`` entries with ``thought=True``)."""
     cands = getattr(response, "candidates", None) or []
@@ -140,7 +160,24 @@ def genai_generate_user_text(
     if max_output_tokens is not None:
         gen_kw["max_output_tokens"] = int(max_output_tokens)
 
-    tc = _thinking_config_for_reasoning_effort(reasoning_effort)
+    tc = None
+    if _supports_gemini_thinking_level(model):
+        tc = _thinking_config_for_reasoning_effort(reasoning_effort)
+    else:
+        from google.genai import types
+
+        budget = _gemini_thinking_budget_from_effort(reasoning_effort)
+        if budget is not None:
+            try:
+                tc = types.ThinkingConfig(
+                    thinking_budget=budget,
+                    include_thoughts=True,
+                )
+            except Exception:
+                try:
+                    tc = types.ThinkingConfig(thinking_budget=budget)
+                except Exception:
+                    tc = None
     if tc is None and include_thoughts_when_no_level:
         try:
             tc = types.ThinkingConfig(include_thoughts=True)
@@ -177,6 +214,10 @@ def genai_generate_user_text(
                 response=resp,
                 phase=io_phase,
                 api_key_masked=api_key_masked,
+                # The logfire_gemini_integration wrapper already emits a nested
+                # raw_io event for this same call. Keep file dump behavior, but
+                # avoid emitting a second sibling Logfire event.
+                emit_logfire_event=False,
             )
             return _visible_text_from_response(resp)
         except Exception as e:

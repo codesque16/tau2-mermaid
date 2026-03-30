@@ -137,7 +137,7 @@ def log_gemini_generate_io(
     except ImportError:
         return
     logfire.info(
-        "gemini.generate_content",
+        "gemini.generate_content.raw_io",
         model=model,
         tool_round=tool_round,
         **({"phase": phase} if phase else {}),
@@ -182,7 +182,7 @@ def log_openai_chat_raw_io(
     except ImportError:
         return
     logfire.info(
-        "openai.chat.completions",
+        "openai.chat.completions.raw_io",
         model=model,
         **({"phase": phase} if phase else {}),
         **({"api_key_masked": api_key_masked} if api_key_masked else {}),
@@ -224,7 +224,7 @@ def log_openai_responses_raw_io(
     except ImportError:
         return
     logfire.info(
-        "openai.responses",
+        "openai.responses.raw_io",
         model=model,
         **({"phase": phase} if phase else {}),
         **({"api_key_masked": api_key_masked} if api_key_masked else {}),
@@ -270,7 +270,7 @@ def log_anthropic_messages_raw_io(
     except ImportError:
         return
     logfire.info(
-        "anthropic.messages.create",
+        "anthropic.messages.create.raw_io",
         model=model,
         **({"phase": phase} if phase else {}),
         **({"api_key_masked": api_key_masked} if api_key_masked else {}),

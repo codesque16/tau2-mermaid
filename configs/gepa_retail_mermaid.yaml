@@ -22,7 +22,7 @@ domain:
     - "domains/retail/policy_base_solo.md"
   tasks: "domains/retail/tasks_solo_comms.json"
   evaluate_communication: true
-  concurrency: 3
+  concurrency: 10
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
   task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
@@ -79,14 +79,14 @@ gepa:
   llm_seed_chain: true
 
   reflection_llm_backend: genai
-  reflection_lm: "gemini-3-flash-preview"
+  reflection_lm: "gemini-3.1-pro-preview"
   reflection_genai_vertex_ai: true
   reflection_genai_temperature: 0.3
   reflection_genai_max_output_tokens: null
   reflection_genai_reasoning_effort: high
 
   diagnosis_llm_backend: genai
-  diagnosis_lm: "gemini-3-flash-preview"
+  diagnosis_lm: "gemini-3.1-pro-preview"
   diagnosis_genai_vertex_ai: true
   diagnosis_genai_temperature: 0.3
   diagnosis_genai_max_output_tokens: null

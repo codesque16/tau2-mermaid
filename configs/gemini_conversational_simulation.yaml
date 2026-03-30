@@ -1,0 +1,72 @@
+# Conversation-mode retail simulation (assistant + simulated user). Run with:
+#   uv run python main.py configs/gemini_conversational_simulation.yaml
+# (Do not use domains.retail.run_solo_tasks — that is solo batch mode only.)
+#
+# Assistant: Vertex AI Gemini Flash Lite (standard model API) + retail MCP tools.
+# User: Gemini Pro on Vertex (same project/region).
+
+mode: conversation
+max_turns: 60
+stop_phrases: ["###STOP###", "###TRANSFER###"]
+# Also end when the user message is exactly ``stop`` (case-insensitive).
+stop_on_user_stop_word: true
+
+# tau2-bench default: fixed assistant greeting (``Hi! How can I help you today?``), then user sim.
+# Override greeting with ``first_agent_message: | ...`` or set ``initial_message`` for user-first.
+
+# Optional: ordered API keys per provider (see gemini_simulation.yaml).
+# api_key_rotation:
+#   gemini: [GEMINI_API_KEY_PRIMARY, GEMINI_API_KEY_BACKUP]
+
+assistant:
+  agent_type: gemini
+  vertex_ai: true
+  vertex_project: "53845524870"
+  vertex_location: "us-central1"
+  model: "gemini-3.1-flash-lite-preview"
+  temperature: 0
+  reasoning_effort: "low"
+  system_prompt_file: ../domains/retail/policy.md
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
+  mcps:
+    - name: retail-tools
+      type: stdio
+      command: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"
+
+user:
+  agent_type: gemini
+  # Gemini Pro (Vertex, standard generateContent — no dedicated endpoint block above).
+  model: "gemini-3.1-pro-preview"
+  vertex_ai: true
+  vertex_project: "53845524870"
+  vertex_location: "us-central1"
+  temperature: 0.3
+  reasoning_effort: "high"
+  max_tokens: 1024
+  system_prompt_file: ../gepa/examples/tau2_retail_mermaid/simulation_guidelines.md
+  system_prompt: |
+    You are Yusuf Rossi in zip code 19122. You do not remember your email address.
+
+    Reason for contact: You received order #W2378156 and wish to exchange the mechanical keyboard
+    for the same one but with clicky switches, and the smart thermostat for one compatible with
+    Google Home instead of Apple HomeKit. If there is no keyboard that is clicky, RGB backlight,
+    full size, you prefer no backlight (not white backlight).
+
+    Follow the guidelines: disclose details progressively, and end with ###STOP### on its own line
+    when the agent has fully resolved your request.

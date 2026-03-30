@@ -1,20 +1,11 @@
-# GEPA retail optimization (tau2-mermaid solo agent). Self-contained YAML (no ``extends``).
+# Same as ``gepa_retail_base.yaml`` (domain, assistant, GEPA hyperparameters) but uses the
+# **multi-component** entrypoint with an optional ``tool_code`` surface + gate (see
+# ``gepa/examples/tau2_retail_components/``).
 #
-# Credentials: set ``GOOGLE_API_KEY`` or ``GEMINI_API_KEY`` (Google AI Studio key for
-# ``generativelanguage.googleapis.com``) in the environment or a repo-root ``.env``.
-# Optional: top-level ``api_key_rotation: { gemini: [KEY_OR_ENV_NAME, ...] }`` in stacked YAML.
+# Run from repo root (not ``domains.retail.run_gepa_optimize``):
+#   uv run python gepa/examples/tau2_retail_components/main.py --config configs/gepa_retail_base_tool_code.yaml
 #
-# GEPA ``optimize_anything`` task modes (see ``gepa.optimize_anything`` docstring):
-#   single_task      → dataset=None, valset=None  (one retail task; evaluator has no ``example``)
-#   multi_task       → dataset=<list>, valset=None
-#   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
-#
-# Run from repo root (``domains.retail.run_gepa_optimize`` reads this file’s ``domain`` + ``gepa`` sections):
-#   uv run python -m domains.retail.run_gepa_optimize --config configs/gepa_retail_base.yaml
-#
-# Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
-#   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
-#   generalization:   optimization_mode: generalization   task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: [23, 27, 32]
+# Credentials: same as ``gepa_retail_base.yaml`` (``GOOGLE_API_KEY`` / ``GEMINI_API_KEY``, etc.).
 
 mode: solo
 max_turns: 60
@@ -37,11 +28,10 @@ domain:
 assistant:
   agent_type: gemini
   model: gemini-3.1-flash-lite-preview
-  # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
   vertex_ai: true
   temperature: 0
   reasoning_effort: low
-  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_components/seeds/tools_markdown.md"
   mcps:
     - name: retail-tools
       type: stdio
@@ -64,22 +54,45 @@ assistant:
         - "transfer_to_human_agents"
 
 gepa:
-  seed_policy_path: "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-  # Merge wrapper with <gepa_generated>…</gepa_generated>; reflection output is spliced here (see reflection_prompts_solo_v1.md).
-  gepa_template_file: "gepa/examples/tau2_retail_mermaid/seed_solo_v1_template.md"
-  output_dir: "outputs/tau2_retail_mermaid"
+  fixed_retail_agent_rules_path: "gepa/examples/tau2_retail_components/fixed/retail_agent_rules.md"
+
+  seed_components:
+    tools_markdown: "gepa/examples/tau2_retail_components/seeds/tools_markdown.md"
+    mermaid_instructions: "gepa/examples/tau2_retail_components/seeds/mermaid_instructions.md"
+    mermaid_graph: "gepa/examples/tau2_retail_components/seeds/mermaid_graph.md"
+    tool_code: "gepa/examples/tau2_retail_components/seeds/tool_code.md"
+
+  gepa_merge_templates:
+    tools_markdown: "gepa/examples/tau2_retail_components/merge_templates/tools_markdown.md"
+    mermaid_instructions: "gepa/examples/tau2_retail_components/merge_templates/mermaid_instructions.md"
+    mermaid_graph: "gepa/examples/tau2_retail_components/merge_templates/mermaid_graph.md"
+    tool_code: "gepa/examples/tau2_retail_components/merge_templates/tool_code.md"
+
+  tool_code_gate:
+    enabled: true
+    max_rounds: 3
+    use_monty: false
+    curator_enabled: true
+    curator_lm: null
+    curator_temperature: null
+    curator_genai_vertex_ai: null
+    curator_genai_max_output_tokens: null
+    curator_genai_reasoning_effort: null
+    strict_fail_score: false
+
+  tool_code_persisted_markdown_path: "domains/retail/additional_tools.md"
+  tool_code_append_to_persisted_file: false
+
+  output_dir: "outputs/tau2_retail_base_tool_code"
   fresh: false
   run_dir: null
 
-  # --- GEPA dataset / valset (names match ``optimize_anything``) ---
   optimization_mode: multi_task
   task_id: null
   dataset_task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
   valset_task_ids: null
 
   evaluation_seed: 7789797979
-  # When ``llm_seed_chain: true``, ``evaluation_seed`` is the master for chained per-iteration
-  # simulator LLM seeds; each ``on_iteration_start`` (iteration >= 1) advances the chain.
   llm_seed_chain: true
 
   reflection_llm_backend: genai
@@ -96,7 +109,7 @@ gepa:
   diagnosis_genai_max_output_tokens: null
   diagnosis_genai_reasoning_effort: high
 
-  reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_solo_v1.md"
+  reflection_prompts_file: "gepa/examples/tau2_retail_components/reflection_prompts_components.md"
 
   reflection_minibatch_size: 10
   reflection_skip_perfect_score: false
@@ -104,8 +117,6 @@ gepa:
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
-  # Stopping: GEPA stops when any bound trips — ``max_metric_calls`` (eval budget) and/or
-  # ``max_candidate_proposals`` (outer proposal / iteration rounds). Set either to null to disable that cap.
   max_metric_calls: null
   max_candidate_proposals: 10
   max_workers: 4

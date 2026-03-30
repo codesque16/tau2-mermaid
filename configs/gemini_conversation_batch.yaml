@@ -1,0 +1,64 @@
+# Conversational batch evaluation (same task JSON / task_ids / DB eval as run_solo_tasks).
+# User simulator prompt = tau2 ``simulation_guidelines.md`` + per-task ``user_scenario`` from JSON.
+# Assistant policy = ``policy_original`` (tau2-bench retail original).
+#
+#   uv run python -m domains.retail.run_conversation_tasks --config configs/gemini_conversation_batch.yaml
+#
+# Same as tau2-bench: assistant greets first, then user sim per task. Optional:
+# ``initial_message`` / ``domain.initial_message`` for user-first, or ``first_agent_message``.
+
+mode: conversation
+max_turns: 60
+# User-sim stop tokens (tau2): include ``###TRANSFER###`` so the run ends after handoff.
+stop_phrases: ["###STOP###", "###TRANSFER###"]
+stop_on_user_stop_word: true
+
+domain:
+  name: retail
+  policy: gepa/examples/tau2_retail_mermaid/policy_original.md
+  user_sim_guidelines: gepa/examples/tau2_retail_mermaid/simulation_guidelines.md
+  tasks: domains/retail/tasks_solo_comms.json
+  output_task_transcripts: true
+  output_base_dir: "outputs"
+  evaluate_communication: true
+  concurrency: 20
+  instructions: domains/retail/instructions.md
+  # Omit ``task_ids`` to run all ``solo_convertible`` tasks in ``tasks_solo_comms.json``.
+  trials: 1
+  seed: 34223423423
+
+assistant:
+  agent_type: gemini
+  vertex_ai: true
+  model: "gemini-3.1-flash-lite-preview"
+  temperature: 0
+  reasoning_effort: ["low", "medium", "high"]
+  mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
+  mcps:
+    - name: retail-tools
+      type: stdio
+      command: "uv run domains/retail/tools.py"
+      tools:
+        - "calculate"
+        - "cancel_pending_order"
+        - "exchange_delivered_order_items"
+        - "find_user_id_by_name_zip"
+        - "find_user_id_by_email"
+        - "get_order_details"
+        - "get_product_details"
+        - "get_user_details"
+        - "list_all_product_types"
+        - "modify_pending_order_address"
+        - "modify_pending_order_items"
+        - "modify_pending_order_payment"
+        - "modify_user_address"
+        - "return_delivered_order_items"
+        - "transfer_to_human_agents"
+
+user:
+  agent_type: gemini
+  model: "gemini-3.1-pro-preview"
+  vertex_ai: true
+  temperature: 0.3
+  reasoning_effort: "low"
+  max_tokens: 1024

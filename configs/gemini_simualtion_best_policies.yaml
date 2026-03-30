@@ -12,17 +12,14 @@ max_turns: 60
 
 domain:
   name: retail
-  policy: 
-    # - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_lite.md"
-    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_base_openai.md"
-    #- "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_lite.md"
-    # - "gepa/examples/tau2_retail_mermaid/gepa_retail_mermaid_openai.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/base_gemini31flashlite_03-24_10-41-11/best_policy.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gemini31flashlite_03-24_10-42-21[520]/best_policy.md"
-    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/results/prompt_optimizer_runs/20260324_gpt5nano_low/candidates/v01.md"
-    # - "/Users/shiladityabanerjee/Projects/tau2-mermaid/gepa/viz_outputs/mermaid_gemini31flashlite_03-25_05-03-03/best_policy.md"
+  policy:
+    # Test the best policies generated in each experiment folder.
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[generalization][base_prompt][E:g31fl][R:g3f][C:g3f][mb:10|it:10][60:20:20][v1]/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[generalization][base_prompt][E:g31fl][R:g31p][C:g31p][mb:10|it:10][60:20:20][v1]/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[generalization][mermaid_prompt][E:g31fl][R:g3f][C:g3f][mb:10|it:10][60:20:20][v1]/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[generalization][mermaid_prompt][E:g31fl][R:g31pro][C:g31pro][mb:10|it:10][60:20:20][v1]/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[22examples][base_prompt][E:g31fl][R:g31pro][C:g31pro][mb:10|it:10][60:20:20][v1]/best_policy.md"
+    - "/Users/shiladityabanerjee/Projects/tau2-mermaid/outputs/[22examples][mermaid_prompt][E:g31fl][R:g31pro][C:g31pro][mb:10|it:10][60:20:20][v1]/best_policy.md"
   tasks: "domains/retail/tasks_solo_comms.json"
   # When true, writes one JSON transcript per task (including tool-call
   # request/response history) under `outputs/<run_id>/experiment_<n>/`.
@@ -30,36 +27,24 @@ domain:
   output_base_dir: "outputs"
   # When true: require task evaluation_criteria.communicate_info strings to appear in assistant text (tau2-style), in addition to DB hash match.
   evaluate_communication: true
-  concurrency: 4
+  concurrency: 10
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
-  task_ids: [2,12,17,23,27,32,33,34,45,42,43,56,66,68,78,73,86,81,91,113,102,103]
   trials: 1
   # Master RNG seed for ``run_solo_tasks``: used only to draw one integer seed per trial; that per-trial
   # value is passed through to each LLM API call (Gemini ``GenerateContentConfig.seed``, LiteLLM/OpenAI ``seed``).
   # Omit to keep the previous default (internal base 300).
-  seed: 34223423423
+  seed: 69878797
 
 assistant:
   agent_type: gemini
   # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
   vertex_ai: true
-  # Dedicated endpoint chatCompletions-over-predict config.
-  vertex_endpoint_id: "mg-endpoint-1baf55cd-6319-42d1-a3f4-8f3b9d13fee3"
+  # Standard Gemini Flash Lite model on Vertex (no dedicated endpoint mode).
+  model: "gemini-3.1-flash-lite-preview"
   vertex_project: "53845524870"
   vertex_location: "us-central1"
-  # Optional when DEDICATED_ENDPOINT_DOMAIN is set in env.
-  vertex_http_predict_base: "https://mg-endpoint-1baf55cd-6319-42d1-a3f4-8f3b9d13fee3.us-central1-529069367369.prediction.vertexai.goog"
-  # Extra fields merged into the instance payload.
-  vertex_endpoint_parameters:
-    max_tokens: 1024
-    temperature: 0
-  model: 
-    # - gemini-3.1-flash-lite-preview
-    # - gemini-3-flash-preview
-    # - gemini-2.5-flash
-    - "gemma-vertex-endpoint"
-  temperature: 0.7
+  temperature: 0
   reasoning_effort: "low" #["low", "medium", "high"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:

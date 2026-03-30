@@ -1,0 +1,8 @@
+# Multi-task GEPA on all 22 solo tasks (train-only; valset defaults to same dataset).
+extends: configs/gepa_retail_components.yaml
+
+gepa:
+  optimization_mode: multi_task
+  task_id: null
+  dataset_task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  valset_task_ids: null

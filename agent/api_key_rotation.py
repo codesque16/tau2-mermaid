@@ -208,6 +208,17 @@ def get_gemini_api_key(scope: str | None = None) -> str:
                 "GEMINI_API_KEY",
             ]
         )
+    if s == "user":
+        return _first_non_empty(
+            [
+                "GOOGLE_API_KEY_USER",
+                "GEMINI_API_KEY_USER",
+                "GOOGLE_API_KEY_ASSISTANT",
+                "GEMINI_API_KEY_ASSISTANT",
+                "GOOGLE_API_KEY",
+                "GEMINI_API_KEY",
+            ]
+        )
     if s in ("gepa", "optimizer", "reflection", "diagnosis"):
         return _first_non_empty(
             [

@@ -1,20 +1,6 @@
-# GEPA retail optimization (tau2-mermaid solo agent). Self-contained YAML (no ``extends``).
-#
-# Credentials: set ``GOOGLE_API_KEY`` or ``GEMINI_API_KEY`` (Google AI Studio key for
-# ``generativelanguage.googleapis.com``) in the environment or a repo-root ``.env``.
-# Optional: top-level ``api_key_rotation: { gemini: [KEY_OR_ENV_NAME, ...] }`` in stacked YAML.
-#
-# GEPA ``optimize_anything`` task modes (see ``gepa.optimize_anything`` docstring):
-#   single_task      → dataset=None, valset=None  (one retail task; evaluator has no ``example``)
-#   multi_task       → dataset=<list>, valset=None
-#   generalization   → dataset=<list>, valset=<held-out list>  (disjoint ids)
-#
-# Run from repo root (``domains.retail.run_gepa_optimize`` reads this file’s ``domain`` + ``gepa`` sections):
-#   uv run python -m domains.retail.run_gepa_optimize --config configs/gepa_retail_base.yaml
-#
-# Examples (set ``task_id`` / ``dataset_task_ids`` / ``valset_task_ids`` to match mode):
-#   multi_task:       optimization_mode: multi_task       task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: null
-#   generalization:   optimization_mode: generalization   task_id: null  dataset_task_ids: [2, 12, 17]  valset_task_ids: [23, 27, 32]
+# GEPA retail optimization (tau2-mermaid generalization, solo agent).
+# Same as `generalization_gepa_retail_base_s2.yaml` but uses a Qwen **Vertex dedicated endpoint**
+# for the main assistant (OpenAI-shaped `:predict` / `@requestFormat: chatCompletions`).
 
 mode: solo
 max_turns: 60
@@ -26,19 +12,35 @@ domain:
     - "domains/retail/policy_base_solo.md"
   tasks: "domains/retail/tasks_solo_comms.json"
   evaluate_communication: true
-  concurrency: 3
+  concurrency: 10
   instructions: "domains/retail/instructions.md"
   stop_mode: "first-text"
-  task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  task_ids: null
   trials: 1
-  seed: 876876876
+  seed: 12345
   db_path: "domains/retail/db.json"
 
 assistant:
   agent_type: gemini
-  model: gemini-3.1-flash-lite-preview
-  # Gemini transport toggle (google.genai.Client(vertexai=...)); keeps existing API key flow.
+  # Switch GemininAgent into dedicated Vertex endpoint mode.
   vertex_ai: true
+  vertex_endpoint_id: "mg-endpoint-b9895d67-2e18-417d-ad70-a68e58f25dd9"
+  vertex_project: "53845524870"
+  vertex_location: "us-central1"
+  vertex_http_predict_api_version: "v1"
+  vertex_http_predict_base: "https://mg-endpoint-b9895d67-2e18-417d-ad70-a68e58f25dd9.us-central1-53845524870.prediction.vertexai.goog"
+
+  # Defaults for the dedicated endpoint instance payload.
+  # (Agent also injects `chat_template_kwargs: {enable_thinking: false}` unless you override.)
+  vertex_endpoint_parameters:
+    max_tokens: 2048
+    temperature: 0
+    top_p: 0.95
+    chat_template_kwargs:
+      enable_thinking: false
+
+  # Label only (endpoint selects the actual deployed model).
+  model: "qwen3-5-9b-vertex-endpoint-b9895d67"
   temperature: 0
   reasoning_effort: low
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
@@ -65,23 +67,21 @@ assistant:
 
 gepa:
   seed_policy_path: "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
-  # Merge wrapper with <gepa_generated>…</gepa_generated>; reflection output is spliced here (see reflection_prompts_solo_v1.md).
   gepa_template_file: "gepa/examples/tau2_retail_mermaid/seed_solo_v1_template.md"
   output_dir: "outputs/tau2_retail_mermaid"
   fresh: false
   run_dir: null
 
-  # --- GEPA dataset / valset (names match ``optimize_anything``) ---
-  optimization_mode: multi_task
+  optimization_mode: generalization
   task_id: null
-  dataset_task_ids: [2, 12, 17, 23, 27, 32, 33, 34, 45, 42, 43, 56, 66, 68, 78, 73, 86, 81, 91, 113, 102, 103]
+  split_file_path: "configs/gepa_experiment1_autosplit_60_20_20.json"
+  dataset_task_ids: null
   valset_task_ids: null
 
-  evaluation_seed: 7789797979
-  # When ``llm_seed_chain: true``, ``evaluation_seed`` is the master for chained per-iteration
-  # simulator LLM seeds; each ``on_iteration_start`` (iteration >= 1) advances the chain.
+  evaluation_seed: 32452423
   llm_seed_chain: true
 
+  # Reflection/diagnosis still use managed genai (not dedicated endpoints) in this repo.
   reflection_llm_backend: genai
   reflection_lm: "gemini-3.1-pro-preview"
   reflection_genai_vertex_ai: true
@@ -97,18 +97,15 @@ gepa:
   diagnosis_genai_reasoning_effort: high
 
   reflection_prompts_file: "gepa/examples/tau2_retail_mermaid/reflection_prompts_solo_v1.md"
-
   reflection_minibatch_size: 10
   reflection_skip_perfect_score: false
   reflection_perfect_score: null
   reflection_batch_sampler: epoch_shuffled
   reflection_module_selector: round_robin
 
-  # Stopping: GEPA stops when any bound trips — ``max_metric_calls`` (eval budget) and/or
-  # ``max_candidate_proposals`` (outer proposal / iteration rounds). Set either to null to disable that cap.
   max_metric_calls: null
   max_candidate_proposals: 10
-  max_workers: 4
+  max_workers: 10
   parallel: true
   raise_on_exception: true
   use_cloudpickle: false
@@ -132,3 +129,4 @@ gepa:
   use_wandb: false
   use_logfire: true
   dump_visualizer_events: false
+

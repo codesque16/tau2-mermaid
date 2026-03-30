@@ -24,7 +24,11 @@ dependencies = [
     "deepdiff>=8.6.1",
     "loguru>=0.7.3",
     "gepa",
+    "google-cloud-aiplatform>=1.143.0",
 ]
+
+[project.optional-dependencies]
+monty = ["pydantic-monty>=0.0.7"]
 
 # Use the vendored GEPA under ./gepa (Logfire callbacks, reflective_dataset_format, etc.).
 # PyPI ``gepa`` has a slimmer TrackingConfig without ``use_logfire``, so nested Logfire spans

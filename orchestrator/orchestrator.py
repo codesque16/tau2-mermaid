@@ -1,5 +1,7 @@
 from enum import Enum
 
+import logfire
+
 from agent import BaseAgent
 from chat.config import SimulationConfig
 from chat.display import (
@@ -14,6 +16,9 @@ from chat.display import (
     print_total_cost,
 )
 from .event_bus import EventBus, Message, Role
+
+# Matches tau2-bench ``DEFAULT_FIRST_AGENT_MESSAGE`` (non-LLM seed before the user simulator replies).
+DEFAULT_FIRST_AGENT_MESSAGE = "Hi! How can I help you today?"
 
 
 async def _stream_chunk(display: StreamingDisplay, event_type: str, data: object) -> None:
@@ -52,34 +57,111 @@ class Orchestrator:
     def _check_stop(self, text: str) -> bool:
         return any(phrase in text for phrase in self.config.stop_phrases)
 
+    def _check_user_stop(self, text: str) -> bool:
+        """``stop_phrases`` (e.g. ``###STOP###``, ``###TRANSFER###``), optional literal ``stop``."""
+        if self._check_stop(text):
+            return True
+        if getattr(self.config, "stop_on_user_stop_word", False):
+            if (text or "").strip().lower() == "stop":
+                return True
+        return False
+
+    async def _user_respond_stream(
+        self,
+        incoming: str,
+        *,
+        print_header: bool,
+        user_turn: int | None,
+    ) -> tuple[str, dict]:
+        """Run the user simulator on ``incoming`` (assistant text or greeting)."""
+        await self.bus.send_to_user(incoming)
+        if print_header:
+            print_role_header("User", turn=user_turn)
+        if self.user.use_streaming_display:
+            with logfire.span("user"):
+                with StreamingDisplay() as display:
+
+                    async def on_chunk_user(ev: str, data: object) -> None:
+                        await _stream_chunk(display, ev, data)
+
+                    user_reply, usage_info_user = await self.user.respond_stream(
+                        incoming, on_chunk=on_chunk_user
+                    )
+                    display.finish()
+        else:
+            with logfire.span("user"):
+
+                async def on_chunk_user(ev: str, data: object) -> None:
+                    if ev == "tool_use" and isinstance(data, dict):
+                        print_tool_call(
+                            name=data.get("name", ""),
+                            tool_id=data.get("id", ""),
+                            input_data=data.get("input"),
+                        )
+
+                user_reply, usage_info_user = await self.user.respond_stream(
+                    incoming, on_chunk=on_chunk_user
+                )
+        return user_reply, usage_info_user
+
     async def run(self) -> list[Message]:
         initial = self.config.initial_message
         has_initial = bool(initial and initial.strip())
 
+        assistant_total_cost = 0.0
+        user_total_cost = 0.0
+
         if has_initial:
+            # Optional: user speaks first (fixed YAML line).
             current_message = initial.strip()
             self.transcript.append(Message(role=Role.USER, content=current_message))
             print_role_header("User", seed=True)
             print_markdown(current_message)
         else:
-            current_message = "Begin the conversation."
-
-        assistant_total_cost = 0.0
-        user_total_cost = 0.0
+            # tau2-bench: fixed assistant greeting (no LLM), then user simulator replies.
+            greeting = (
+                (getattr(self.config, "first_agent_message", None) or "").strip()
+                or DEFAULT_FIRST_AGENT_MESSAGE
+            )
+            self.transcript.append(Message(role=Role.ASSISTANT, content=greeting))
+            print_role_header("Assistant", seed=True)
+            print_markdown(greeting)
+            # So the first real assistant LLM call sees the same greeting in ``history`` (tau2-bench parity).
+            a_hist = getattr(self.assistant, "history", None)
+            if isinstance(a_hist, list):
+                a_hist.append({"role": "assistant", "content": greeting})
+            user_opening, usage_info_open = await self._user_respond_stream(
+                greeting,
+                print_header=True,
+                user_turn=1,
+            )
+            u0 = usage_info_open.get("usage")
+            c0 = usage_info_open.get("cost")
+            if c0 is not None:
+                user_total_cost += c0
+            print_turn_cost("User", u0, c0)
+            self.transcript.append(Message(role=Role.USER, content=user_opening))
+            if self._check_user_stop(user_opening):
+                print_stop_phrase("User stop (phrase or 'stop'). Goal achieved!")
+                print_total_cost(assistant_total_cost, user_total_cost)
+                print_simulation_complete(len(self.transcript))
+                return self.transcript
+            current_message = user_opening
 
         for turn in range(self.config.max_turns):
-            # Assistant responds (streaming)
+            # Assistant responds (streaming); nest LLM/tool spans under ``agent`` for traces.
             await self.bus.send_to_assistant(current_message)
             print_role_header("Assistant", turn=turn + 1)
-            with StreamingDisplay() as display:
+            with logfire.span("agent"):
+                with StreamingDisplay() as display:
 
-                async def on_chunk(ev: str, data: object) -> None:
-                    await _stream_chunk(display, ev, data)
+                    async def on_chunk(ev: str, data: object) -> None:
+                        await _stream_chunk(display, ev, data)
 
-                assistant_reply, usage_info = await self.assistant.respond_stream(
-                    current_message, on_chunk=on_chunk
-                )
-                display.finish()
+                    assistant_reply, usage_info = await self.assistant.respond_stream(
+                        current_message, on_chunk=on_chunk
+                    )
+                    display.finish()
 
             u = usage_info.get("usage")
             c = usage_info.get("cost")
@@ -93,32 +175,11 @@ class Orchestrator:
                 print_stop_phrase("Stop phrase detected in assistant reply.")
                 break
 
-            # User agent responds (streaming); on first turn with no initial message, this is the first user message
-            await self.bus.send_to_user(assistant_reply)
-            print_role_header("User", turn=turn + 1)
-            if self.user.use_streaming_display:
-                with StreamingDisplay() as display:
-
-                    async def on_chunk_user(ev: str, data: object) -> None:
-                        await _stream_chunk(display, ev, data)
-
-                    user_reply, usage_info_user = await self.user.respond_stream(
-                        assistant_reply, on_chunk=on_chunk_user
-                    )
-                    display.finish()
-            else:
-                # Human agent: don't print "text" chunk — user already saw their input when typing
-                async def on_chunk_user(ev: str, data: object) -> None:
-                    if ev == "tool_use" and isinstance(data, dict):
-                        print_tool_call(
-                            name=data.get("name", ""),
-                            tool_id=data.get("id", ""),
-                            input_data=data.get("input"),
-                        )
-
-                user_reply, usage_info_user = await self.user.respond_stream(
-                    assistant_reply, on_chunk=on_chunk_user
-                )
+            user_reply, usage_info_user = await self._user_respond_stream(
+                assistant_reply,
+                print_header=True,
+                user_turn=turn + 1,
+            )
 
             u_user = usage_info_user.get("usage")
             c_user = usage_info_user.get("cost")
@@ -128,8 +189,8 @@ class Orchestrator:
 
             self.transcript.append(Message(role=Role.USER, content=user_reply))
 
-            if self._check_stop(user_reply):
-                print_stop_phrase("Stop phrase detected in user reply. Goal achieved!")
+            if self._check_user_stop(user_reply):
+                print_stop_phrase("User stop (phrase or 'stop'). Goal achieved!")
                 break
 
             current_message = user_reply
