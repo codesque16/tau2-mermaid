@@ -1,0 +1,1236 @@
+{
+  "report": {
+    "dataset": {
+      "total_examples": 912,
+      "tasks": 114,
+      "runs": [
+        "medium",
+        "low"
+      ],
+      "trials_per_run": 4,
+      "examples_per_task": 8
+    },
+    "global": {
+      "successes": 490,
+      "success_rate": 0.5372807017543859,
+      "bucket_counts": {
+        "easy": 50,
+        "medium": 29,
+        "hard": 35
+      }
+    },
+    "difficulty_thresholds": {
+      "hard": "success_rate <= 0.25",
+      "medium": "0.25 < success_rate <= 0.625",
+      "easy": "success_rate > 0.625"
+    },
+    "targets": {
+      "train": {
+        "hard": 25,
+        "medium": 20,
+        "easy": 35
+      },
+      "val": {
+        "hard": 5,
+        "medium": 4,
+        "easy": 8
+      },
+      "test": {
+        "hard": 5,
+        "medium": 4,
+        "easy": 8
+      }
+    },
+    "splits": {
+      "train": {
+        "tasks": 80,
+        "examples": 640,
+        "successes": 355,
+        "success_rate": 0.5546875,
+        "medium_rate": 0.628125,
+        "low_rate": 0.48125,
+        "difficulty": {
+          "hard": 25,
+          "medium": 20,
+          "easy": 35
+        }
+      },
+      "val": {
+        "tasks": 17,
+        "examples": 136,
+        "successes": 68,
+        "success_rate": 0.5,
+        "medium_rate": 0.6029411764705882,
+        "low_rate": 0.39705882352941174,
+        "difficulty": {
+          "hard": 5,
+          "medium": 4,
+          "easy": 8
+        }
+      },
+      "test": {
+        "tasks": 17,
+        "examples": 136,
+        "successes": 67,
+        "success_rate": 0.49264705882352944,
+        "medium_rate": 0.6029411764705882,
+        "low_rate": 0.38235294117647056,
+        "difficulty": {
+          "hard": 5,
+          "medium": 5,
+          "easy": 7
+        }
+      }
+    }
+  },
+  "task_summary": [
+    {
+      "task_id": 0,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 1,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 2,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 1.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 1.0,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 3,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.5,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 4,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.5,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 5,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 6,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.75,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 7,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 0.75,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 8,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.5,
+      "low_rate": 0.75,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 9,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 10,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.5,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 11,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 12,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 0.75,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 13,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 14,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 15,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 0.75,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 16,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 17,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 18,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.0,
+      "low_rate": 0.25,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 19,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.5,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 20,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 1.0,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 21,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.25,
+      "low_rate": 0.75,
+      "reasoning_gap": -0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 22,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 23,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 1.0,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 24,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.25,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 25,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.0,
+      "low_rate": 0.25,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 26,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 27,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.0,
+      "low_rate": 0.25,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 28,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.75,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 29,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.75,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 30,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 31,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.0,
+      "low_rate": 0.25,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 32,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 33,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 34,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 35,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.75,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 36,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.75,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 37,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.25,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 38,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.0,
+      "low_rate": 0.25,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 39,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.75,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 40,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 41,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 42,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 43,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.75,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 44,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 0.75,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 45,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.75,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 46,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 1.0,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 47,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 48,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 49,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 50,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 51,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.5,
+      "low_rate": 0.75,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 52,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 53,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 54,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.75,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 55,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.75,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 56,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 1.0,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 57,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 58,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.75,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 59,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 60,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.5,
+      "low_rate": 0.75,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 61,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.5,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 62,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 0.25,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 63,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 64,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.0,
+      "low_rate": 0.5,
+      "reasoning_gap": -0.5,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 65,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 66,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.25,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 67,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 68,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 69,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.25,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 70,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 71,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.75,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 72,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.5,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 73,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 74,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 75,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 76,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 77,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 78,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 0.75,
+      "low_rate": 1.0,
+      "reasoning_gap": -0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 79,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.75,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 80,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 81,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 82,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.75,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 83,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 84,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 85,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 86,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 87,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.75,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 88,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 89,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 90,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.5,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 91,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 92,
+      "successes": 8,
+      "success_rate": 1.0,
+      "medium_rate": 1.0,
+      "low_rate": 1.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 93,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 94,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 95,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 1.0,
+      "low_rate": 0.5,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 96,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.25,
+      "low_rate": 0.75,
+      "reasoning_gap": -0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 97,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 98,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 99,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 100,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 101,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 102,
+      "successes": 2,
+      "success_rate": 0.25,
+      "medium_rate": 0.5,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 103,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 1.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 1.0,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 104,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.25,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 105,
+      "successes": 6,
+      "success_rate": 0.75,
+      "medium_rate": 0.75,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 106,
+      "successes": 7,
+      "success_rate": 0.875,
+      "medium_rate": 1.0,
+      "low_rate": 0.75,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "easy"
+    },
+    {
+      "task_id": 107,
+      "successes": 5,
+      "success_rate": 0.625,
+      "medium_rate": 1.0,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.75,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 108,
+      "successes": 4,
+      "success_rate": 0.5,
+      "medium_rate": 0.75,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.5,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 109,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 110,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 111,
+      "successes": 3,
+      "success_rate": 0.375,
+      "medium_rate": 0.5,
+      "low_rate": 0.25,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "medium"
+    },
+    {
+      "task_id": 112,
+      "successes": 1,
+      "success_rate": 0.125,
+      "medium_rate": 0.25,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.25,
+      "difficulty_bucket": "hard"
+    },
+    {
+      "task_id": 113,
+      "successes": 0,
+      "success_rate": 0.0,
+      "medium_rate": 0.0,
+      "low_rate": 0.0,
+      "reasoning_gap": 0.0,
+      "difficulty_bucket": "hard"
+    }
+  ],
+  "splits": {
+    "train": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      11,
+      12,
+      14,
+      15,
+      16,
+      18,
+      19,
+      21,
+      22,
+      24,
+      25,
+      26,
+      27,
+      30,
+      31,
+      32,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      44,
+      45,
+      48,
+      50,
+      52,
+      53,
+      54,
+      57,
+      61,
+      62,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      87,
+      88,
+      89,
+      90,
+      92,
+      95,
+      96,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113
+    ],
+    "val": [
+      8,
+      28,
+      33,
+      34,
+      43,
+      46,
+      55,
+      56,
+      58,
+      77,
+      85,
+      91,
+      93,
+      94,
+      97,
+      98,
+      105
+    ],
+    "test": [
+      9,
+      10,
+      13,
+      17,
+      20,
+      23,
+      29,
+      41,
+      42,
+      47,
+      49,
+      51,
+      59,
+      60,
+      63,
+      76,
+      86
+    ]
+  }
+}

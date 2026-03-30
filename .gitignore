@@ -78,3 +78,7 @@ dist/
 
 # Optional: uncomment to ignore generated simulation outputs
 # tau2-bench/data/simulations/*.json
+
+# Local generated outputs
+outputs/
+llm_gateway/
