@@ -27,7 +27,9 @@ domain:
 assistant:
   agent_type: gemini
   vertex_ai: true
-  model: "gemini-3.1-flash-lite-preview"
+  model: 
+    - "gemini-3.1-flash-lite-preview"
+    - "gemini-3.1-pro-preview"
   temperature: 0
   reasoning_effort: ["low", "medium", "high"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
