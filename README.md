@@ -189,3 +189,10 @@ Solo simulation:
 ```bash
 uv run python -m domains.retail.run_conversation_tasks --config configs/gemini_solo_batch.yaml
 ```
+
+Command to add gcloud credentials:
+
+```bash
+gcloud auth application-default login
+gcloud init --console-only
+```
