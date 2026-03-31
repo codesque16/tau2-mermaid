@@ -1,5 +1,6 @@
 mode: solo
 max_turns: 60
+strict_dotenv_only: true
 
 # Optional: ordered API keys per provider (first = primary). On 429, advance to the next key for
 # the rest of the process; if a backup key fails with a non-rate-limit error, switch back to primary;

@@ -157,3 +157,35 @@ uv run tau2 run --domain retail --agent llm_mermaid_agent --agent-llm "gpt-4.1-m
 ```bash
 uv run python -m agent.agent_mermaid.sop_mcp_server
 ```
+
+**Commands reference:**
+
+Gepa with Qwen generalization task:
+
+```bash
+uv run python gepa/examples/tau2_retail_mermaid/main.py --config configs/generalization_gepa_retail_base_s2_qwen_vertex_endpoint.yaml --fresh
+```
+
+Best policies from GEPA solo runs:
+
+```bash
+uv run python -m domains.retail.run_solo_tasks --config configs/gemini_simualtion_best_policies.yaml
+```
+
+Solo run with deployed Vertex endpoint:
+
+```bash
+uv run python -m domains.retail.run_solo_tasks --config configs/gemini_solo_batch_qwen_vertex.yaml
+```
+
+Conversation simulation:
+
+```bash
+uv run python -m domains.retail.run_conversation_tasks --config configs/gemini_conversation_batch.yaml
+```
+
+Solo simulation:
+
+```bash
+uv run python -m domains.retail.run_conversation_tasks --config configs/gemini_solo_batch.yaml
+```

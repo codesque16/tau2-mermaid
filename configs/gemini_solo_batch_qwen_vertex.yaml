@@ -11,6 +11,7 @@
 
 mode: solo
 max_turns: 60
+strict_dotenv_only: true
 
 domain:
   name: retail

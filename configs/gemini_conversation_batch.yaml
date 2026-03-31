@@ -9,6 +9,7 @@
 
 mode: conversation
 max_turns: 60
+strict_dotenv_only: true
 # User-sim stop tokens (tau2): include ``###TRANSFER###`` so the run ends after handoff.
 stop_phrases: ["###STOP###", "###TRANSFER###"]
 stop_on_user_stop_word: true
