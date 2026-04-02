@@ -104,6 +104,92 @@ source .venv/bin/activate
 python main.py configs/mermaid_human.yaml
 ```
 
+## τ² bench fork (`tau3-bench-fork`)
+
+The [Sierra τ²-bench](https://github.com/sierra-research/tau2-bench)-style simulator lives under **`tau3-bench-fork/`** (install and run commands assume you `cd` there).
+
+### Install
+
+```bash
+cd tau3-bench-fork
+uv sync
+# Optional: uv sync --extra voice --extra dev   # voice stack + tests
+```
+
+Copy env template and add keys:
+
+```bash
+cp .env.example .env
+```
+
+Verify data files:
+
+```bash
+uv run tau2 check-data
+```
+
+### Commands
+
+| Command | Purpose |
+|--------|---------|
+| `uv run tau2 run --domain retail --agent vertex_agent --agent-llm <model> --user vertex_user_simulator --user-llm <model> --num-trials 1 --num-tasks 5` | CLI run (same knobs as YAML) |
+| `uv run tau2config --config examples/retail_vertex_text.yaml` | Run YAML: all **enabled** runs (or `enabled_run_ids` in file) |
+| `uv run tau2config -c examples/retail_vertex_text.yaml --run-ids <run_id>` | Run **one** (or more) named runs from `runs:` |
+| `uv run tau2config -c examples/retail_vertex_text.yaml --run-concurrency N` | Override parallel **top-level** YAML runs (see also root `run_concurrency` in YAML) |
+
+Examples:
+
+```bash
+# Single run id from a multi-run file
+uv run tau2config -c examples/retail_vertex_text.yaml --run-ids retail_conv_full_g31fl_low_reasoning_0
+
+# Vertex retail text (adjust models to match your YAML)
+uv run tau2 run --domain retail \
+  --agent vertex_agent --agent-llm gemini-3.1-flash-lite-preview \
+  --user vertex_user_simulator --user-llm gemini-3.1-pro-preview \
+  --num-trials 1 --num-tasks 5
+```
+
+GCP auth for Vertex (if you use `vertex_agent` / `vertex_user_simulator`):
+
+```bash
+gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+```
+
+### Environment variables (`tau3-bench-fork`)
+
+Set these in **`tau3-bench-fork/.env`** (loaded automatically from the cwd / parent search, and `tau2config` also loads `.env` next to the YAML). Names are representative; unused vars can be omitted.
+
+| Variable | Purpose |
+|----------|---------|
+| **`TAU2_DATA_DIR`** | Path to the `data/` tree if the package is not installed editable (default: `tau3-bench-fork/data` in dev). |
+| **`VERTEXAI_PROJECT`** | GCP project for Google GenAI / Vertex (alias: often use **`GOOGLE_CLOUD_PROJECT`**). |
+| **`VERTEXAI_LOCATION`** | Region, e.g. `global` for Gemini 3 models (recommended in this fork). |
+| **`TAU2_GENAI_MAX_RETRIES`**, **`TAU2_GENAI_RETRY_BASE_S`**, **`TAU2_GENAI_RETRY_MAX_S`** | Backoff for Vertex `generate_content` retries (defaults in `.env.example`). |
+| **`TAU2_INCLUDE_THOUGHTS_IN_HISTORY`** | `0`/`1` — include model “thought” parts in history (GenAI path). |
+| **`LOGFIRE_TOKEN`** or **`PYDANTIC_LOGFIRE_TOKEN`** | Send traces to [Logfire](https://logfire.pydantic.dev). |
+| **`LOGFIRE_PROJECT_NAME`** / **`PYDANTIC_LOGFIRE_PROJECT`** | Optional project hint. |
+| **`LOGFIRE_SERVICE_NAME`** | Service name in Logfire (default in code: `tau2-mermaid`). |
+| **`LOGFIRE_SEND_TO_LOGFIRE`** | Set to `true` if you need to force cloud export when debugging env. |
+
+LiteLLM-backed models (non-Vertex) use the usual provider keys, for example:
+
+| Variable | Purpose |
+|----------|---------|
+| **`OPENAI_API_KEY`** | OpenAI / many LiteLLM routes |
+| **`ANTHROPIC_API_KEY`** | Anthropic |
+| **`OPENROUTER_API_KEY`** | OpenRouter (e.g. banking_knowledge embeddings) |
+
+Voice extras (`uv sync --extra voice`):
+
+| Variable | Purpose |
+|----------|---------|
+| **`ELEVENLABS_API_KEY`** | TTS |
+| **`DEEPGRAM_API_KEY`** | Transcription |
+
+More detail: `tau3-bench-fork/docs/getting-started.md` and `tau3-bench-fork/.env.example`.
+
 
 ## Running the Retail Agent (Mermaid)
 
@@ -121,7 +207,7 @@ Keep this terminal running. The server listens on `http://localhost:8000/mcp` by
 
 ### 2. Run the retail agent
 
-In another terminal, from the `tau2-bench` directory:
+In another terminal, from the `tau3-bench-fork` directory (or your τ² checkout):
 
 ```bash
 uv run tau2 run --domain retail --agent llm_mermaid_agent --agent-llm "gpt-4.1-mini" --user-llm "gpt-4.1-mini" --name "[MERMAID_AGENT][TEST_ALL]" --max-steps 60 --task-ids 96 --mcp-server-url http://localhost:8000/mcp --mcp-sop-file "retail/AGENTS.md"
