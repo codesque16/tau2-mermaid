@@ -25,6 +25,8 @@ dependencies = [
     "loguru>=0.7.3",
     "gepa",
     "google-cloud-aiplatform>=1.143.0",
+    "opentelemetry-exporter-gcp-trace",
+    "opentelemetry-instrumentation-google-genai",
 ]
 
 [project.optional-dependencies]

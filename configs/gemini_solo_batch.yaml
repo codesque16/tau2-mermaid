@@ -21,6 +21,7 @@ domain:
   # When the assistant emits non-tool text (see ``run_solo_tasks`` for other stop modes).
   stop_mode: "first-text"
   # Omit ``task_ids`` to run all ``solo_convertible`` tasks in ``tasks_solo_comms.json``.
+  task_ids: [1, 2, 3, 4]
   trials: 1
   seed: 34223423423
 
@@ -29,9 +30,9 @@ assistant:
   vertex_ai: true
   model: 
     - "gemini-3.1-flash-lite-preview"
-    - "gemini-3.1-pro-preview"
-  temperature: 0
-  reasoning_effort: ["low", "medium", "high"]
+    # - "gemini-3.1-pro-preview"
+  temperature: 0.9
+  reasoning_effort: "low" #["low", "medium", "high"]
   mcp_tools_markdown_path: "gepa/examples/tau2_retail_mermaid/tools.md"
   mcps:
     - name: retail-tools

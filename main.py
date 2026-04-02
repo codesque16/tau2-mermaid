@@ -10,6 +10,7 @@ import yaml
 from dotenv import load_dotenv
 
 from agent import create_agent
+from agent.telemetry import configure_logfire_tau2
 from agent.config import AgentConfig as AgentAgentConfig
 from chat.config import AgentConfig as ChatAgentConfig, load_simulation_config
 from orchestrator.event_bus import EventBus
@@ -141,7 +142,7 @@ def main() -> None:
     # Mute Pydantic serializer warnings from LLM instrumentation
     warnings.filterwarnings("ignore", message=".*[Pp]ydantic.*serializer.*", category=UserWarning)
     warnings.filterwarnings("ignore", module="pydantic", category=UserWarning)
-    logfire.configure(scrubbing=False, console=False)
+    configure_logfire_tau2(scrubbing=False, console=False)
 
     # Initialize Logfire LLM instrumentation (see logfire.pydantic.dev/docs/integrations/llms/)
     # Each call instruments the corresponding SDK so traces show provider, model, tokens, and cost.

@@ -15,7 +15,9 @@ strict_dotenv_only: true
 
 domain:
   name: retail
-  policy: gepa/examples/tau2_retail_mermaid/seed_solo_v1.md
+  policy: 
+  - "gepa/examples/tau2_retail_mermaid/seed_solo_v1.md"
+  - "gepa/viz_outputs/[generalization][base_prompt][E:qwen9b][R:g31p][C:g31p][mb:10|it:10][60:20:20][v1]/best_policy.md"
   tasks: domains/retail/tasks_solo_comms.json
   output_task_transcripts: true
   output_base_dir: "outputs"
@@ -24,7 +26,7 @@ domain:
   instructions: domains/retail/instructions.md
   stop_mode: "first-text"
   trials: 1
-  seed: 34223423423
+  seed: 998974546
 
 assistant:
   agent_type: gemini

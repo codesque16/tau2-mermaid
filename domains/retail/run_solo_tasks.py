@@ -37,6 +37,7 @@ import hashlib
 
 import yaml
 import logfire
+from agent.telemetry import configure_logfire_tau2
 import os
 from dotenv import load_dotenv
 
@@ -1086,7 +1087,7 @@ def main() -> None:
     # os.environ.setdefault(
     #     "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
     # )
-    logfire.configure(scrubbing=False, console=False)
+    configure_logfire_tau2(scrubbing=False, console=False)
     # logfire.instrument_google_genai()
     from agent.logfire_gemini_integration import instrument_logfire_gemini
 

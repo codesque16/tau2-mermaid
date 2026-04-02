@@ -5,7 +5,12 @@ Logfire's LiteLLM tests; list ``content`` is Unrecognised) plus ``all_messages_e
 OpenInference ``llm.*_messages.*`` (assistant ``message.content``
 = visible text only; ``message.reasoning`` + ``message.contents.*`` using ``type: thinking`` for Model Run),
 ``tool_call_id`` on tool rows, ``llm.model_name``, token counts, and
-``gen_ai.*`` model/usage (no ``gen_ai.input/output.messages`` OTel JSON).
+``gen_ai.*`` model/usage plus a ``gen_ai.client.inference.operation.details`` **span event**
+with **only two** annotation attributes (``gen_ai.input.messages``, ``gen_ai.output.messages``) —
+the Cloud Trace exporter allows **four** annotation attributes per event; any extra were dropped
+before, so the UI preview stayed empty. Span labels are capped at **32**; we set message payloads
+**last** and default ``TAU2_GCP_TRACE_SLIM_GENAI=1`` to skip OpenInference ``llm.*`` flattening so
+GenAI fields survive export.
 
 Request/response messages for Logfire are built from **native** ``t_contents`` / candidate
 ``Part`` objects so ``Part.thought`` is preserved; OpenTelemetry ``to_input_messages`` drops
@@ -23,6 +28,7 @@ import dataclasses
 import functools
 import json
 import logging
+import os
 from contextvars import ContextVar, Token
 from collections.abc import Sequence
 from typing import Any, Callable, Literal
@@ -798,8 +804,120 @@ def _attach_litellm_style_request_response(
     )
 
 
+_GEN_AI_INFERENCE_EVENT = "gen_ai.client.inference.operation.details"
+
+
+def _gcp_trace_slim_genai_span() -> bool:
+    """Drop OpenInference ``llm.*_messages.*`` flattening to stay under Cloud Trace's 32 span labels.
+
+    Logfire still gets ``request_data`` / ``response_data`` from :func:`_attach_litellm_style_request_response`.
+    Disable with ``TAU2_GCP_TRACE_SLIM_GENAI=0`` (default: slim on).
+    """
+    v = os.environ.get("TAU2_GCP_TRACE_SLIM_GENAI", "1").strip().lower()
+    return v not in ("0", "false", "no", "off")
+
+
+def _provider_name_for_models(models: Any | None) -> str:
+    """Match ``opentelemetry-instrumentation-google-genai`` Vertex vs Gemini routing."""
+    try:
+        from opentelemetry.instrumentation.google_genai.generate_content import (
+            _get_is_vertexai,
+        )
+        from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (
+            GenAiProviderNameValues,
+        )
+
+        if models is not None:
+            v = _get_is_vertexai(models)
+            if v is True:
+                return GenAiProviderNameValues.GCP_VERTEX_AI.value
+            if v is False:
+                return GenAiProviderNameValues.GCP_GEMINI.value
+    except Exception:
+        pass
+    import os
+
+    if os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "0").lower() in ("true", "1"):
+        return "gcp.vertex_ai"
+    return "gcp.gemini"
+
+
+def _add_gen_ai_inference_operation_event(
+    span: Any,
+    *,
+    model: str,
+    contents: Any,
+    config: Any,
+    response: Any,
+    models: Any | None,
+) -> None:
+    """Set ``gen_ai.input/output.messages`` for Cloud Trace GenAI UI.
+
+    The GCP Trace exporter allows only **4** annotation attributes per time event
+    (``MAX_EVENT_ATTRS``) and **32** span labels. We emit **one** event with exactly
+    **two** attributes (input + output message JSON) so they are not truncated.
+    We also set the same keys on the span **after** other attributes so they tend
+    to survive the 32-label cap (last-wins eviction in the exporter).
+    """
+    try:
+        from google.genai.models import t as transformers
+        from opentelemetry.instrumentation.google_genai.generate_content import (
+            _config_to_system_instruction,
+            _create_completion_details_attributes,
+        )
+        from opentelemetry.instrumentation.google_genai.message import (
+            to_input_messages,
+            to_output_messages,
+            to_system_instructions,
+        )
+        from opentelemetry.semconv._incubating.attributes import gen_ai_attributes
+        from opentelemetry.util.genai.utils import gen_ai_json_dumps
+    except ImportError:
+        return
+    try:
+        req_contents = transformers.t_contents(contents)
+        input_messages = to_input_messages(contents=req_contents)
+        candidates = getattr(response, "candidates", None) or []
+        output_messages = to_output_messages(candidates=candidates)
+        system_instructions: list[Any] = []
+        su = _config_to_system_instruction(config)
+        if su:
+            sc = transformers.t_contents(su)[0]
+            system_instructions = to_system_instructions(content=sc)
+        details = _create_completion_details_attributes(
+            input_messages,
+            output_messages,
+            system_instructions,
+        )
+        provider = _provider_name_for_models(models)
+        in_msg = gen_ai_json_dumps(details[gen_ai_attributes.GEN_AI_INPUT_MESSAGES])
+        out_msg = gen_ai_json_dumps(details[gen_ai_attributes.GEN_AI_OUTPUT_MESSAGES])
+        # Span: set GenAI payloads last so Cloud Trace exporter keeps them when trimming to 32.
+        span.set_attribute(gen_ai_attributes.GEN_AI_PROVIDER_NAME, provider)
+        span.set_attribute(gen_ai_attributes.GEN_AI_INPUT_MESSAGES, in_msg)
+        span.set_attribute(gen_ai_attributes.GEN_AI_OUTPUT_MESSAGES, out_msg)
+        # Event: only 2 attrs — exporter MAX_EVENT_ATTRS=4; previously we sent 10+ and messages were dropped.
+        span.add_event(
+            _GEN_AI_INFERENCE_EVENT,
+            attributes={
+                gen_ai_attributes.GEN_AI_INPUT_MESSAGES: in_msg,
+                gen_ai_attributes.GEN_AI_OUTPUT_MESSAGES: out_msg,
+            },
+        )
+    except Exception:
+        logger.debug(
+            "logfire_gemini_integration: gen_ai inference event skipped", exc_info=True
+        )
+
+
 def _apply_gen_ai_span_attributes(
-    span: Any, *, model: str, contents: Any, config: Any, response: Any
+    span: Any,
+    *,
+    model: str,
+    contents: Any,
+    config: Any,
+    response: Any,
+    models: Any | None = None,
 ) -> None:
     try:
         from google.genai.models import t as transformers
@@ -823,14 +941,15 @@ def _apply_gen_ai_span_attributes(
     )
     response_message = _native_response_to_openai_message(response)
 
-    oi_flat = {
-        **_openinference_flat_message_attributes(openai_messages, message_type="input"),
-        **_openinference_flat_message_attributes(
-            [response_message], message_type="output"
-        ),
-    }
-    for k, v in oi_flat.items():
-        span.set_attribute(k, v)
+    if not _gcp_trace_slim_genai_span():
+        oi_flat = {
+            **_openinference_flat_message_attributes(openai_messages, message_type="input"),
+            **_openinference_flat_message_attributes(
+                [response_message], message_type="output"
+            ),
+        }
+        for k, v in oi_flat.items():
+            span.set_attribute(k, v)
     span.set_attribute("llm.model_name", model)
     span.set_attribute("llm.system", "google")
 
@@ -873,6 +992,15 @@ def _apply_gen_ai_span_attributes(
     )
 
     _attach_raw_generate_content_io(span, model=model, contents=contents, config=config, response=response)
+
+    _add_gen_ai_inference_operation_event(
+        span,
+        model=model,
+        contents=contents,
+        config=config,
+        response=response,
+        models=models,
+    )
 
 
 # OTLP exporters often cap string attributes (~128KiB); stay under to avoid drops.
@@ -961,6 +1089,7 @@ def _wrap_sync(orig: Callable[..., Any]) -> Callable[..., Any]:
                 contents=contents,
                 config=config,
                 response=response,
+                models=self,
             )
             return response
 
@@ -994,6 +1123,7 @@ def _wrap_async(orig: Callable[..., Any]) -> Callable[..., Any]:
                 contents=contents,
                 config=config,
                 response=response,
+                models=self,
             )
             return response
 

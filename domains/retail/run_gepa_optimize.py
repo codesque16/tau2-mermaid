@@ -42,6 +42,7 @@ from typing import Any, Dict, List
 import logfire
 from dotenv import load_dotenv
 
+from agent.telemetry import configure_logfire_tau2
 from domains.retail.llm_seed_chain import (
     LLMSeedChain,
     LLMSeedChainCallback,
@@ -736,15 +737,6 @@ def main() -> None:
     load_dotenv()
     # Google Gen AI OTel integration disabled for now (see agent.gemini_log for I/O).
     # os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
-    logfire.configure(scrubbing=False, console=False)
-    # logfire.instrument_google_genai()
-    from agent.logfire_gemini_integration import instrument_logfire_gemini
-
-    instrument_logfire_gemini()
-    # Instrument LiteLLM so individual model calls (including agent rollouts)
-    # are visible as spans in Logfire, consistent with run_solo_tasks.
-    logfire.instrument_litellm()
-
     parser = argparse.ArgumentParser(
         description="Run GEPA optimization for retail domain (config-driven)."
     )
@@ -769,6 +761,18 @@ def main() -> None:
     args = parser.parse_args()
 
     raw_cfg = _load_retail_solo_config(args.config)
+    configure_logfire_tau2(
+        scrubbing=False,
+        console=False,
+        use_gcp_trace=(raw_cfg.get("gepa") or {}).get("use_gcp_trace"),
+    )
+    from agent.logfire_gemini_integration import instrument_logfire_gemini
+
+    instrument_logfire_gemini()
+    # Instrument LiteLLM so individual model calls (including agent rollouts)
+    # are visible as spans in Logfire, consistent with run_solo_tasks.
+    logfire.instrument_litellm()
+
     from agent.api_key_rotation import configure_from_simulation_dict
 
     configure_from_simulation_dict(raw_cfg)

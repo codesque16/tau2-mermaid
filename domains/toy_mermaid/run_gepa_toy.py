@@ -25,6 +25,7 @@ import logfire
 import yaml
 
 from agent import create_agent
+from agent.telemetry import configure_logfire_tau2
 from agent.config import AgentConfig as AgentAgentConfig
 from chat.config import AgentConfig as ChatAgentConfig, SimulationConfig
 from orchestrator.event_bus import EventBus
@@ -286,17 +287,21 @@ def _override_mermaid_graph(mermaid_cfg: Any, mermaid_graph_path: str) -> Any:
 
 
 def main() -> None:
-    logfire.configure(scrubbing=False, console=False)
-    # Avoid instrument_litellm() span spam; prefer explicit spans.
-
     p = argparse.ArgumentParser()
     p.add_argument("--config", type=Path, required=True)
     args = p.parse_args()
 
     raw = _load_yaml(args.config)
+    gepa_cfg: Dict[str, Any] = raw.get("gepa") or {}
+    configure_logfire_tau2(
+        scrubbing=False,
+        console=False,
+        use_gcp_trace=gepa_cfg.get("use_gcp_trace"),
+    )
+    # Avoid instrument_litellm() span spam; prefer explicit spans.
+
     sim_cfg = _build_simulation_config(raw)
     domain_cfg: Dict[str, Any] = raw.get("domain") or {}
-    gepa_cfg: Dict[str, Any] = raw.get("gepa") or {}
 
     tasks_path = Path(domain_cfg["tasks"])
     tasks: list[dict[str, Any]] = yaml.safe_load(tasks_path.read_text(encoding="utf-8")) if tasks_path.suffix in {".yaml", ".yml"} else __import__("json").loads(tasks_path.read_text(encoding="utf-8"))

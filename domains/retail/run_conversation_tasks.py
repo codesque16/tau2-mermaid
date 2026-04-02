@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import logfire
+from agent.telemetry import configure_logfire_tau2
 import yaml
 from dotenv import load_dotenv
 
@@ -561,7 +562,7 @@ def main() -> None:
     args = parser.parse_args()
 
     load_dotenv()
-    logfire.configure(scrubbing=False, console=False)
+    configure_logfire_tau2(scrubbing=False, console=False)
     from agent.logfire_gemini_integration import instrument_logfire_gemini
 
     instrument_logfire_gemini()
