@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Compare git status and working-tree bytes between tau3-bench and tau3-bench-fork.
+# Compare git status and working-tree bytes between upstream τ²-bench and tau3-bench-fork.
+# Clone upstream separately (this repo no longer vendors it as a submodule), then:
+#   A=/path/to/tau2-bench ./scripts/compare_tau3_bench_fork.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-A="${A:-$ROOT/tau3-bench}"
+A="${A:-}"
 B="${B:-$ROOT/tau3-bench-fork}"
+
+if [[ -z "$A" ]]; then
+  echo "error: set A to a checkout of github.com/sierra-research/tau2-bench (submodule removed from tau2-mermaid)." >&2
+  echo "  example: git clone git@github.com:sierra-research/tau2-bench.git /tmp/tau2-bench && A=/tmp/tau2-bench $0" >&2
+  exit 1
+fi
 
 for d in "$A" "$B"; do
   if ! git -C "$d" rev-parse --git-dir >/dev/null 2>&1; then

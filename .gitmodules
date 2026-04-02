@@ -4,9 +4,6 @@
 [submodule "gepa"]
 	path = gepa
 	url = https://github.com/codesque16/tau2-gepa.git
-[submodule "tau3-bench"]
-	path = tau3-bench
-	url = git@github.com:sierra-research/tau2-bench.git
 [submodule "tau3-bench-fork"]
 	path = tau3-bench-fork
 	url = git@github.com:codesque16/tau3-bench.git

@@ -9,10 +9,16 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC="${SRC:-$ROOT/tau3-bench}"
+SRC="${SRC:-}"
 DEST="${DEST:-$ROOT/tau3-bench-fork}"
 
-# Paths relative to tau3-bench/ (union of the two change lists you shared).
+if [[ -z "$SRC" ]]; then
+  echo "error: set SRC to a checkout of github.com/sierra-research/tau2-bench (tau3-bench submodule was removed)." >&2
+  echo "  example: git clone git@github.com:sierra-research/tau2-bench.git /tmp/tau2-bench && SRC=/tmp/tau2-bench $0" >&2
+  exit 1
+fi
+
+# Paths relative to upstream tau2-bench checkout (union of the two change lists you shared).
 FILES=(
   .env.example
   pyproject.toml
