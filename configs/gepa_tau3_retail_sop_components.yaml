@@ -1,0 +1,59 @@
+# τ³ retail GEPA example:
+# - Candidate = dict[str, str] with keys: `sop_node_policies`, `sop_flowchart`
+# - Only those two components are partially-merged via `<gepa_generated>...</gepa_generated>`
+# - Evaluator materializes the full candidate policy into a temp file and passes it
+#   to tau3-bench-fork retail environment via `policy_path`.
+
+mode: generalization
+max_turns: 60
+
+tau3:
+  policy_solo_path: "tau3-bench-fork/data/tau2/domains/retail/policy_solo.md"
+
+dataset:
+  # tau3-bench-fork retail split keys (from split_tasks.json):
+  #   train / test / base
+  dataset_split_key: "train"
+  valset_split_key: "test"
+
+assistant:
+  # tau3-bench-fork agent implementation name
+  agent_name: "vertex_agent"
+  llm: "gemini-3.1-flash-lite-preview"
+  # Passed through to the agent's underlying LLM call.
+  llm_args:
+    temperature: 0
+    reasoning_level: low
+  max_errors: 10
+
+gepa:
+  reflection_prompts_file: "gepa/examples/tau3_retail_sop_components/reflection_prompts_sop_components.md"
+
+  seed_components:
+    sop_node_policies: "gepa/examples/tau3_retail_sop_components/seeds/sop_node_policies.md"
+    sop_flowchart: "gepa/examples/tau3_retail_sop_components/seeds/sop_flowchart.md"
+
+  gepa_merge_templates:
+    sop_node_policies: "gepa/examples/tau3_retail_sop_components/merge_templates/sop_node_policies.md"
+    sop_flowchart: "gepa/examples/tau3_retail_sop_components/merge_templates/sop_flowchart.md"
+
+  engine:
+    # Keep this small for smoke tests; increase for real optimization.
+    max_metric_calls: 6
+    max_candidate_proposals: 3
+    parallel: false
+    max_workers: 1
+    raise_on_exception: true
+    cache_evaluation: false
+    track_best_outputs: true
+    display_progress_bar: false
+
+  reflection:
+    reflection_lm: "gemini-3.1-pro-preview"
+    reflection_minibatch_size: 2
+    module_selector: "all"
+
+  tracking:
+    use_logfire: true
+    use_wandb: false
+

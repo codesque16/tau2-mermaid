@@ -23,6 +23,8 @@ dependencies = [
     "addict>=2.4.0",
     "deepdiff>=8.6.1",
     "loguru>=0.7.3",
+    # tau3-bench-fork (vendored tau2) imports pandas in data_model.simulation
+    "pandas>=2.0",
     "gepa",
     "google-cloud-aiplatform>=1.143.0",
     "opentelemetry-exporter-gcp-trace",
