@@ -1,0 +1,31 @@
+# Registry for scripts/gcloud_scripts/vertex_endpoint_warm.sh
+#
+# Usage (from this directory):
+#   ./vertex_endpoint_warm.sh --config vertex_warm_endpoints.yaml retail_solo_gemma4_31b_vertex_endpoint
+#   ./vertex_endpoint_warm.sh --config vertex_warm_endpoints.yaml retail_solo_qwen35_9b_vertex_endpoint 90
+#
+# You can also point --config at a tau2 file that has ``runs:`` and use the run id directly:
+#   ./vertex_endpoint_warm.sh --config ../../tau3-bench-fork/examples/retail_vertex_text.yaml \
+#     retail_solo_gemma4_31b_vertex_endpoint
+#
+# ``ref.yaml`` paths are relative to this file's directory.
+
+defaults:
+  interval_sec: 120
+  predict_timeout: 120
+  project_id: gemini-1xn
+
+endpoints:
+  retail_solo_qwen35_9b_vertex_endpoint:
+    ref:
+      yaml: ../../tau3-bench-fork/examples/retail_vertex_text.yaml
+      run_id: retail_solo_qwen35_9b_vertex_endpoint
+    # Optional per-endpoint overrides (merge on top of the run’s agent_llm_args):
+    # interval_sec: 90
+    # predict_timeout: 300
+    # vertex_project: "53845524870"
+
+  retail_solo_gemma4_31b_vertex_endpoint:
+    ref:
+      yaml: ../../tau3-bench-fork/examples/retail_vertex_text.yaml
+      run_id: retail_solo_gemma4_31b_vertex_endpoint
