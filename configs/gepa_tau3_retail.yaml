@@ -1,0 +1,112 @@
+# GEPA over τ³-bench-fork retail text runs (see ``gepa/examples/tau3_gepa/main.py``).
+#
+# Generalization on the 60/20/20 split (``train`` / ``val`` in JSON; held-out val for GEPA valset).
+#
+# Run (repo root):
+#   uv run python gepa/examples/tau3_gepa/main.py --config configs/gepa_tau3_retail.yaml --fresh
+#
+# Executor mirrors:
+#   cd tau3-bench-fork && uv run tau2config --config examples/retail_vertex_text.yaml --run-ids <run_id>
+# with per-eval overrides and ``retail_policy_path`` → candidate policy file.
+
+tau3:
+  yaml_config: examples/retail_vertex_text.yaml
+  # Must match a key under ``runs:`` in that file (not ``retail_solo_full_*`` — use ``retail_solo_*`` or ``retail_conv_full_*``).
+  run_id: retail_solo_gemma4_26b_fp8_cloud_run
+  task_set_name: retail
+  # null = load full retail task list, then filter by ids from ``gepa.split_file_path``
+  task_split_name: null
+  merged_overrides: {}
+  verbose_logs: false
+
+gepa:
+  seed_policy_path: gepa/examples/tau3_gepa/seed_mermaid.md
+  gepa_template_file: gepa/examples/tau3_gepa/seed_mermaid_template.md
+  output_dir: outputs/tau3_gepa
+  fresh: false
+  run_dir: null
+
+  optimization_mode: generalization
+  task_id: null
+  dataset_task_ids: null
+  valset_task_ids: null
+
+  # 60/20/20 split (``train`` → GEPA dataset, ``val`` → GEPA valset). Use split_val_key: test for the other 20%.
+  split_file_path: tau3-bench-fork/data/tau2/domains/retail/split_tasks_60_20_20.json
+  split_train_key: train
+  split_val_key: val
+
+  evaluation_seed: 7789797979
+  llm_seed_chain: true
+
+  reflection_llm_backend: genai
+  reflection_lm: gemini-3.1-pro-preview
+  reflection_genai_vertex_ai: true
+  reflection_genai_temperature: 0.3
+  reflection_genai_max_output_tokens: null
+  reflection_genai_reasoning_effort: high
+
+  diagnosis_llm_backend: genai
+  diagnosis_lm: gemini-3.1-pro-preview
+  diagnosis_genai_vertex_ai: true
+  diagnosis_genai_temperature: 0.3
+  diagnosis_genai_max_output_tokens: null
+  diagnosis_genai_reasoning_effort: high
+
+  reflection_prompts_file: gepa/examples/tau3_gepa/reflection_prompts_mermaid.md
+
+  # Reflection minibatch (maps to gepa.optimize_anything.ReflectionConfig)
+  reflection_minibatch_size: 3
+  reflection_skip_perfect_score: false
+  # Threshold for "perfect" / failure counting; null uses GEPA default. For vulnerable_min_errors,
+  # the sampler treats scores < this as errors (internally 1.0 if unset everywhere).
+  reflection_perfect_score: 1.0
+  # epoch_shuffled | vulnerable_min_errors (biased toward failure examples + optional min-error expansion)
+  # reflection_batch_sampler: epoch_shuffled
+  reflection_batch_sampler: vulnerable_min_errors
+  # Only used when reflection_batch_sampler is vulnerable_min_errors:
+  # append random train ids until at least this many subsample scores are below reflection_perfect_score
+  # (or 1.0), or the train pool is exhausted. Each new id is evaluated once per iteration (merged).
+  min_errors_minibatch: 3
+  # Cap on how many ids per minibatch are drawn from the persistent vulnerable set (null = no cap).
+  vulnerable_minibatch_size: 4
+  reflection_module_selector: round_robin
+
+  evaluate_communication: true
+
+  max_metric_calls: null
+  max_candidate_proposals: 10
+  max_workers: 10
+  parallel: true
+  raise_on_exception: true
+  use_cloudpickle: false
+  cache_evaluation: true
+  cache_evaluation_storage: auto
+  track_best_outputs: true
+  candidate_selection_strategy: pareto
+  frontier_type: hybrid
+  val_evaluation_policy: full_eval
+  best_example_evals_k: 30
+  capture_traces: false
+  capture_stdio: false
+  display_progress_bar: true
+
+  use_logfire: true
+  use_wandb: false
+  # Omit Cloud Trace unless ADC is valid; avoids gRPC retry stalls when creds expire.
+  use_gcp_trace: false
+
+  reflective_dataset_format: tau2_retail
+
+  # Optional CV-style dynamic split (generalization mode only).
+  # - Build success/failure sets from pass_fail_table (base run output)
+  # - Stratified train/test split
+  # - K-fold rotation on train: one fold is val each iteration
+  # - Train minibatch sampled from non-val-fold IDs with fail/success balance
+  cv_generalization:
+    enabled: true
+    pass_fail_table: tau3-bench-fork/data/simulations/retail_solo_gemma4_26b_fp8_cloud_run_04_07_08_15_43/task_pass_fail.json
+    test_fraction: 0.3
+    k_folds: 3
+    seed: 0
+    minibatch_failures: null  # if null, uses train failure rate
