@@ -79,6 +79,7 @@ ok "Weights found: ${FILE_COUNT} files at ${GCS_MODEL_PATH}"
 step "2/3  Building vLLM command"
 
 ARGS=(
+  "gcloud storage cp gs://chat_templates/gemma-26b-chat-template-injection1.jinja /tmp/gemma26b_chat_template.jinja &&"
   "vllm" "serve" "${GCS_MODEL_PATH}"
   "--served-model-name" "${SERVED_MODEL_NAME}"
   "--dtype" "bfloat16"
@@ -86,6 +87,10 @@ ARGS=(
   "--gpu-memory-utilization" "${GPU_MEM_UTIL}"
   "--tensor-parallel-size" "${TENSOR_PARALLEL_SIZE}"
   "--load-format" "${LOAD_FORMAT}"
+  "--enable-log-requests"
+  "--enable-log-outputs"
+  "--uvicorn-log-level" "debug"
+  "--chat-template" "/tmp/gemma26b_chat_template.jinja"
   "--port" "8080"
   "--host" "0.0.0.0"
 )
@@ -130,7 +135,7 @@ done
 # Join into single string for Cloud Run --args
 ARGS_STR="${ARGS[*]}"
 
-info "vLLM command: ${ARGS_STR:0:100}..."
+info "vLLM command: ${ARGS_STR}"
 info "Context: ${MAX_MODEL_LEN:-default} tokens | Seqs: ${MAX_NUM_SEQS} | GPU util: ${GPU_MEM_UTIL}"
 
 # ── Startup probe timing ──────────────────────────────────────
