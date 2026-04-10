@@ -68,7 +68,7 @@ MODEL    = "google/gemma-4-26B-A4B-it"
 CHAT_TEMPLATE_KWARGS = {
     "enable_thinking": True,
     # "inject_thinking": True,          # ← flip this to test injection
-    "injection_prefix": "<|channel>thought\nLet's plan step by step:\n1) "
+    "injection_prefix": "<|channel>thought\nI will plan step by step, but lets start with a contextual poem:\n"
 }
 
 # Derive a display label for the panels
