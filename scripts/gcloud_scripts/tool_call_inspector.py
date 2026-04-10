@@ -29,7 +29,9 @@ from rich import box
 console = Console()
 
 BASE_URL = "http://34.72.38.143:8000"
+BASE_URL = "http://34.29.173.120:8000"
 MODEL    = "google/gemma-4-E4B-it"
+MODEL    = "google/gemma-4-26B-A4B-it"
 CHAT_TEMPLATE_KWARGS = {"enable_thinking": True}
 MAX_TOOL_STEPS = 8   # max tool call rounds per user turn
 
@@ -342,7 +344,7 @@ def chat_turn(user_msg: str, messages: list, turn: int) -> list:
         finish     = choice["finish_reason"]
         usage      = response["usage"]
         tool_calls = message.get("tool_calls") or []
-        reasoning  = message.get("reasoning_content")
+        reasoning  = message.get("reasoning")
         content    = message.get("content") or ""
 
         # ── 3. Raw output ─────────────────────────────────────

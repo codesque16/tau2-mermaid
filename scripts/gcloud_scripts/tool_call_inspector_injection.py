@@ -43,7 +43,9 @@ from rich import box
 console = Console()
 
 BASE_URL = "http://34.72.38.143:8000"
+BASE_URL = "http://34.29.173.120:8000"
 MODEL    = "google/gemma-4-E4B-it"
+MODEL    = "google/gemma-4-26B-A4B-it"
 
 # ── Injection config ──────────────────────────────────────────
 # Flip between three modes:
@@ -207,10 +209,12 @@ def render_prompt(messages: list) -> tuple[list, dict]:
     """
     for payload in [
         {"model": MODEL, "messages": messages, "tools": TOOLS,
-         "chat_template_kwargs": CHAT_TEMPLATE_KWARGS},
+         "chat_template_kwargs": CHAT_TEMPLATE_KWARGS,
+         "skip_special_tokens":  False},
         {"model": MODEL, "messages": messages,
-         "chat_template_kwargs": CHAT_TEMPLATE_KWARGS},
-        {"model": MODEL, "messages": messages},
+         "chat_template_kwargs": CHAT_TEMPLATE_KWARGS,
+         "skip_special_tokens":  False},
+        {"model": MODEL, "messages": messages, "skip_special_tokens":  False},
     ]:
         try:
             r = requests.post(f"{BASE_URL}/v1/chat/completions/render", json=payload)
@@ -258,6 +262,7 @@ def chat_api(messages: list, max_tokens: int = 1024) -> dict:
         "max_tokens":           max_tokens,
         "temperature":          0.3,
         "chat_template_kwargs": CHAT_TEMPLATE_KWARGS,
+        "skip_special_tokens":  False,
     })
     data = r.json()
     if "choices" not in data:
@@ -408,7 +413,7 @@ def chat_turn(user_msg: str, messages: list, turn: int) -> list:
         finish     = choice["finish_reason"]
         usage      = response["usage"]
         tool_calls = message.get("tool_calls") or []
-        reasoning  = message.get("reasoning_content")
+        reasoning  = message.get("reasoning")
         content    = message.get("content") or ""
 
         # ── OUTPUT: only what model generated after the prefix ─
