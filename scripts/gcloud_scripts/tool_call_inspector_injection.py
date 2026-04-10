@@ -470,7 +470,7 @@ def chat_turn(user_msg: str, messages: list, turn: int) -> list:
         if content:
             asst["content"] = content
         if reasoning:
-            asst["reasoning_content"] = reasoning
+            asst["reasoning"] = reasoning
         messages.append(asst)
 
         # ── No tool calls → done ──────────────────────────────
