@@ -56,7 +56,7 @@ gepa:
   reflection_prompts_file: gepa/examples/tau3_gepa/reflection_prompts_mermaid.md
 
   # Reflection minibatch (maps to gepa.optimize_anything.ReflectionConfig)
-  reflection_minibatch_size: 3
+  reflection_minibatch_size: 10
   reflection_skip_perfect_score: false
   # Threshold for "perfect" / failure counting; null uses GEPA default. For vulnerable_min_errors,
   # the sampler treats scores < this as errors (internally 1.0 if unset everywhere).
