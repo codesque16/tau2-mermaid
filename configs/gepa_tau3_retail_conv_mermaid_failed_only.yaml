@@ -1,0 +1,99 @@
+# GEPA over τ³-bench-fork retail conversation runs, optimized on failed tasks only.
+#
+# Failed task IDs are taken from:
+# tau3-bench-fork/data/simulations/retail_conv_openai_agent_mermaid_no_thinking_instructions_completions_04_17_12_19_03/task_pass_fail.json
+#
+# Threshold: tasks with reward <= 0.5 (i.e. >=2 failures out of 4 trials).
+# Previous threshold was reward <= 0.25 (>=3 failures out of 4), yielding 14 tasks.
+# Current threshold adds 14 more "borderline" tasks (reward == 0.5) for a total of 28.
+#
+# Additionally, 20 random "healthy" tasks (reward > 0.5) are included as a regression
+# set to guard against the optimizer sacrificing currently-passing behavior.
+# Random sample drawn from the 86 non-failed tasks using seed 7789797979:
+#   [7, 8, 9, 10, 12, 17, 21, 24, 35, 36, 40, 51, 67, 69, 76, 79, 81, 86, 94, 113]
+# Final dataset size: 48 tasks.
+#
+# Run from repo root:
+#   uv run python gepa/examples/tau3_gepa/main.py --config configs/gepa_tau3_retail_conv_mermaid_failed_only.yaml --fresh
+
+tau3:
+  yaml_config: examples/retail_runs_final_completions_api.yaml
+  run_id: retail_conv_openai_agent_mermaid_no_thinking_instructions_completions
+  task_set_name: retail
+  task_split_name: null
+  merged_overrides: {}
+  verbose_logs: false
+
+gepa:
+  seed_policy_path: tau3-bench-fork/data/tau2/domains/retail/policy_opus.md
+  gepa_template_file: gepa/examples/tau3_gepa/seed_mermaid_conv_template.md
+  output_dir: outputs/tau3_gepa_conv_mermaid_failed_only
+  fresh: false
+  run_dir: null
+
+  optimization_mode: multi_task
+  task_id: null
+  dataset_task_ids: [0, 3, 4, 7, 8, 9, 10, 12, 17, 18, 19, 21, 24, 32, 35, 36, 37, 38, 39, 40, 51, 52, 54, 60, 63, 64, 66, 67, 69, 71, 72, 74, 76, 79, 81, 84, 86, 91, 94, 98, 100, 102, 104, 105, 107, 108, 110, 113]
+  valset_task_ids: null
+
+  evaluation_seed: 7789797979
+  llm_seed_chain: true
+
+  # Run each task N times; reward = successes / N. Diagnosis sees all trials in <trial> blocks.
+  num_trials: 4
+  # Fan each task's N trials out across this many worker threads per task.
+  # Defaults to num_trials (all trials concurrent). Set to 1 to run trials sequentially.
+  # Peak concurrent simulations ≈ min(len(dataset_task_ids), max_workers) * trial_concurrency.
+  # For a strict total cap C, set max_workers = C // trial_concurrency.
+  trial_concurrency: 4
+
+  reflection_llm_backend: genai
+  reflection_lm: gemini-3.1-pro-preview
+  reflection_genai_vertex_ai: true
+  reflection_genai_temperature: 0.3
+  reflection_genai_max_output_tokens: null
+  reflection_genai_reasoning_effort: high
+
+  diagnosis_llm_backend: genai
+  diagnosis_lm: gemini-3.1-pro-preview
+  diagnosis_genai_vertex_ai: true
+  diagnosis_genai_temperature: 0.3
+  diagnosis_genai_max_output_tokens: null
+  diagnosis_genai_reasoning_effort: high
+
+  reflection_prompts_file: gepa/examples/tau3_gepa/reflection_prompts_mermaid.md
+
+  # Reflection minibatch
+  reflection_minibatch_size: 15
+  reflection_skip_perfect_score: false
+  reflection_perfect_score: 1.0
+  reflection_batch_sampler: vulnerable_min_errors
+  min_errors_minibatch: 3
+  min_errors_expand_step_size: 10
+  vulnerable_minibatch_size: 4
+  reflection_module_selector: round_robin
+
+  evaluate_communication: true
+
+  max_metric_calls: null
+  max_candidate_proposals: 10
+  max_workers: 180
+  parallel: true
+  raise_on_exception: true
+  use_cloudpickle: false
+  cache_evaluation: true
+  cache_evaluation_storage: auto
+  track_best_outputs: true
+  candidate_selection_strategy: pareto
+  frontier_type: hybrid
+  val_evaluation_policy: full_eval
+  best_example_evals_k: 30
+  capture_traces: false
+  capture_stdio: false
+  display_progress_bar: true
+
+  use_logfire: true
+  use_wandb: false
+  use_gcp_trace: false
+
+  reflective_dataset_format: tau2_retail

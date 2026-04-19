@@ -19,6 +19,21 @@ def _inline_json_dict(obj: object | None) -> str:
         return str(obj or {})
 
 
+def _extract_tool_call_name_and_args(tc: dict[str, Any]) -> tuple[str, Any]:
+    """Normalize OpenAI/LiteLLM tool-call payloads to (name, args)."""
+    # Common shape: {"type":"function","id":"...","function":{"name":"...","arguments":"{...}"}}
+    fn = tc.get("function")
+    if isinstance(fn, dict):
+        name = fn.get("name") or tc.get("name") or "?"
+        args = fn.get("arguments")
+        return str(name), args
+
+    # Flat shape used by some adapters: {"name":"...","arguments":{...}}
+    name = tc.get("name") or "?"
+    args = tc.get("arguments")
+    return str(name), args
+
+
 def format_openai_style_history_dicts(
     messages: list[dict[str, Any]] | None,
     *,
@@ -44,15 +59,15 @@ def format_openai_style_history_dicts(
             reasoning_raw = msg.get("reasoning_content") or msg.get("thought")
             reasoning = str(reasoning_raw).strip() if reasoning_raw is not None else ""
             if reasoning:
-                out.append("  (Reasoning)")
+                out.append("  <think>")
                 out.extend([f"    {line}" for line in reasoning.splitlines()])
+                out.append("  </think>")
             tool_calls = msg.get("tool_calls") or []
             if tool_calls:
                 for tc in tool_calls:
                     if isinstance(tc, dict):
-                        name = tc.get("name") or "?"
+                        name, args = _extract_tool_call_name_and_args(tc)
                         tool_id = tc.get("id") or tc.get("tool_id") or "unknown"
-                        args = tc.get("arguments")
                         out.append(f"  (ToolCall : {tool_id}) {name} {_inline_json_dict(args)}")
             if content:
                 out.extend([f"  {line}" for line in content.splitlines()])
