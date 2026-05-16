@@ -1,0 +1,19 @@
+# Single-GPU launch config for QLoRA runs.
+#
+# Each QLoRA job needs only one GPU, so we can run 4 in parallel by setting
+# CUDA_VISIBLE_DEVICES per run. This config just makes accelerate behave
+# correctly with single-process training.
+#
+# Usage (manual GPU pinning for parallel runs):
+#   CUDA_VISIBLE_DEVICES=0 python -m training.train --manifest experiments/qlora_data_1k/manifest.yaml &
+#   CUDA_VISIBLE_DEVICES=1 python -m training.train --manifest experiments/qlora_data_5k/manifest.yaml &
+#   CUDA_VISIBLE_DEVICES=2 python -m training.train --manifest experiments/qlora_data_full/manifest.yaml &
+#   wait
+
+compute_environment: LOCAL_MACHINE
+distributed_type: 'NO'
+mixed_precision: bf16
+num_machines: 1
+num_processes: 1
+machine_rank: 0
+use_cpu: false

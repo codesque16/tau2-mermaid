@@ -1,0 +1,54 @@
+name: qlora_26b_pilot
+description: |
+  First end-to-end loop: QLoRA on Gemma 4 26B with the 272-example training set
+  from batch 1. Uses a single A100 40GB. Validates the training+eval pipeline
+  before any Track 3 experiments. Expected: small but measurable lift over
+  baseline on node accuracy.
+
+mode: qlora
+
+data:
+  train_path: data/batch1/train.jsonl
+  eval_path: data/batch1/eval_formatted.jsonl
+  graphs_path: data/batch1/graphs.jsonl
+
+model:
+  name: google/gemma-4-26b-a4b-it
+  torch_dtype: bfloat16
+  attn_implementation: flash_attention_2
+
+qlora:
+  r: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+
+training:
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 1.0e-4
+  warmup_ratio: 0.03
+  lr_scheduler_type: cosine
+  max_seq_length: 8192
+  gradient_checkpointing: true
+  optim: paged_adamw_8bit
+  bf16: true
+  logging_steps: 5
+  save_steps: 50
+  eval_steps: 50
+  save_total_limit: 2
+  seed: 42
+
+eval_spec:
+  run_eval: true
+  quantize_for_eval: true

@@ -1,0 +1,40 @@
+# Accelerate launch config for 4x A100 40GB FSDP full-parameter SFT.
+#
+# Usage:
+#   accelerate launch --config_file accelerate_configs/fsdp_4gpu.yaml \
+#     -m training.train --manifest experiments/full_sft_26b/manifest.yaml
+#
+# Notes:
+# - FULL_SHARD shards parameters, gradients, and optimizer state across GPUs.
+#   This is what makes Gemma 4 26B trainable on 4x40GB.
+# - SHARDED_STATE_DICT writes checkpoints in a sharded format; faster I/O but
+#   requires consolidation for inference. We consolidate in eval_harness.
+# - transformer_layer_cls_to_wrap is Gemma-architecture-specific. If you change
+#   model family (e.g., Llama), update this to "LlamaDecoderLayer" etc.
+# - sync_module_states True ensures all ranks start from the same weights.
+
+compute_environment: LOCAL_MACHINE
+distributed_type: FSDP
+mixed_precision: bf16
+num_machines: 1
+num_processes: 4
+machine_rank: 0
+main_training_function: main
+
+fsdp_config:
+  fsdp_auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  fsdp_transformer_layer_cls_to_wrap: Gemma4DecoderLayer
+  fsdp_sharding_strategy: FULL_SHARD
+  fsdp_state_dict_type: SHARDED_STATE_DICT
+  fsdp_offload_params: false
+  fsdp_backward_prefetch: BACKWARD_PRE
+  fsdp_forward_prefetch: false
+  fsdp_use_orig_params: true
+  fsdp_cpu_ram_efficient_loading: true
+  fsdp_sync_module_states: true
+  fsdp_activation_checkpointing: true
+
+downcast_bf16: false
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false
