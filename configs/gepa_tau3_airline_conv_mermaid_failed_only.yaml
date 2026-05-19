@@ -1,0 +1,124 @@
+# GEPA over τ³-bench-fork airline conversation runs — multi-task subset (same layout as retail failed_only).
+#
+# Dataset: 32 fixed task IDs (see ``dataset_task_ids``).
+#
+# Run from repo root:
+#   uv run python gepa/examples/tau3_gepa/main.py --config configs/gepa_tau3_airline_conv_mermaid_failed_only.yaml --fresh
+#
+# Executor parity (CLI would be):
+#   cd tau3-bench-fork && uv run tau2config --config examples/airline_runs_final_completions_api_3_runs_each.yaml \
+#     --run-ids mermaid \
+#     --set agent_llm_args.openai_base_url=http://34.14.180.215:8000
+
+tau3:
+  yaml_config: examples/airline_runs_final_completions_api_3_runs_each.yaml
+  run_id: mermaid
+  task_set_name: airline
+  task_split_name: null
+  # Same as ``tau2config --set agent_llm_args.openai_base_url=...`` (shallow merge into YAML run).
+  merged_overrides:
+    agent_llm_args:
+      openai_base_url: "http://34.13.63.100:8000"
+  verbose_logs: false
+
+gepa:
+  seed_policy_path: tau3-bench-fork/data/tau2/domains/airline/policy_opus.md
+  gepa_template_file: gepa/examples/tau3_gepa/seed_mermaid_conv_template.md
+  output_dir: outputs/tau3_gepa_airline_conv_mermaid_failed_only
+  fresh: false
+  run_dir: null
+
+  optimization_mode: multi_task
+  task_id: null
+  dataset_task_ids:
+    [
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      11,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      23,
+      24,
+      25,
+      26,
+      29,
+      30,
+      32,
+      33,
+      34,
+      35,
+      37,
+      39,
+      40,
+      42,
+      44,
+      46,
+    ]
+  valset_task_ids: null
+
+  evaluation_seed: 7789797979
+  llm_seed_chain: true
+
+  num_trials: 4
+  trial_concurrency: 4
+
+  reflection_llm_backend: genai
+  reflection_lm: gemini-3.1-pro-preview
+  reflection_genai_vertex_ai: true
+  reflection_genai_temperature: 0.3
+  reflection_genai_max_output_tokens: null
+  reflection_genai_reasoning_effort: high
+
+  diagnosis_llm_backend: genai
+  diagnosis_lm: gemini-3.1-pro-preview
+  diagnosis_genai_vertex_ai: true
+  diagnosis_genai_temperature: 0.3
+  diagnosis_genai_max_output_tokens: null
+  diagnosis_genai_reasoning_effort: high
+
+  reflection_prompts_file: gepa/examples/tau3_gepa/reflection_prompts_mermaid.md
+
+  reflection_minibatch_size: 15
+  reflection_skip_perfect_score: false
+  reflection_perfect_score: 1.0
+  reflection_batch_sampler: vulnerable_min_errors
+  min_errors_minibatch: 3
+  min_errors_expand_step_size: 10
+  vulnerable_minibatch_size: 4
+  reflection_module_selector: round_robin
+
+  evaluate_communication: true
+
+  max_metric_calls: null
+  max_candidate_proposals: 10
+  max_workers: 160
+  parallel: true
+  raise_on_exception: true
+  use_cloudpickle: false
+  cache_evaluation: true
+  cache_evaluation_storage: auto
+  track_best_outputs: true
+  candidate_selection_strategy: pareto
+  frontier_type: hybrid
+  val_evaluation_policy: full_eval
+  best_example_evals_k: 30
+  capture_traces: false
+  capture_stdio: false
+  display_progress_bar: true
+
+  use_logfire: true
+  use_wandb: false
+  use_gcp_trace: false
+
+  reflective_dataset_format: tau2_retail

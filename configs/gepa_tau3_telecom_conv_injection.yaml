@@ -1,0 +1,99 @@
+# GEPA over τ³-bench-fork telecom conversation runs (injection / thinking-prefix completions).
+#
+# Seed policy is the same concatenated <main_policy>…<tech_support_policy>… shape as the
+# live telecom environment (see ``policy_combined_manual_gepa_seed.md``).
+#
+# Run from repo root:
+#   uv run python gepa/examples/tau3_gepa/main.py --config configs/gepa_tau3_telecom_conv_injection.yaml --fresh
+#
+# Executor parity:
+#   cd tau3-bench-fork && uv run tau2config --config examples/telecom_runs_final_completions_api_3_runs_each.yaml \
+#     --run-ids injection
+
+tau3:
+  yaml_config: examples/telecom_runs_final_completions_api_3_runs_each.yaml
+  run_id: injection
+  task_set_name: telecom
+  task_split_name: null
+  merged_overrides: {}
+  verbose_logs: false
+
+gepa:
+  seed_policy_path: tau3-bench-fork/data/tau2/domains/telecom/policy_combined_manual_gepa_seed.md
+  gepa_template_file: gepa/examples/tau3_gepa/seed_mermaid_conv_template.md
+  output_dir: outputs/tau3_gepa_telecom_conv_injection
+  fresh: false
+  run_dir: null
+
+  optimization_mode: generalization
+  task_id: null
+  dataset_task_ids: null
+  valset_task_ids: null
+
+  split_file_path: tau3-bench-fork/data/tau2/domains/telecom/split_tasks.json
+  split_train_key: train
+  split_val_key: test
+
+  evaluation_seed: 7789797979
+  llm_seed_chain: true
+
+  num_trials: 4
+  trial_concurrency: 4
+
+  reflection_llm_backend: genai
+  reflection_lm: gemini-3.1-pro-preview
+  reflection_genai_vertex_ai: true
+  reflection_genai_temperature: 0.3
+  reflection_genai_max_output_tokens: null
+  reflection_genai_reasoning_effort: high
+
+  diagnosis_llm_backend: genai
+  diagnosis_lm: gemini-3.1-pro-preview
+  diagnosis_genai_vertex_ai: true
+  diagnosis_genai_temperature: 0.3
+  diagnosis_genai_max_output_tokens: null
+  diagnosis_genai_reasoning_effort: high
+
+  reflection_prompts_file: gepa/examples/tau3_gepa/reflection_prompts_mermaid.md
+
+  reflection_minibatch_size: 15
+  reflection_skip_perfect_score: false
+  reflection_perfect_score: 1.0
+  reflection_batch_sampler: vulnerable_min_errors
+  min_errors_minibatch: 3
+  min_errors_expand_step_size: 10
+  vulnerable_minibatch_size: 4
+  reflection_module_selector: round_robin
+
+  evaluate_communication: true
+
+  max_metric_calls: null
+  max_candidate_proposals: 10
+  max_workers: 180
+  parallel: true
+  raise_on_exception: true
+  use_cloudpickle: false
+  cache_evaluation: true
+  cache_evaluation_storage: auto
+  track_best_outputs: true
+  candidate_selection_strategy: pareto
+  frontier_type: hybrid
+  val_evaluation_policy: full_eval
+  best_example_evals_k: 30
+  capture_traces: false
+  capture_stdio: false
+  display_progress_bar: true
+
+  use_logfire: true
+  use_wandb: false
+  use_gcp_trace: false
+
+  reflective_dataset_format: tau2_retail
+
+  cv_generalization:
+    enabled: false
+    pass_fail_table: tau3-bench-fork/data/simulations/retail_conv_openai_agent_mermaid_no_thinking_instructions_completions_04_17_12_19_03/task_pass_fail.json
+    test_fraction: 0.3
+    k_folds: 3
+    seed: 0
+    minibatch_failures: null
