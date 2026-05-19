@@ -7,3 +7,6 @@
 [submodule "tau3-bench-fork"]
 	path = tau3-bench-fork
 	url = git@github.com:codesque16/tau3-bench.git
+[submodule "mermaid_fine_tuning"]
+	path = mermaid_fine_tuning
+	url = git@github.com:codesque16/mermaid_finetuning.git
